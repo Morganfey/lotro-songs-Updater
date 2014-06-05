@@ -119,7 +119,6 @@ public final class MaskedStringOption extends Option {
 			}
 		});
 
-		// TODO save, show boxes
 		final JCheckBox saveBox = new JCheckBox(), showBox = new JCheckBox();
 		saveBox.setText("Save");
 		saveBox.addChangeListener(new ChangeListener() {

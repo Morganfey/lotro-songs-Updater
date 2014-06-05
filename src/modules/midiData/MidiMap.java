@@ -1,7 +1,5 @@
 package modules.midiData;
 
-import gui.Visualizable;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -23,7 +21,7 @@ import javax.swing.JPanel;
  * 
  * @author Nelphindal
  */
-public class MidiMap implements Visualizable {
+public class MidiMap {
 
 	/**
 	 * A class representing a note
@@ -233,8 +231,9 @@ public class MidiMap implements Visualizable {
 
 	/**
 	 * Sets all options of mainPanel to display this map.
+	 * 
+	 * @param mainPanel
 	 */
-	@Override
 	public final void init(final JPanel mainPanel) {
 //		System.out.println(parser.getDuration());
 		d.width = (int) ((parser.getDuration() + 1.0 / 60.0) * scale);
@@ -247,8 +246,9 @@ public class MidiMap implements Visualizable {
 
 	/**
 	 * Paints this map on previously set panel.
+	 * 
+	 * @param g
 	 */
-	@Override
 	public final void paint(final Graphics g) {
 		g.clearRect(0, 0, d.width, d.height);
 		final Graphics g0 = g.create();

@@ -1,8 +1,5 @@
 package modules.abcCreator;
 
-import gui.DragObject;
-import gui.DropTarget;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -24,17 +21,16 @@ import modules.abcCreator.DragAndDropPlugin.State;
 
 final class DO_Listener extends DNDListener {
 
-	private final State state;
 	private final JPanel panel;
 	private final Track track;
 	private final AbcCreator abcCreator;
 
 	private JPanel panelVolume;
 
-	DO_Listener(final Track track, final JPanel panel, final State status,
+	DO_Listener(final Track track, final JPanel panel, final State state,
 			final AbcCreator abcCreator) {
+		super(state);
 		this.panel = panel;
-		state = status;
 		this.track = track;
 		this.abcCreator = abcCreator;
 		panel.setBackground(DNDListener.C_INACTIVE);

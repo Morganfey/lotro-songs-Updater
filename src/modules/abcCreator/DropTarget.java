@@ -1,12 +1,10 @@
-package gui;
+package modules.abcCreator;
 
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.JPanel;
-
-import modules.AbcCreator;
 
 
 /**
@@ -21,10 +19,10 @@ public interface DropTarget extends Comparable<DropTarget>,
 	 * 
 	 * @param key
 	 * @param panel
-	 * @param abcCreator
+	 * @param caller
 	 */
 	void displayParam(final String key, final JPanel panel,
-			AbcCreator abcCreator);
+			final DndPluginCaller caller);
 
 	/**
 	 * @return the instance created this target.

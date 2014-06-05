@@ -1,8 +1,5 @@
 package modules.abcCreator;
 
-import gui.DragObject;
-import gui.DropTarget;
-import gui.DropTargetContainer;
 import gui.GUI;
 import gui.GUIPlugin;
 import io.IOHandler;

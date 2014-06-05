@@ -1,7 +1,11 @@
 package main;
 
 import io.IOHandler;
-import modules.songData.SongDataContainer;
+
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
+
 import util.OptionContainer;
 import util.Path;
 import util.TaskPool;
@@ -20,7 +24,8 @@ public class StartupContainer {
 	IOHandler io;
 	MasterThread master;
 	boolean jar;
-	private SongDataContainer container;
+	private final Map<Class<ContainerElement>, ContainerElement> elements =
+			new HashMap<>();
 	private TaskPool taskPool;
 
 	StartupContainer() {
@@ -42,6 +47,32 @@ public class StartupContainer {
 	}
 
 	/**
+	 * @param clazz
+	 * @return the SongDataContainer
+	 */
+	public final <CE extends ContainerElement> CE getContainerElement(
+			final Class<CE> clazz) {
+		@SuppressWarnings("unchecked")
+		final CE ce = (CE) elements.get(clazz);
+		if (ce == null) {
+			try {
+				@SuppressWarnings("unchecked")
+				final Class<ContainerElement> clazzCE =
+						(Class<ContainerElement>) clazz;
+				final Constructor<CE> c = clazz.getConstructor(getClass());
+				final CE ceNew = c.newInstance(this);
+				elements.put(clazzCE, ceNew);
+				return ceNew;
+			} catch (final Exception e) {
+				io.printError("Error in creating new instance of " + clazz,
+						false);
+				master.interrupt();
+			}
+		}
+		return ce;
+	}
+
+	/**
 	 * @return the IO-handler
 	 */
 	public final IOHandler getIO() {
@@ -60,29 +91,6 @@ public class StartupContainer {
 	 */
 	public final OptionContainer getOptionContainer() {
 		return optionContainer;
-	}
-
-	/**
-	 * @return the SongDataContainer
-	 */
-	public final SongDataContainer getSongdataContainer() {
-		if (container == null) {
-			final String home =
-					Main.getConfigValue(main.Main.GLOBAL_SECTION,
-							main.Main.PATH_KEY, null);
-			final Path basePath = Path.getPath(home.split("/"));
-			if (!basePath.exists()) {
-				io.printError(
-						"The default path or the path defined in\nthe config-file does not exist:\n"
-								+ basePath
-								+ "\n Please look into the manual for more information.",
-						false);
-			}
-			container =
-					new SongDataContainer(io, taskPool,
-							basePath.resolve("Music"));
-		}
-		return container;
 	}
 
 	/**

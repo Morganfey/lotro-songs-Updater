@@ -1,8 +1,5 @@
 package modules;
 
-import gui.DragObject;
-import gui.DropTarget;
-import gui.DropTargetContainer;
 import io.ExceptionHandle;
 import io.IOHandler;
 import io.InputStream;
@@ -27,7 +24,11 @@ import main.Flag;
 import main.Main;
 import main.MasterThread;
 import main.StartupContainer;
+import modules.abcCreator.DndPluginCaller;
 import modules.abcCreator.DragAndDropPlugin;
+import modules.abcCreator.DragObject;
+import modules.abcCreator.DropTarget;
+import modules.abcCreator.DropTargetContainer;
 import modules.abcCreator.DrumMapFileFilter;
 import modules.abcCreator.ExecutableFileFilter;
 import modules.abcCreator.InstrumentMapFileFilter;
@@ -49,7 +50,7 @@ import util.TaskPool;
 /**
  * @author Nelphindal
  */
-public class AbcCreator implements Module {
+public class AbcCreator implements Module, DndPluginCaller {
 
 	/**
 	 * Enum indicating what type of runnable shall be called
@@ -113,6 +114,9 @@ public class AbcCreator implements Module {
 
 		synchronized final void drawState(final IOHandler io) {
 			this.io = io;
+			if (failed) {
+				return;
+			}
 			io.startProgress(getMessage(), size);
 			io.updateProgress(progress);
 		}
@@ -309,7 +313,7 @@ public class AbcCreator implements Module {
 
 	private final Set<Integer> maps = new HashSet<>();
 
-	private final static InitState initState = new InitState();
+	private final InitState initState;
 
 	/**
 	 * Constructor for building versionInfo
@@ -326,6 +330,7 @@ public class AbcCreator implements Module {
 		parser = null;
 		taskPool = null;
 		bruteDir = null;
+		initState = null;
 		brutesMidi = brutesMap = brutesAbc = null;
 	}
 
@@ -357,6 +362,7 @@ public class AbcCreator implements Module {
 		taskPool = sc.getTaskPool();
 		bruteDir = Path.getTmpDir("BruTE-GUI");
 		brutesMidi = brutesMap = brutesAbc = null;
+		initState = new InitState();
 	}
 
 	private AbcCreator(final AbcCreator abc, final StartupContainer sc) {
@@ -374,6 +380,7 @@ public class AbcCreator implements Module {
 		brutesMidi = bruteDir.resolve("mid.mid");
 		brutesMap = bruteDir.resolve("out.config");
 		brutesAbc = bruteDir.resolve("new.abc");
+		initState = abc.initState;
 	}
 
 	/**
@@ -459,7 +466,8 @@ public class AbcCreator implements Module {
 				try {
 					final boolean init = init();
 					if (!init) {
-						AbcCreator.initState.setFailed();
+						initState.setFailed();
+						bruteDir.delete();
 					}
 				} catch (final IOException e) {
 					e.printStackTrace();
@@ -495,20 +503,20 @@ public class AbcCreator implements Module {
 	@Override
 	public final void run() {
 		try {
-			AbcCreator.initState.drawState(io);
+			initState.drawState(io);
 			taskPool.waitForTasks();
-			if (AbcCreator.initState.failed() || master.isInterrupted()) {
+			if (initState.failed() || master.isInterrupted()) {
 				return;
 			}
 			final Path instrumentMap = INSTRUMENT_MAP.getValue();
 			final Path drumMaps = DRUM_MAPS.getValue();
 			if (instrumentMap != null) {
-				AbcCreator.initState.startPhase(InitState.INSTRUMENT_MAP,
+				initState.startPhase(InitState.INSTRUMENT_MAP,
 						(int) instrumentMap.toFile().length());
 				MidiInstrument.readMap(instrumentMap, io);
 			}
 			if (drumMaps != null) {
-				AbcCreator.initState.startPhase(InitState.DRUM_MAP);
+				initState.startPhase(InitState.DRUM_MAP);
 				prepareMaps(drumMaps);
 			}
 			for (int i = 0; i < AbcCreator.DRUM_MAPS_COUNT; i++) {
@@ -610,6 +618,8 @@ public class AbcCreator implements Module {
 
 			@Override
 			public void run() {
+				boolean first = true;
+
 				do {
 					int read;
 					try {
@@ -626,6 +636,12 @@ public class AbcCreator implements Module {
 					if (read == '\n') {
 						final String line = builder.toString();
 						if (line.contains("/")) {
+							final String[] s =
+									line.replaceFirst("\r\n", "").split("/");
+							if (first) {
+								first = false;
+								io.setProgressSize(Integer.parseInt(s[1]) + 1);
+							}
 							io.updateProgress();
 						}
 						System.out.print(line);
@@ -678,7 +694,7 @@ public class AbcCreator implements Module {
 							} catch (final IOException e) {
 								e.printStackTrace();
 							}
-							AbcCreator.initState.progress();
+							initState.progress();
 						}
 					});
 				}
@@ -698,11 +714,11 @@ public class AbcCreator implements Module {
 		if (source.toFile().isDirectory()) {
 			if (destination.toFile().exists()
 					&& !destination.toFile().isDirectory()) {
-				AbcCreator.initState.setFailed();
+				initState.setFailed();
 				throw new IOException("Copying directory to file");
 			} else {
 				final String[] files = source.toFile().list();
-				AbcCreator.initState.incrementSize(files.length);
+				initState.incrementSize(files.length);
 				for (final String s : files) {
 					if (!destination.toFile().exists()) {
 						if (!destination.toFile().mkdir()) {
@@ -713,8 +729,8 @@ public class AbcCreator implements Module {
 					taskPool.addTask(new Runnable() {
 						@Override
 						public final void run() {
-							if (master.isInterrupted()
-									|| AbcCreator.initState.failed()) {
+							if (master.isInterrupted() || initState.failed()) {
+								bruteDir.delete();
 								return;
 							}
 							try {
@@ -723,7 +739,7 @@ public class AbcCreator implements Module {
 							} catch (final IOException e) {
 								e.printStackTrace();
 							}
-							AbcCreator.initState.progress();
+							initState.progress();
 						}
 					});
 				}
@@ -738,32 +754,29 @@ public class AbcCreator implements Module {
 
 	private final void extract(final JarFile jarFile, final String string)
 			throws IOException {
-		AbcCreator.initState.startPhase(InitState.READ_JAR);
-		final Set<ZipEntry> jarEntries = extract_getEntries(jarFile, string);
-		AbcCreator.initState
-				.startPhase(InitState.UNPACK_JAR, jarEntries.size());
-		unpack(jarFile, jarEntries.toArray(new ZipEntry[jarEntries.size()]));
-		io.endProgress();
-	}
-
-	private final Set<ZipEntry> extract_getEntries(final JarFile jarFile,
-			final String... entriesArray) {
-		final Enumeration<JarEntry> e = jarFile.entries();
-		final Set<ZipEntry> jarEntries = new HashSet<>();
-		final Set<String> entries = new HashSet<>();
-		for (final String s : entriesArray) {
-			entries.add(s);
-		}
-		while (e.hasMoreElements()) {
-			final JarEntry jarEntry = e.nextElement();
-			final String entryName =
-					jarEntry.getName().substring(6).split("\\/", 2)[0];
-			if (!jarEntry.isDirectory() && entries.contains(entryName)) {
-				jarEntries.add(jarEntry);
+		initState.startPhase(InitState.READ_JAR);
+		final ZipEntry jarEntry = jarFile.getEntry(string);
+		initState.startPhase(InitState.UNPACK_JAR);
+		unpack(jarFile, jarEntry);
+		final Path jar = bruteDir.resolve(string);
+		final Set<JarEntry> entries = new HashSet<>();
+		final JarFile jarFile1 = new JarFile(jar.toFile());
+		final Enumeration<JarEntry> ee = jarFile1.entries();
+		while (ee.hasMoreElements()) {
+			final JarEntry je = ee.nextElement();
+			if (!je.isDirectory()) {
+				entries.add(je);
 			}
-			io.updateProgress(1);
 		}
-		return jarEntries;
+		initState.setSize(InitState.UNPACK_JAR, entries.size());
+		unpack(jarFile1, entries.toArray(new JarEntry[entries.size()]));
+		try {
+			jarFile1.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		jar.delete();
+
 	}
 
 	private final Path generateMap(final String name, final String title) {
@@ -832,18 +845,16 @@ public class AbcCreator implements Module {
 			if (!bruteDir.exists()) {
 				System.err.println("Unable to find Brute\n" + bruteDir
 						+ " does not exist.");
-				io.printError("Unable to find Brute", false);
-				master.interrupt();
 				return false;
 			}
-			AbcCreator.initState.startPhase(InitState.COPY);
-			AbcCreator.initState.setSize(InitState.COPY,
-					copy(bruteDir, this.bruteDir).size());
+			initState.startPhase(InitState.COPY);
+			initState.setSize(InitState.COPY, copy(bruteDir, this.bruteDir)
+					.size());
 		} else {
 			final JarFile jarFile;
 			jarFile = new JarFile(wdDir.toFile());
 			try {
-				extract(jarFile, "Brute");
+				extract(jarFile, "BruTE.jar");
 			} finally {
 				jarFile.close();
 				io.endProgress();
@@ -855,7 +866,7 @@ public class AbcCreator implements Module {
 	private void prepareMaps(final Path drumMaps) {
 		final String[] files = drumMaps.toFile().list();
 		if (files != null) {
-			AbcCreator.initState.setSize(InitState.DRUM_MAP, files.length);
+			initState.setSize(InitState.DRUM_MAP, files.length);
 			for (final String f : files) {
 				if (f.startsWith("drum") && f.endsWith(".drummap.txt")) {
 					final String idString = f.substring(4, f.length() - 12);
@@ -863,7 +874,7 @@ public class AbcCreator implements Module {
 					try {
 						id = Integer.parseInt(idString);
 					} catch (final Exception e) {
-						AbcCreator.initState.progress();
+						initState.progress();
 						continue;
 					}
 					taskPool.addTask(new Runnable() {
@@ -873,7 +884,7 @@ public class AbcCreator implements Module {
 							try {
 								copy(drumMaps.resolve(f), bruteDir.resolve(f));
 
-								AbcCreator.initState.progress();
+								initState.progress();
 							} catch (final IOException e) {
 								e.printStackTrace();
 							}
@@ -881,7 +892,7 @@ public class AbcCreator implements Module {
 					});
 					maps.add(id);
 				} else {
-					AbcCreator.initState.progress();
+					initState.progress();
 				}
 			}
 		}
@@ -992,39 +1003,36 @@ public class AbcCreator implements Module {
 			if (master.isInterrupted()) {
 				return;
 			}
-			taskPool.addTask(new Runnable() {
-				@Override
-				public void run() {
-					final OutputStream out;
-					final java.io.File file;
-					if (jarEntries.length == 1) {
-						file = bruteDir.resolve(jarEntry.getName()).toFile();
-					} else {
-						file =
-								bruteDir.resolve(
-										jarEntry.getName().substring(6))
-										.toFile();
-					}
-					if (!file.getParentFile().exists()) {
-						if (!bruteDir.exists()) {
-							return;
-						}
-						if (!file.getParentFile().mkdirs()) {
-							throw new RuntimeException("Unpacking BruTE failed");
-						}
-					}
-					out = io.openOut(file);
-					try {
-						io.write(jarFile.getInputStream(jarEntry), out);
-					} catch (final IOException e) {
-						bruteDir.delete();
-						throw new RuntimeException("Unpacking BruTE failed");
-					} finally {
-						io.close(out);
-					}
-					AbcCreator.initState.progress();
+
+			final OutputStream out;
+			final java.io.File file;
+			if (jarEntries.length == 1) {
+				file = bruteDir.resolve(jarEntry.getName()).toFile();
+			} else {
+				file =
+						bruteDir.resolve(jarEntry.getName().substring(6))
+								.toFile();
+			}
+			if (!file.getParentFile().exists()) {
+				if (!file.getParentFile().mkdirs()) {
+					initState.setFailed();
+					bruteDir.delete();
+					return;
 				}
-			});
+			}
+			try {
+				out = io.openOut(file);
+				try {
+					io.write(jarFile.getInputStream(jarEntry), out);
+				} finally {
+					io.close(out);
+				}
+			} catch (final IOException e) {
+				initState.setFailed();
+				bruteDir.delete();
+				return;
+			}
+			initState.progress();
 		}
 	}
 

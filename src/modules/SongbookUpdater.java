@@ -80,7 +80,7 @@ public final class SongbookUpdater implements Module {
 		final Path basePath = Path.getPath(home.split("/"));
 		pluginDataPath = basePath.resolve("PluginData");
 		songbookPlugindataPath = pluginDataPath.resolve("SongbookUpdateData");
-		container = sc.getSongdataContainer();
+		container = sc.getContainerElement(SongDataContainer.class);
 		master = sc.getMaster();
 	}
 

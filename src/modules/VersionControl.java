@@ -89,8 +89,8 @@ public final class VersionControl implements Module {
 
 	private final static String SECTION = Main.VC_SECTION;
 
-	private static final String DEFAULT_GIT_URL_SSH = null; // TODO set url for
-// ssh
+	private static final String DEFAULT_GIT_URL_SSH = null;
+	// TODO set url for ssh
 	private static final String DEFAULT_GIT_URL_HTTPS =
 			"https://github.com/Greonyral/lotro-songs.git";
 
@@ -553,7 +553,6 @@ public final class VersionControl implements Module {
 				walk.dispose();
 				return;
 			}
-			// TODO is remote branch already included in the remote branch?
 			final ObjectReader reader =
 					gitSession.getRepository().newObjectReader();
 			final TreeSet<RevCommit> commits =
@@ -996,8 +995,8 @@ public final class VersionControl implements Module {
 			reader.release();
 			treeParserOld.stopWalk();
 			treeParserNew.stopWalk();
-			io.startProgress("Creating new commit", -1);
 			if (doCommit) {
+				io.startProgress("Creating new commit", -1);
 				gitSession
 						.commit()
 						.setMessage(

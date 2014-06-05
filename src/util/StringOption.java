@@ -150,8 +150,6 @@ public final class StringOption extends Option {
 			}
 		});
 
-		// TODO listener to transfer content
-
 		mainPanel.setLayout(new BorderLayout());
 		mainPanel.add(new JLabel(getDescription()), BorderLayout.SOUTH);
 		mainPanel.add(scrollPane);

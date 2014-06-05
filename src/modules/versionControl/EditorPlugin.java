@@ -1,8 +1,13 @@
 package modules.versionControl;
 
+import gui.GUIInterface;
 import gui.GUIPlugin;
 
+import java.awt.BorderLayout;
+
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 
 /**
@@ -27,8 +32,15 @@ public final class EditorPlugin implements GUIPlugin {
 	/** TODO */
 	@Override
 	public final boolean display(final JPanel panel) {
-		// TODO Auto-generated method stub
-		return true;
+		final JPanel panelButton = new JPanel();
+		panel.setLayout(new BorderLayout());
+		panel.add(new JScrollPane(new JTextArea(content)));
+		panel.add(panelButton, BorderLayout.SOUTH);
+
+		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
+		panelButton.add(GUIInterface.Button.ABORT.getButton(),
+				BorderLayout.WEST);
+		return false;
 	}
 
 	/**

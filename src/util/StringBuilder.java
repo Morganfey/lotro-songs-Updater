@@ -1,11 +1,19 @@
 package util;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 
 
 class StringBuilder {
 
 	private final static int PATTERN_SIZE = 16;
+	private final static Clipboard clip = Toolkit.getDefaultToolkit()
+			.getSystemClipboard();
 
 	private final char[][] content =
 			new char[2][4 * StringBuilder.PATTERN_SIZE];
@@ -74,19 +82,36 @@ class StringBuilder {
 	}
 
 	private final void handleControl(int keycode, int[] cursor, boolean alt) {
-		// TODO ctrl-handler
 		switch (keycode) {
 			case KeyEvent.VK_A:
 				cursor[1] = 0;
 				cursor[2] = length();
 				break;
 			case KeyEvent.VK_C:
+				if (head > tail) {
+					growAndCopy();
+				}
+				StringBuilder.clip.setContents(
+						new StringSelection(new String(content[cIdx], head
+								+ cursor[1], cursor[2] - cursor[1])), null);
+				break;
 			case KeyEvent.VK_Q:
 				if (alt) {
 					insert('@', cursor);
 				}
 				break;
 			case KeyEvent.VK_V:
+				try {
+					final String pasted =
+							(String) StringBuilder.clip.getContents(null)
+									.getTransferData(DataFlavor.stringFlavor);
+					for (final char c : pasted.toCharArray()) {
+						insert(c, cursor);
+						cursor[1] = cursor[2] = cursor[0];
+					}
+				} catch (final UnsupportedFlavorException | IOException e) {
+					e.printStackTrace();
+				}
 		}
 	}
 
@@ -224,20 +249,20 @@ class StringBuilder {
 		}
 		final char[] array = s.toCharArray();
 		if (head > tail) {
-			// TODO
-		} else {
-			if (tail + array.length >= content[cIdx].length) {
-				final int length = length();
-				grow();
-				System.arraycopy(content[cIdx], head, content[cIdxNext],
-						StringBuilder.PATTERN_SIZE, length);
-				switchBuffer();
-				head = StringBuilder.PATTERN_SIZE;
-				tail = length;
-			}
-			System.arraycopy(array, 0, content[cIdx], tail, array.length);
-			tail += array.length;
+			growAndCopy();
+			// TODO more efficient implementation?
 		}
+		if (tail + array.length >= content[cIdx].length) {
+			final int length = length();
+			grow();
+			System.arraycopy(content[cIdx], head, content[cIdxNext],
+					StringBuilder.PATTERN_SIZE, length);
+			switchBuffer();
+			head = StringBuilder.PATTERN_SIZE;
+			tail = length;
+		}
+		System.arraycopy(array, 0, content[cIdx], tail, array.length);
+		tail += array.length;
 		return this;
 	}
 

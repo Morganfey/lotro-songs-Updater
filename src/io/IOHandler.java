@@ -592,8 +592,8 @@ public class IOHandler {
 	 * @param in
 	 * @param out
 	 */
-	public final void
-			write(final java.io.InputStream in, final OutputStream out) {
+	public final void write(final java.io.InputStream in,
+			final java.io.OutputStream out) {
 		final byte[] buffer = new byte[16000];
 		try {
 			while (true) {

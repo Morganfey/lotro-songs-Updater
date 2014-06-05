@@ -461,10 +461,12 @@ public final class Path implements Comparable<Path> {
 			}
 			boolean ret = pathNew.exists() || pathNew.toFile().mkdir();
 			for (int i = 0; i < files.length; i++) {
-				if (!resolve(files[i]).renameTo(pathNew.resolve(files[i]))) {
+				if (!getPathFunc(files[i]).renameTo(
+						pathNew.getPathFunc(files[i]))) {
 					// undo
 					while (i >= 0) {
-						pathNew.resolve(files[i]).renameTo(resolve(files[i]));
+						pathNew.getPathFunc(files[i]).renameTo(
+								getPathFunc(files[i]));
 						--i;
 					}
 					pathNew.delete();
@@ -579,7 +581,6 @@ public final class Path implements Comparable<Path> {
 				return new Path(this, name);
 			}
 			if (p.get() == null) {
-				System.out.println("Path was removed");
 				return new Path(this, name);
 			}
 			return p.get();

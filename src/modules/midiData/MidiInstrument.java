@@ -1,8 +1,5 @@
 package modules.midiData;
 
-import gui.DragObject;
-import gui.DropTarget;
-import gui.DropTargetContainer;
 import io.ExceptionHandle;
 import io.IOHandler;
 import io.InputStream;
@@ -26,6 +23,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import modules.AbcCreator;
+import modules.abcCreator.DndPluginCaller;
+import modules.abcCreator.DragObject;
+import modules.abcCreator.DropTarget;
+import modules.abcCreator.DropTargetContainer;
 import util.Path;
 
 
@@ -592,7 +593,7 @@ class EmptyMidiInstrumentDropTarget implements DropTarget {
 	/** */
 	@Override
 	public final void displayParam(final String key, final JPanel panel,
-			final AbcCreator abc) {
+			final DndPluginCaller caller) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -743,10 +744,10 @@ class MidiInstrumentDropTarget implements DropTarget {
 	/** */
 	@Override
 	public final void displayParam(final String key, final JPanel panel,
-			final AbcCreator abcCreator) {
+			final DndPluginCaller caller) {
 		panel.setLayout(new BorderLayout());
 		if (key.equals("map")) {
-			final Set<Integer> maps = abcCreator.getMaps();
+			final Set<Integer> maps = ((AbcCreator) caller).getMaps();
 			final Integer map = params.get(key);
 			final int mapId;
 			if (map == null) {
@@ -801,7 +802,9 @@ class MidiInstrumentDropTarget implements DropTarget {
 					@Override
 					public final void mouseReleased(final MouseEvent e) {
 						params.put(key, i);
-						shared.panel.setBackground(Color.WHITE);
+						if (shared.panel != null) {
+							shared.panel.setBackground(Color.WHITE);
+						}
 						shared.panel = mapPanel;
 					}
 				});

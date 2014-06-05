@@ -3,6 +3,7 @@ io
 main
 modules
 modules.abcCreator
+modules.fileEditor
 modules.midiData
 modules.songData
 modules.versionControl

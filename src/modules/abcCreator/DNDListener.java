@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import modules.abcCreator.DragAndDropPlugin.State;
+
 
 abstract class DNDListener implements MouseListener {
 
@@ -14,6 +16,12 @@ abstract class DNDListener implements MouseListener {
 	protected static final Color C_SELECTED0 = Color.YELLOW;
 	protected static final Color C_SELECTED1 = Color.ORANGE;
 	protected static final Color C_DROP = Color.BLUE;
+
+	protected final State state;
+
+	protected DNDListener(final State state) {
+		this.state = state;
+	}
 
 	@Override
 	public void mouseClicked(final MouseEvent e) {

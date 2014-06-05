@@ -253,7 +253,8 @@ final class MidiParserImpl extends MidiParser {
 											duration = end;
 										}
 									}
-									eventsDecoded.addNote(renumberMap.get(track),
+									eventsDecoded.addNote(
+											renumberMap.get(track),
 											noteOn.getKey(), start, end,
 											noteOn.getVelocity());
 									break;

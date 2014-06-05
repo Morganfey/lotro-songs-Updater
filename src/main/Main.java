@@ -233,7 +233,8 @@ public class Main {
 					}
 					io.close(in);
 					if (sb.length() != 0) {
-						// TODO error parsing config
+						System.out.println("error parsing config");
+						sc.master.interrupt();
 					}
 					synchronized (sc) {
 						sc.initDone = true;
@@ -325,7 +326,7 @@ public class Main {
 			final String jarPath;
 			if (FileSystem.type == FileSystem.OSType.WINDOWS) {
 				jarPath =
-						url.getPath().substring(1).split("!")[0].replaceAll(
+						url.getPath().substring(0).split("!")[0].replaceAll(
 								"/", "\\\\");
 			} else {
 				jarPath = url.getPath().split("!")[0];

@@ -14,6 +14,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import main.ContainerElement;
+import main.Main;
+import main.StartupContainer;
 import util.Path;
 import util.TaskPool;
 
@@ -23,7 +26,7 @@ import util.TaskPool;
  * 
  * @author Nelphindal
  */
-public class SongDataContainer {
+public class SongDataContainer implements ContainerElement {
 
 	@SuppressWarnings("unused")
 	private final static void cleanUp(final StringBuilder title_i) {
@@ -395,16 +398,24 @@ public class SongDataContainer {
 			.createMap();
 
 	/**
-	 * @param io
-	 *            IO-Handler to use
-	 * @param taskPool
-	 * @param root
+	 * @param sc
 	 */
-	public SongDataContainer(final IOHandler io, final TaskPool taskPool,
-			final Path root) {
-		this.io = io;
-		this.taskPool = taskPool;
-		tree = new DirTree(root);
+	public SongDataContainer(final StartupContainer sc) {
+		io = sc.getIO();
+		taskPool = sc.getTaskPool();
+		final String home =
+				Main.getConfigValue(main.Main.GLOBAL_SECTION,
+						main.Main.PATH_KEY, null);
+		assert home != null;
+		final Path basePath = Path.getPath(home.split("/")).resolve("Music");
+		if (!basePath.exists()) {
+			io.printError(
+					"The default path or the path defined in\nthe config-file does not exist:\n"
+							+ basePath
+							+ "\n Please look into the manual for more information.",
+					false);
+		}
+		tree = new DirTree(basePath);
 	}
 
 	/**

@@ -4,7 +4,6 @@ import io.ExceptionHandle;
 import io.IOHandler;
 import io.OutputStream;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -24,8 +23,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import modules.Module;
 import util.FileSystem;
@@ -72,19 +71,21 @@ public class MasterThread extends Thread {
 
 	private final ThreadState state = new ThreadState();
 
-	private Event event;
-
 	private final Path tmp = Path.getTmpDir("NelphiTool");
 	private final Map<String, ModuleInfo> modulesLocal = new HashMap<>();
 	private final List<String> possibleModules = new ArrayList<>();
 
 	private final StartupContainer sc;
-	private Path wd;
-	private IOHandler io;
 	private final TaskPool taskPool;
+
+	private Event event;
+
+	private IOHandler io;
 	private boolean parsed;
 
 	private boolean suppressUnknownHost;
+
+	private Path wd;
 
 	/**
 	 * @param os
@@ -164,6 +165,9 @@ public class MasterThread extends Thread {
 						Main.NAME_KEY));
 				waitForOSInit();
 				io.getOptions(options);
+				if (isInterrupted()) {
+					return;
+				}
 				Main.flushConfig();
 			}
 			for (final String module : possibleModules) {
@@ -203,7 +207,7 @@ public class MasterThread extends Thread {
 				return;
 			}
 
-			die(repack(changedModules));
+			die(repack());
 		} catch (final Exception e) {
 			io.handleException(ExceptionHandle.TERMINATE, e);
 			handleEvents();
@@ -224,7 +228,8 @@ public class MasterThread extends Thread {
 			if (versionRead < 0) {
 				return false;
 			}
-			return ByteBuffer.wrap(bytes).getInt() != info.getVersion();
+			final int versionNew = ByteBuffer.wrap(bytes).getInt();
+			return versionNew != info.getVersion();
 		} catch (final MalformedURLException e) {
 			e.printStackTrace();
 			return false;
@@ -247,23 +252,23 @@ public class MasterThread extends Thread {
 
 	private final void die(final Path path) {
 		if (path != null) {
-			if (!wd.toFile().isFile()) {
-				wd.getParent().getParent().delete();
-				path.renameTo(wd.getParent().getParent()
-						.resolve("Launcher.jar"));
-			} else {
-				path.renameTo(wd);
-			}
+			taskPool.close();
 			io.printMessage(
 					"Update complete",
 					"The update completed successfully.\nThe program will terminate now.",
 					true);
+			interrupt();
+			io.close();
+			if (wd.toFile().isFile()) {
+				path.renameTo(wd);
+			}
+			tmp.delete();
+		} else {
+			taskPool.close();
+			io.close();
+			tmp.delete();
+			interrupt();
 		}
-
-		taskPool.close();
-		io.close();
-		tmp.delete();
-		interrupt();
 	}
 
 	private final void downloadModule(final String module) {
@@ -443,73 +448,13 @@ public class MasterThread extends Thread {
 		io.endProgress();
 	}
 
-	private final Path repack(final Set<String> modules) throws IOException {
+	private final Path repack() throws IOException {
 		if (isInterrupted()) {
 			return null;
 		}
-		// unpack current jar
-		final Set<JarEntry> entriesQueue;
-		entriesQueue = new HashSet<>();
 		if (sc.jar) {
 			final JarFile jar = new JarFile(wd.toFile());
-			io.startProgress("Unpacking", jar.size());
-			class EntryFiller implements Runnable {
-
-				private final ArrayDeque<String> workList;
-				private final Path dir;
-
-				private EntryFiller(final Path p,
-						final ArrayDeque<String> workList) {
-					this.workList = workList;
-					dir = p;
-				}
-
-				EntryFiller() {
-					final String[] work = tmp.toFile().list();
-					workList = new ArrayDeque<>(work.length);
-					for (final String w : work) {
-						if (tmp.resolve(w).toFile().isDirectory()) {
-							workList.add(w);
-						}
-					}
-					dir = tmp;
-				}
-
-				@Override
-				public void run() {
-					while (true) {
-						final String work;
-						synchronized (workList) {
-							if (workList.isEmpty()) {
-								return;
-							}
-							work = workList.remove();
-						}
-						final Path p = dir.resolve(work);
-						if (p.toFile().isDirectory()) {
-							final ArrayDeque<String> workList =
-									new ArrayDeque<>();
-							for (final String s : p.toFile().list()) {
-								workList.add(s);
-							}
-							taskPool.addTask(new EntryFiller(p, workList));
-						} else if (p.toFile().isFile()) {
-							synchronized (entriesQueue) {
-								entriesQueue
-										.add(new JarEntry(p.relativize(tmp)));
-							}
-						}
-
-					}
-				}
-
-			}
-			taskPool.addTask(new EntryFiller());
-			taskPool.waitForTasks();
-			if (isInterrupted()) {
-				jar.close();
-				return null;
-			}
+			io.startProgress("Unpacking running archive", jar.size());
 			final Enumeration<JarEntry> entries = jar.entries();
 			while (entries.hasMoreElements()) {
 				if (isInterrupted()) {
@@ -520,18 +465,18 @@ public class MasterThread extends Thread {
 				while (entry.isDirectory()) {
 					if (!entries.hasMoreElements()) {
 						entry = null;
+						io.endProgress();
 						break;
 					}
 					io.updateProgress();
 					entry = entries.nextElement();
-					System.out.println(wd + ":" + entry);
 				}
 				if (entry == null) {
 					break;
 				}
-				entriesQueue.add(entry);
 				final Path target = tmp.resolve(entry.getName().split("/"));
 				if (target.exists()) {
+					io.updateProgress();
 					continue;
 				}
 				if (!target.getParent().exists()) {
@@ -539,89 +484,69 @@ public class MasterThread extends Thread {
 				}
 				final OutputStream out = io.openOut(target.toFile());
 				io.write(jar.getInputStream(entry), out);
+				io.close(out);
 				io.updateProgress();
 			}
 			jar.close();
-		} else {
-			for (final String module : modules) {
-				final File moduleFile = tmp.resolve(module + ".jar").toFile();
-				final JarFile moduleJar = new JarFile(moduleFile);
-				final Enumeration<JarEntry> entries = moduleJar.entries();
-				io.startProgress("Unpacking module " + module,
-						(int) moduleFile.length());
-				while (entries.hasMoreElements()) {
-					final JarEntry entry = entries.nextElement();
-					final Path target =
-							wd.resolve("modules").resolve(
-									entry.getName().split("/"));
-					if (entry.isDirectory()) {
-						if (target.exists()) {
-							target.delete();
-							target.toFile().mkdir();
-						} else {
-							target.toFile().mkdirs();
-						}
-					} else {
-						final InputStream in = moduleJar.getInputStream(entry);
-						final OutputStream out = io.openOut(target.toFile());
-						io.write(in, out);
-						io.close(out);
-					}
-					io.updateProgress((int) entry.getSize());
+			class Task {
+				final String name;
+				final Path source;
+
+				Task(final String s) {
+					name = s;
+					source = tmp.resolve(s);
 				}
-				moduleJar.close();
-				io.endProgress();
+
+				Task(final Task t, final String s) {
+					name = t.name + "/" + s;
+					source = t.source.resolve(s);
+				}
+			}
+			final String[] f = tmp.toFile().list();
+			io.startProgress("Packing new archive", f.length);
+			final ArrayDeque<Task> worklist = new ArrayDeque<>();
+			for (final String s : f) {
+				worklist.add(new Task(s));
+			}
+			final Path target = tmp.resolve("new.jar");
+			final OutputStream out = io.openOut(target.toFile());
+			final JarOutputStream jarout = new JarOutputStream(out);
+			int size = f.length;
+			while (!worklist.isEmpty()) {
+				final Task t = worklist.pop();
+				if (t.source.toFile().isDirectory()) {
+					final String[] ss = t.source.toFile().list();
+					io.setProgressSize(size += ss.length);
+					for (final String s : ss) {
+						worklist.add(new Task(t, s));
+					}
+					io.updateProgress();
+				} else {
+					jarout.putNextEntry(new ZipEntry(t.name));
+					io.write(io.openIn(t.source.toFile()), jarout);
+					jarout.closeEntry();
+					io.updateProgress();
+					t.source.delete();
+				}
+			}
+			jarout.close();
+			io.close(out);
+			return target;
+		} else {
+			final Path tmp = this.tmp.resolve("modules");
+			final Path modulesPath = wd.resolve("modules");
+			final String[] dirs = tmp.toFile().list();
+			io.startProgress("Placing new class files", dirs.length);
+			boolean success = true;
+			for (final String dir : dirs) {
+				success &= tmp.resolve(dir).renameTo(modulesPath.resolve(dir));
+				io.updateProgress();
+			}
+			if (!success) {
+				io.printError("Update failed", false);
+				return null;
 			}
 			return wd;
-		}
-		taskPool.waitForTasks();
-		if (isInterrupted()) {
-			return null;
-		}
-		io.startProgress("Packing new jar-archive", entriesQueue.size());
-
-		final Path target = tmp.resolve("new.jar");
-		final OutputStream out = io.openOut(target.toFile());
-		final ZipOutputStream zipOut = new ZipOutputStream(out);
-		try {
-			final byte[] buffer = new byte[0x2000];
-			for (final JarEntry entry : entriesQueue) {
-				try {
-					if (entry.isDirectory()) {
-						continue;
-					}
-					zipOut.putNextEntry(entry);
-					try {
-						final Path file = tmp.resolve(entry.getName());
-						final InputStream in;
-						if (sc.jar) {
-							in = io.openIn(file.toFile());
-						} else {
-							in =
-									io.openIn(wd.resolve(entry.getName())
-											.toFile());
-						}
-						while (true) {
-							final int read = in.read(buffer);
-							if (read < 0) {
-								break;
-							}
-							zipOut.write(buffer, 0, read);
-						}
-						file.delete();
-					} finally {
-						zipOut.closeEntry();
-					}
-				} finally {
-					io.updateProgress();
-				}
-			}
-			io.endProgress();
-			return target;
-		} finally {
-			zipOut.flush();
-			zipOut.close();
-			io.close(out);
 		}
 	}
 
@@ -675,6 +600,7 @@ public class MasterThread extends Thread {
 					continue;
 				}
 				if (!p.getParent().exists()) {
+					System.out.println("omitting " + e);
 					io.updateProgress();
 					continue;
 				}
@@ -684,8 +610,8 @@ public class MasterThread extends Thread {
 				io.close(out);
 				io.updateProgress();
 			}
-			target.delete();
 			jar.close();
+			target.delete();
 		} catch (final IOException e) {
 			e.printStackTrace();
 			io.handleException(ExceptionHandle.TERMINATE, e);
