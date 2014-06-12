@@ -15,10 +15,8 @@ class StringBuilder {
 	private final static Clipboard clip = Toolkit.getDefaultToolkit()
 			.getSystemClipboard();
 
-	private final char[][] content =
-			new char[2][4 * StringBuilder.PATTERN_SIZE];
-	private int head = StringBuilder.PATTERN_SIZE,
-			tail = StringBuilder.PATTERN_SIZE;
+	private final char[][] content = new char[2][4 * StringBuilder.PATTERN_SIZE];
+	private int head = StringBuilder.PATTERN_SIZE, tail = StringBuilder.PATTERN_SIZE;
 	private int cIdx = 0;
 	private int cIdxNext = 1;
 
@@ -68,11 +66,9 @@ class StringBuilder {
 	}
 
 	private final void grow() {
-		if (content[cIdxNext] == null
-				|| content[cIdxNext].length <= content[cIdx].length) {
+		if (content[cIdxNext] == null || content[cIdxNext].length <= content[cIdx].length) {
 			content[cIdxNext] =
-					new char[content[cIdx].length + StringBuilder.PATTERN_SIZE
-							* 2];
+					new char[content[cIdx].length + StringBuilder.PATTERN_SIZE * 2];
 		}
 	}
 
@@ -91,9 +87,8 @@ class StringBuilder {
 				if (head > tail) {
 					growAndCopy();
 				}
-				StringBuilder.clip.setContents(
-						new StringSelection(new String(content[cIdx], head
-								+ cursor[1], cursor[2] - cursor[1])), null);
+				StringBuilder.clip.setContents(new StringSelection(new String(
+						content[cIdx], head + cursor[1], cursor[2] - cursor[1])), null);
 				break;
 			case KeyEvent.VK_Q:
 				if (alt) {
@@ -123,11 +118,12 @@ class StringBuilder {
 			final int length = length();
 			final int lengthDelta = cursorArray[2] - cursorArray[1] - 1;
 			if (lengthDelta != 0) {
+				grow();
 				System.arraycopy(content[cIdx], head, content[cIdxNext],
 						StringBuilder.PATTERN_SIZE, cursorArray[1]);
-				System.arraycopy(content[cIdx], head + cursorArray[2],
-						content[cIdxNext], StringBuilder.PATTERN_SIZE
-								+ cursorArray[1] + 1, length - cursorArray[2]);
+				System.arraycopy(content[cIdx], head + cursorArray[2], content[cIdxNext],
+						StringBuilder.PATTERN_SIZE + cursorArray[1] + 1, length
+								- cursorArray[2]);
 				switchBuffer();
 			}
 			content[cIdx][cursorArray[1] + head] = c;
@@ -157,6 +153,52 @@ class StringBuilder {
 		}
 	}
 
+	private final void insert(final String s, int[] cursorArray) {
+		if (cursorArray[1] < cursorArray[2]) {
+			if (head > tail) {
+				copy();
+			}
+			final int length = length();
+			final int lengthDelta = cursorArray[2] - cursorArray[1] - 1;
+			if (lengthDelta != 0) {
+				grow();
+				System.arraycopy(content[cIdx], head, content[cIdxNext],
+						StringBuilder.PATTERN_SIZE, cursorArray[1]);
+				System.arraycopy(content[cIdx], head + cursorArray[2], content[cIdxNext],
+						StringBuilder.PATTERN_SIZE + cursorArray[1] + s.length(), length
+								- cursorArray[2]);
+				switchBuffer();
+				tail -= head - StringBuilder.PATTERN_SIZE;
+				head = StringBuilder.PATTERN_SIZE;
+			}
+			System.arraycopy(s.toCharArray(), 0, content[cIdx],
+					StringBuilder.PATTERN_SIZE + cursorArray[1], s.length());
+			tail -= lengthDelta;
+			cursorArray[0] = cursorArray[2] = ++cursorArray[1];
+			return;
+		}
+		final int cursor = cursorArray[0]++;
+		if (cursor == length()) {
+			appendLast(s);
+		} else if (cursor == 0) {
+			appendFirst(s);
+		} else {
+			final int length = length();
+			if (length > content[cIdx].length * 3 / 4) {
+				grow();
+			}
+			System.arraycopy(content[cIdx], head, content[cIdxNext],
+					StringBuilder.PATTERN_SIZE, cursor);
+			System.arraycopy(content[cIdx], head + cursor, content[cIdxNext],
+					StringBuilder.PATTERN_SIZE + cursor + s.length(), length - cursor);
+			switchBuffer();
+			System.arraycopy(s.toCharArray(), 0, content[cIdx],
+					StringBuilder.PATTERN_SIZE + cursor, s.length());
+			head = StringBuilder.PATTERN_SIZE;
+			tail = StringBuilder.PATTERN_SIZE + length + 1;
+		}
+	}
+
 	private final void remove(int[] cursorArray) {
 		if (cursorArray[1] < cursorArray[2]) {
 			if (head > tail) {
@@ -165,9 +207,8 @@ class StringBuilder {
 			final int length = length();
 			System.arraycopy(content[cIdx], head, content[cIdxNext],
 					StringBuilder.PATTERN_SIZE, cursorArray[1]);
-			System.arraycopy(content[cIdx], head + cursorArray[2],
-					content[cIdxNext], StringBuilder.PATTERN_SIZE
-							+ cursorArray[1], length - cursorArray[2]);
+			System.arraycopy(content[cIdx], head + cursorArray[2], content[cIdxNext],
+					StringBuilder.PATTERN_SIZE + cursorArray[1], length - cursorArray[2]);
 			switchBuffer();
 			head = StringBuilder.PATTERN_SIZE;
 			tail =
@@ -192,9 +233,8 @@ class StringBuilder {
 			}
 			System.arraycopy(content[cIdx], head, content[cIdxNext],
 					StringBuilder.PATTERN_SIZE, cursor);
-			System.arraycopy(content[cIdx], head + cursor + 1,
-					content[cIdxNext], StringBuilder.PATTERN_SIZE + cursor,
-					length - cursor - 1);
+			System.arraycopy(content[cIdx], head + cursor + 1, content[cIdxNext],
+					StringBuilder.PATTERN_SIZE + cursor, length - cursor - 1);
 			switchBuffer();
 			tail = StringBuilder.PATTERN_SIZE + length - 1;
 			head = StringBuilder.PATTERN_SIZE;
@@ -242,6 +282,30 @@ class StringBuilder {
 		content[cIdx][tail++] = c;
 	}
 
+	final StringBuilder appendFirst(final String s) {
+		if (isEmpty()) {
+			set(s);
+			return this;
+		}
+		final char[] array = s.toCharArray();
+		if (head > tail) {
+			growAndCopy();
+			// TODO more efficient implementation?
+		}
+		if (tail + array.length >= content[cIdx].length) {
+			final int length = length();
+			grow();
+			System.arraycopy(content[cIdx], head, content[cIdxNext],
+					StringBuilder.PATTERN_SIZE + s.length(), length);
+			switchBuffer();
+			head = StringBuilder.PATTERN_SIZE;
+			tail = length;
+		}
+		System.arraycopy(array, 0, content[cIdx], PATTERN_SIZE, array.length);
+		tail += array.length;
+		return this;
+	}
+
 	final StringBuilder appendLast(final String s) {
 		if (isEmpty()) {
 			set(s);
@@ -266,8 +330,17 @@ class StringBuilder {
 		return this;
 	}
 
+	final char charAt(int pos) {
+		return content[cIdx][(head + pos) % content[cIdx].length];
+	}
+
 	final void clear() {
 		tail = head = StringBuilder.PATTERN_SIZE;
+	}
+
+	final byte getByte(int pos) {
+		return (byte) (((charAt(pos) - '0') << 4) | (charAt(pos + 1) - '0'));
+
 	}
 
 	final void handleEvent(final KeyEvent e, int[] cursor) {
@@ -363,6 +436,15 @@ class StringBuilder {
 		return c;
 	}
 
+	final void replace(int pos, int len, final String string) {
+		if (len != string.length()) {
+			this.insert(string, new int[] { pos, pos, pos + len });
+		} else {
+			System.arraycopy(string.toCharArray(), 0, content[cIdx], head + len,
+					string.length());
+		}
+	}
+
 	final void set(final String s) {
 		if (s == null || s.isEmpty()) {
 			clear();
@@ -370,12 +452,17 @@ class StringBuilder {
 		}
 		if (content[cIdx].length < s.length() + StringBuilder.PATTERN_SIZE * 2) {
 			content[cIdx] =
-					new char[s.length() + StringBuilder.PATTERN_SIZE * 4
-							- s.length() % (StringBuilder.PATTERN_SIZE * 2)];
+					new char[s.length() + StringBuilder.PATTERN_SIZE * 4 - s.length()
+							% (StringBuilder.PATTERN_SIZE * 2)];
 		}
-		System.arraycopy(s.toCharArray(), 0, content[cIdx],
-				StringBuilder.PATTERN_SIZE, s.length());
+		System.arraycopy(s.toCharArray(), 0, content[cIdx], StringBuilder.PATTERN_SIZE,
+				s.length());
 		head = StringBuilder.PATTERN_SIZE;
 		tail = head + s.length();
+	}
+
+
+	final void setHead(int offset) {
+		head += offset;
 	}
 }

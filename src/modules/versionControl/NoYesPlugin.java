@@ -2,10 +2,12 @@ package modules.versionControl;
 
 import gui.GUI;
 import gui.GUIInterface;
+import gui.GUIPlugin;
 
-import java.awt.GridLayout;
+import java.awt.BorderLayout;
 
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 
 
 /**
@@ -13,26 +15,41 @@ import javax.swing.JPanel;
  * 
  * @author Nelphindal
  */
-public final class NoYesPlugin implements gui.GUIPlugin {
+public final class NoYesPlugin extends GUIPlugin {
 
-	private final String title;
+	private final String title, message;
 	private final GUIInterface gui;
+	private final boolean progress;
 
 	/**
 	 * @param title
+	 * @param message
 	 * @param guiInterface
+	 * @param progress
 	 */
-	public NoYesPlugin(final String title, final GUIInterface guiInterface) {
+	public NoYesPlugin(final String title, final String message,
+			final GUIInterface guiInterface, boolean progress) {
 		this.title = title;
+		this.message = message;
 		gui = guiInterface;
+		this.progress = progress;
 	}
 
 	/** */
 	@Override
-	public final boolean display(final JPanel panel) {
-		panel.setLayout(new GridLayout(1, 2));
-		panel.add(GUI.Button.NO.getButton());
-		panel.add(GUI.Button.YES.getButton());
+	protected final boolean display(final JPanel panel) {
+		final JPanel panelButton = new JPanel();
+		final JTextArea text = new JTextArea();
+		text.setEditable(false);
+		text.setText(message);
+		panel.setLayout(new BorderLayout());
+		panelButton.setLayout(new BorderLayout());
+		panel.add(panelButton, BorderLayout.SOUTH);
+		panel.add(text);
+		panelButton.add(GUI.Button.NO.getButton(), BorderLayout.EAST);
+		panelButton.add(GUI.Button.YES.getButton(), BorderLayout.WEST);
+		if (progress)
+			panel.add(gui.getProgressBar(), BorderLayout.NORTH);
 		return false;
 	}
 
@@ -45,7 +62,7 @@ public final class NoYesPlugin implements gui.GUIPlugin {
 
 	/** */
 	@Override
-	public final String getTitle() {
+	protected final String getTitle() {
 		return title;
 	}
 

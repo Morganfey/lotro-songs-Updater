@@ -437,6 +437,11 @@ public class GUI implements GUIInterface {
 		return pressed;
 	}
 
+	@Override
+	public final Component getProgressBar() {
+		return bar;
+	}
+
 	/** */
 	@Override
 	public final void initProgress() {
@@ -489,7 +494,8 @@ public class GUI implements GUIInterface {
 	@Override
 	public final void runPlugin(final GUIPlugin plugin) {
 		final JPanel panel = new JPanel();
-		if (plugin.display(panel)) {
+		if (plugin.display(panel, this)) {
+			plugin.endDisplay();
 			return;
 		}
 		mainFrame.getContentPane().removeAll();
@@ -509,7 +515,7 @@ public class GUI implements GUIInterface {
 
 		final Set<String> selection = new HashSet<>();
 		final JPanel panel = new JPanel();
-		panel.setLayout(new GridLayout(3, 0));
+		panel.setLayout(new GridLayout(0, 2));
 
 		mainFrame.add(text, BorderLayout.NORTH);
 		mainFrame.add(Button.OK.getButton(), BorderLayout.SOUTH);
@@ -580,8 +586,8 @@ public class GUI implements GUIInterface {
 		wait.setText(action);
 	}
 
-	private final void printMessageFunc(final String title,
-			final String message, boolean toFront) {
+	private final void printMessageFunc(final String title, final String message,
+			boolean toFront) {
 
 		synchronized (Button.class) {
 			pressed = Button.ABORT;
@@ -635,7 +641,7 @@ public class GUI implements GUIInterface {
 		}
 	}
 
-	private final void revalidate(boolean pack, boolean toFront) {
+	final void revalidate(boolean pack, boolean toFront) {
 		if (master.isInterrupted()) {
 			return;
 		}

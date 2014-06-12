@@ -44,7 +44,7 @@ import util.TaskPool;
  * 
  * @author Nelphindal
  */
-public class DragAndDropPlugin implements GUIPlugin {
+public class DragAndDropPlugin extends GUIPlugin {
 
 	class State {
 
@@ -64,8 +64,7 @@ public class DragAndDropPlugin implements GUIPlugin {
 		final JPanel instrumentRootPanel = new JPanel();
 		final Map<DropTarget, Set<Integer>> instrumentToTrack = new TreeMap<>();
 		final Map<DropTarget, JPanel> targetToPanel = new HashMap<>();
-		final Map<DropTargetContainer, JPanel> targetContainerToPanel =
-				new HashMap<>();
+		final Map<DropTargetContainer, JPanel> targetContainerToPanel = new HashMap<>();
 		final JPanel objectRootPanel;
 		final Map<DragObject, JPanel> objectToPanel = new HashMap<>();
 
@@ -87,8 +86,7 @@ public class DragAndDropPlugin implements GUIPlugin {
 		panel.addMouseListener(new DT_Listener(panel, target, status));
 	}
 
-	final static void initInstrumentPanel(final State state,
-			final DropTarget target) {
+	final static void initInstrumentPanel(final State state, final DropTarget target) {
 		final JPanel panelNew = target.getPanel();
 		final JPanel paramPanel = new JPanel();
 		final JPanel labelPanel = new JPanel();
@@ -181,9 +179,9 @@ public class DragAndDropPlugin implements GUIPlugin {
 	 * @param targets
 	 * @param io
 	 */
-	public DragAndDropPlugin(final AbcCreator abcCreator,
-			final TaskPool taskPool, final MidiParser parser,
-			final DropTargetContainer[] targets, final IOHandler io) {
+	public DragAndDropPlugin(final AbcCreator abcCreator, final TaskPool taskPool,
+			final MidiParser parser, final DropTargetContainer[] targets,
+			final IOHandler io) {
 		this.parser = parser;
 		this.targets = targets;
 		this.taskPool = taskPool;
@@ -194,7 +192,7 @@ public class DragAndDropPlugin implements GUIPlugin {
 	 * Displays the tracks, instruments and their association
 	 */
 	@Override
-	public final boolean display(final JPanel panel) {
+	protected final boolean display(final JPanel panel) {
 		taskPool.addTask(new Runnable() {
 
 			@Override
@@ -299,7 +297,7 @@ public class DragAndDropPlugin implements GUIPlugin {
 
 	/** */
 	@Override
-	public final String getTitle() {
+	protected final String getTitle() {
 		return "BruTE";
 	}
 
@@ -362,8 +360,7 @@ public class DragAndDropPlugin implements GUIPlugin {
 					@Override
 					public void run() {
 						final boolean success =
-								state.abcCreator.call_back(null, null,
-										getAbcTracks());
+								state.abcCreator.call_back(null, null, getAbcTracks());
 						synchronized (state) {
 							state.notifyAll();
 							state.upToDate = success;
@@ -398,8 +395,7 @@ public class DragAndDropPlugin implements GUIPlugin {
 	}
 
 	private final JScrollPane initCenter(final Map<Integer, Track> trackList) {
-		final JScrollPane scrollPane =
-				new JScrollPane(state.instrumentRootPanel);
+		final JScrollPane scrollPane = new JScrollPane(state.instrumentRootPanel);
 
 		final Map<Integer, MidiInstrument> midiMap = parser.instruments();
 		state.emptyTarget = targets[targets.length - 1].createNewTarget(null);
@@ -467,8 +463,7 @@ public class DragAndDropPlugin implements GUIPlugin {
 	final void initTrack(final Track track) {
 		final JPanel panel = new JPanel();
 		panel.setLayout(new BorderLayout());
-		panel.addMouseListener(new DO_Listener(track, panel, state,
-				state.abcCreator));
+		panel.addMouseListener(new DO_Listener(track, panel, state, state.abcCreator));
 		panel.add(new JLabel(track.getName()));
 		state.objectRootPanel.add(panel);
 		state.objectToPanel.put(track, panel);

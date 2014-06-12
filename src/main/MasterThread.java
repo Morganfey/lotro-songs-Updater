@@ -337,7 +337,7 @@ public class MasterThread extends Thread {
 
 	private final Set<String> init() {
 		possibleModules.add("AbcCreator");
-//		possibleModules.add("FileEditor");
+		possibleModules.add("FileEditor");
 		possibleModules.add("VersionControl");
 		possibleModules.add("SongbookUpdater");
 		try {

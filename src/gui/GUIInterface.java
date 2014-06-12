@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.Component;
 import java.util.Collection;
 import java.util.Set;
 
@@ -163,5 +164,7 @@ public interface GUIInterface {
 	 * @param title
 	 */
 	void setProgressTitle(String title);
+
+	Component getProgressBar();
 
 }

@@ -1,30 +1,22 @@
 package modules.fileEditor;
 
 import gui.GUIPlugin;
-import io.IOHandler;
 
 import javax.swing.JPanel;
 
+import util.Path;
+import modules.FileEditor;
 import modules.songData.SongDataContainer;
 
 
-public final class ChangeTitleGUI implements GUIPlugin {
+public final class ChangeTitleGUI extends FileEditorPlugin {
 
-	public ChangeTitleGUI(final SongDataContainer container, final IOHandler io) {
-		// TODO Auto-generated constructor stub
+	public ChangeTitleGUI(final FileEditor fileEditor, final Path root) {
+		super(fileEditor, root);
 	}
 
 	@Override
-	public final boolean display(final JPanel panel) {
-		// TODO Auto-generated method stub
-		return true;
+	protected final String getTitle() {
+		return "Selected songs to change titles";
 	}
-
-	
-	@Override
-	public final String getTitle() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

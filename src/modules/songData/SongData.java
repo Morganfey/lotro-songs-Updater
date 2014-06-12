@@ -12,8 +12,7 @@ import util.Path;
  */
 public class SongData {
 
-	final static SongData create(final ModEntry song,
-			final Map<String, String> voices) {
+	final static SongData create(final ModEntry song, final Map<String, String> voices) {
 		final TreeMap<Integer, String> voicesMap = new TreeMap<>();
 		for (final Map.Entry<String, String> v : voices.entrySet()) {
 			voicesMap.put(Integer.parseInt(v.getKey()), v.getValue());
@@ -43,11 +42,17 @@ public class SongData {
 		return sortedVoices;
 	}
 
-	final long getLastModification() {
+	/**
+	 * @return the time-stamp of the file representing the date (in milliseconds) of last modification
+	 */
+	public final long getLastModification() {
 		return mod;
 	}
 
-	final Path getPath() {
+	/**
+	 * @return the path denoting the file related to <i>this</i>
+	 */
+	public final Path getPath() {
 		return song;
 	}
 

@@ -7,4 +7,5 @@ package main;
  */
 public interface ContainerElement {
 
+	/* dummy interface */
 }

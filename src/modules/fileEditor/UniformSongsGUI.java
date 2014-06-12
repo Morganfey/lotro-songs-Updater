@@ -11,14 +11,14 @@ import modules.songData.SongDataContainer;
 import util.Path;
 
 
-public final class UniformSongsGUI implements GUIPlugin {
+public final class UniformSongsGUI extends GUIPlugin {
 
 	public UniformSongsGUI(final SongDataContainer container, final IOHandler io) {
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
-	public final boolean display(final JPanel panel) {
+	protected final boolean display(final JPanel panel) {
 		// TODO Auto-generated method stub
 		return true;
 	}
@@ -30,7 +30,7 @@ public final class UniformSongsGUI implements GUIPlugin {
 
 
 	@Override
-	public String getTitle() {
+	protected String getTitle() {
 		// TODO Auto-generated method stub
 		return null;
 	}

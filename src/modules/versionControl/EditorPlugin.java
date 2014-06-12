@@ -15,7 +15,7 @@ import javax.swing.JTextArea;
  * 
  * @author Nelphindal
  */
-public final class EditorPlugin implements GUIPlugin {
+public final class EditorPlugin extends GUIPlugin {
 
 	private final String title;
 	private final String content;
@@ -29,17 +29,15 @@ public final class EditorPlugin implements GUIPlugin {
 		this.title = title;
 	}
 
-	/** TODO */
 	@Override
-	public final boolean display(final JPanel panel) {
+	protected final boolean display(final JPanel panel) {
 		final JPanel panelButton = new JPanel();
 		panel.setLayout(new BorderLayout());
 		panel.add(new JScrollPane(new JTextArea(content)));
 		panel.add(panelButton, BorderLayout.SOUTH);
 
 		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
-		panelButton.add(GUIInterface.Button.ABORT.getButton(),
-				BorderLayout.WEST);
+		panelButton.add(GUIInterface.Button.ABORT.getButton(), BorderLayout.WEST);
 		return false;
 	}
 
@@ -52,7 +50,7 @@ public final class EditorPlugin implements GUIPlugin {
 
 	/** */
 	@Override
-	public final String getTitle() {
+	protected final String getTitle() {
 		return title;
 	}
 

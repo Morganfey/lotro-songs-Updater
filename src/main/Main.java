@@ -314,9 +314,9 @@ public class Main {
 			final Path classPath;
 			os.jar = false;
 			if (FileSystem.type == FileSystem.OSType.WINDOWS) {
-				classPath = Path.getPath(url.getFile().split("/"));
+				classPath = Path.getPath(url);
 			} else {
-				classPath = Path.getPath(url.getFile());
+				classPath = Path.getPath(url);
 			}
 			System.out.println("class-path: " + classPath);
 			os.workingDirectory = classPath.getParent().getParent();
@@ -332,7 +332,7 @@ public class Main {
 				jarPath = url.getPath().split("!")[0];
 			}
 			System.out.println("jarFile: " + jarPath);
-			os.workingDirectory = Path.getPath(jarPath.substring(5));
+			os.workingDirectory = Path.getPath(url);
 		} else {
 			os.io.printError("Unable to locate working directory", false);
 			os.io.close();

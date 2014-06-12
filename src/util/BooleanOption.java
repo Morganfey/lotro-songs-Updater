@@ -28,30 +28,24 @@ public final class BooleanOption extends Option {
 	 * @param guiDescription
 	 *            a short string usable to label <i>this</i> option
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or
-	 *            {@link main.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or {@link main.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or
-	 *            {@link main.Flag#NoLongFlag} to enable this option
+	 *            a unique printable string to register at flags or {@link main.Flag#NoLongFlag} to enable this option
 	 * @param section
-	 *            the section identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the section identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param key
-	 *            the key identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the key identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param defaultValue
-	 *            the default value for
-	 *            {@link main.Main#getConfigValue(String, String, String)}
+	 *            the default value for {@link main.Main#getConfigValue(String, String, String)}
 	 */
-	public BooleanOption(final OptionContainer optionContainer,
-			final String name, final String toolTip,
-			final String guiDescription, char shortFlag, final String longFlag,
-			final String section, final String key, boolean defaultValue) {
-		super(optionContainer, name, toolTip, guiDescription, shortFlag,
-				longFlag, false, section, key, Boolean.valueOf(defaultValue)
-						.toString());
+	public BooleanOption(final OptionContainer optionContainer, final String name,
+			final String toolTip, final String guiDescription, char shortFlag,
+			final String longFlag, final String section, final String key,
+			boolean defaultValue) {
+		super(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag, false,
+				section, key, Boolean.valueOf(defaultValue).toString());
 	}
 
 	/**
@@ -126,8 +120,8 @@ public final class BooleanOption extends Option {
 	public final void value(final String value) {
 		if (key == null) {
 			this.value = value;
-		}
-		super.value(value);
+		} else
+			super.value(value);
 		if (listener != null) {
 			listener.newValue(getValue());
 		}

@@ -17,7 +17,7 @@ import util.Path;
  * 
  * @author Nelphindal
  */
-public class FileSelectionGUIPlugin implements GUIPlugin {
+public class FileSelectionGUIPlugin extends GUIPlugin {
 
 	private final String title;
 	private final File startDir;
@@ -40,7 +40,8 @@ public class FileSelectionGUIPlugin implements GUIPlugin {
 
 	/** */
 	@Override
-	public final boolean display(final JPanel panel) {
+	protected
+	final boolean display(final JPanel panel) {
 		final JFileChooser fileChooser = new JFileChooser(startDir);
 		fileChooser.setDialogTitle(title);
 		fileChooser.setFileFilter(filter);
@@ -67,7 +68,7 @@ public class FileSelectionGUIPlugin implements GUIPlugin {
 
 	/** */
 	@Override
-	public final String getTitle() {
+	protected final String getTitle() {
 		return title;
 	}
 
