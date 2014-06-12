@@ -57,6 +57,7 @@ import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
+import org.eclipse.jgit.lib.ProgressMonitor;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.lib.StoredConfig;
@@ -443,9 +444,9 @@ public final class VersionControl implements Module {
 			final StoredConfig config = gitSession_band.getRepository().getConfig();
 			config.setString("user", null, "name", name);
 			config.setString("user", null, "email", EMAIL.value());
+			config.setString("branch", branch, "merge", "refs/heads/" + branch);
+			config.setString("branch", branch, "remote", "origin");
 			config.setString("remote", "origin", "url", remoteURL);
-			config.setString("branch", branch, "remote", branch);
-			config.setString("branch", branch, "merge", "+refs/heads/" + branch);
 			config.save();
 		} catch (final JGitInternalException | IOException e) {
 			io.handleException(ExceptionHandle.CONTINUE, e);
@@ -591,7 +592,7 @@ public final class VersionControl implements Module {
 			final Git gitSession = Git.open(band.toFile());
 
 			final FetchResult fetchResult =
-					gitSession.fetch().setProgressMonitor(io.getProgressMonitor()).call();
+					gitSession.fetch().setProgressMonitor(getProgressMonitor()).call();
 
 			final ObjectId remoteHead =
 					fetchResult.getAdvertisedRef("HEAD").getObjectId();
@@ -642,6 +643,37 @@ public final class VersionControl implements Module {
 			io.handleException(ExceptionHandle.CONTINUE, e);
 			return;
 		}
+	}
+
+	private final ProgressMonitor getProgressMonitor() {
+		final gui.ProgressMonitor monitor = io.getProgressMonitor();
+		
+		return new ProgressMonitor() {
+
+			@Override
+			public final void beginTask(final String arg0, int arg1) {
+				monitor.beginTask(arg0, arg1);
+			}
+
+			@Override
+			public final void endTask() {
+				monitor.endProgress();
+			}
+
+			@Override
+			public final boolean isCancelled() {
+				return false;
+			}
+
+			@Override
+			public final void start(int arg0) {
+				monitor.beginTask("", arg0);
+			}
+
+			@Override
+			public final void update(int arg0) {
+				monitor.update(arg0);
+			}};
 	}
 
 	private final void checkoutBBoard() {
@@ -770,7 +802,7 @@ public final class VersionControl implements Module {
 						.setRefSpecs(
 								new RefSpec("refs/heads/" + BRANCH.value()
 										+ ":refs/remotes/origin/" + BRANCH.value()))
-						.setProgressMonitor(io.getProgressMonitor()).call();
+						.setProgressMonitor(getProgressMonitor()).call();
 		return fetch.getAdvertisedRef("HEAD").getObjectId();
 	}
 
@@ -803,7 +835,7 @@ public final class VersionControl implements Module {
 			setConfig(gitSession);
 
 			final FetchResult fetch =
-					gitSession.fetch().setProgressMonitor(io.getProgressMonitor()).call();
+					gitSession.fetch().setProgressMonitor(getProgressMonitor()).call();
 			final String branch = gitSession.getRepository().getBranch();
 
 			Ref localHead = gitSession.getRepository().getRef(fetch_bb.getSource());
@@ -1146,7 +1178,7 @@ public final class VersionControl implements Module {
 		final RefSpec ref =
 				new RefSpec("refs/heads/"
 						+ Main.getConfigValue(VersionControl.SECTION, "branch", "master"));
-		push.setRefSpecs(ref).setProgressMonitor(io.getProgressMonitor());
+		push.setRefSpecs(ref).setProgressMonitor(getProgressMonitor());
 		if (!USE_SSH.getValue()) {
 			final CredentialsProvider login =
 					new UsernamePasswordCredentialsProvider(USERNAME.value(), PWD.value());

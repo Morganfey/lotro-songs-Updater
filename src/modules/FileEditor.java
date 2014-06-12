@@ -26,7 +26,6 @@ import modules.fileEditor.ChangeTitleGUI;
 import modules.fileEditor.EditorPlugin;
 import modules.fileEditor.FileEditorPlugin;
 import modules.fileEditor.SongChangeData;
-import modules.fileEditor.UniformSongsGUI;
 import modules.fileEditor.UniformTitlesGUI;
 import modules.songData.SongDataContainer;
 

@@ -325,7 +325,7 @@ public class IOHandler {
 	 * 
 	 * @return the progress monitor
 	 */
-	public final org.eclipse.jgit.lib.ProgressMonitor getProgressMonitor() {
+	public final ProgressMonitor getProgressMonitor() {
 		return progressMonitor;
 	}
 

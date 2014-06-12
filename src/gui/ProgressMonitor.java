@@ -6,7 +6,7 @@ package gui;
  * 
  * @author Nelphindal
  */
-public class ProgressMonitor implements org.eclipse.jgit.lib.ProgressMonitor {
+public class ProgressMonitor {
 
 	private final GUIInterface gui;
 	private int progress;
@@ -32,7 +32,6 @@ public class ProgressMonitor implements org.eclipse.jgit.lib.ProgressMonitor {
 	 *            set later by calling
 	 *            {@link #beginTaskPreservingProgress(String, int)}
 	 */
-	@Override
 	public final synchronized void beginTask(final String paramString,
 			int paramInt) {
 		if (paramInt < 0) {
@@ -71,28 +70,6 @@ public class ProgressMonitor implements org.eclipse.jgit.lib.ProgressMonitor {
 	}
 
 	/**
-	 * Ends the task
-	 */
-	@Override
-	@Deprecated
-	public final synchronized void endTask() {
-		if (init) {
-			endProgress();
-		}
-		init = false;
-	}
-
-	/**
-	 * Checks if current task was cancelled
-	 * 
-	 * @return <i>false</i>
-	 */
-	@Override
-	public final boolean isCancelled() {
-		return false;
-	}
-
-	/**
 	 * @param size
 	 *            the new maximum size
 	 */
@@ -113,22 +90,11 @@ public class ProgressMonitor implements org.eclipse.jgit.lib.ProgressMonitor {
 	}
 
 	/**
-	 * @deprecated only for interface reasons. Use
-	 *             {@link #beginTask(String, int)} instead
-	 */
-	@Override
-	@Deprecated
-	public final void start(int arg0) {
-		beginTask("", arg0);
-	}
-
-	/**
 	 * Adds to current progress <i>paramInt</i> units
 	 * 
 	 * @param paramInt
 	 *            units to add
 	 */
-	@Override
 	public final synchronized void update(int paramInt) {
 		if (!init || progress < 0) {
 			return;
