@@ -4,11 +4,6 @@ import io.ExceptionHandle;
 import io.IOHandler;
 import io.InputStream;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.GridLayout;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -19,10 +14,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import modules.AbcCreator;
 import modules.abcCreator.DndPluginCaller;
 import modules.abcCreator.DragObject;
 import modules.abcCreator.DropTarget;
@@ -35,21 +28,20 @@ import util.Path;
  * 
  * @author Nelphindal
  */
-public class MidiInstrument implements DropTargetContainer {
+public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPanel> {
 
 	private final String name;
 	private final String name0;
 
 	private static int counter = 0;
 
-	private final Set<DropTarget> parts = new HashSet<>();
+	private final Set<DropTarget<JPanel, JPanel, JPanel>> parts = new HashSet<>();
 
 	/** */
 	public static final MidiInstrument FLUTE = new MidiInstrument("flute");
 
 	/** */
-	public static final MidiInstrument CLARINET =
-			new MidiInstrument("clarinet");
+	public static final MidiInstrument CLARINET = new MidiInstrument("clarinet");
 
 	/** */
 	public static final MidiInstrument HARP = new MidiInstrument("harp");
@@ -64,12 +56,10 @@ public class MidiInstrument implements DropTargetContainer {
 	public static final MidiInstrument THEORBO = new MidiInstrument("theorbo");
 
 	/** */
-	public static final MidiInstrument DRUMS = new MidiInstrument("drums",
-			"map");
+	public static final MidiInstrument DRUMS = new MidiInstrument("drums", "map");
 
 	/** */
-	public static final MidiInstrument BAGPIPES =
-			new MidiInstrument("bagpipes");
+	public static final MidiInstrument BAGPIPES = new MidiInstrument("bagpipes");
 
 	/** */
 	public static final MidiInstrument PIBGORN = new MidiInstrument("pibgorn");
@@ -78,9 +68,7 @@ public class MidiInstrument implements DropTargetContainer {
 	public static final MidiInstrument COWBELL = new MidiInstrument("cowbell");
 
 	/** */
-	/* disabled because of wrong key */
-	// public static final MidiInstrument MOOR_COWBELL = new
-// MidiInstrument("moor-cowbell");
+	public static final MidiInstrument MOOR_COWBELL = new MidiInstrument("moor-cowbell");
 
 	/*
 	 * to make createTargets() to work:
@@ -89,23 +77,26 @@ public class MidiInstrument implements DropTargetContainer {
 
 	final int id;
 	final Set<String> paramKeys = new HashSet<>();
+	private final JPanel panel = new JPanel();
 
-	private static final Map<Byte, MidiInstrument> idToInstrument =
-			MidiInstrument.buildInstrumentMap();
+	private static final Map<Byte, MidiInstrument> idToInstrument = MidiInstrument
+			.buildInstrumentMap();
 
 	/**
 	 * Returns an array containing each instrument.
 	 * 
 	 * @return an array containing each instrument.
 	 */
-	public final static DropTargetContainer[] createTargets() {
+	@SuppressWarnings("unchecked")
+	public final static DropTargetContainer<JPanel, JPanel, JPanel>[] createTargets() {
 		final Field[] instrumentFields = MidiInstrument.class.getFields();
-		final DropTargetContainer[] instruments =
+		final DropTargetContainer<JPanel, JPanel, JPanel>[] instruments =
 				new DropTargetContainer[instrumentFields.length + 1];
 		try {
 			for (int i = 0; i < instrumentFields.length; i++) {
 				instruments[i] =
-						(DropTargetContainer) instrumentFields[i].get(null);
+						(DropTargetContainer<JPanel, JPanel, JPanel>) instrumentFields[i]
+								.get(null);
 			}
 		} catch (final IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
@@ -198,9 +189,8 @@ public class MidiInstrument implements DropTargetContainer {
 							abcInstrument_1 = MidiInstrument.COWBELL;
 							break;
 						case 10:
-							// TODO re-enable when supported
-//							abcInstrument_1 = MOOR_COWBELL;
-//							break;
+							abcInstrument_1 = MOOR_COWBELL;
+							break;
 						default:
 							abcInstrument_1 = null;
 					}
@@ -215,14 +205,12 @@ public class MidiInstrument implements DropTargetContainer {
 			io.endProgress();
 		}
 		if (newMap.size() != 128) {
-			io.printError("the given map has not exact 128 instruments to map",
-					false);
+			io.printError("the given map has not exact 128 instruments to map", false);
 		} else {
 			MidiInstrument.idToInstrument.clear();
 			MidiInstrument.idToInstrument.putAll(newMap);
 		}
-		System.out.println("replaced default map by "
-				+ MidiInstrument.idToInstrument);
+		System.out.println("replaced default map by " + MidiInstrument.idToInstrument);
 	}
 
 	private final static Map<Byte, MidiInstrument> buildInstrumentMap() {
@@ -537,10 +525,9 @@ public class MidiInstrument implements DropTargetContainer {
 
 	/** */
 	@Override
-	public final MidiInstrumentDropTarget createNewTarget(final JPanel panel) {
+	public final MidiInstrumentDropTarget createNewTarget() {
 		final MidiInstrumentDropTarget t =
-				new MidiInstrumentDropTarget(this, ++MidiInstrument.counter,
-						panel);
+				new MidiInstrumentDropTarget(this, ++MidiInstrument.counter);
 		parts.add(t);
 		return t;
 	}
@@ -553,18 +540,18 @@ public class MidiInstrument implements DropTargetContainer {
 
 	/** */
 	@Override
-	public final Iterator<DropTarget> iterator() {
+	public final Iterator<DropTarget<JPanel, JPanel, JPanel>> iterator() {
 		return parts.iterator();
 	}
 
 	/** */
 	@Override
-	public final Set<DropTarget> removeAllLinks(final DragObject object) {
-		final Set<DropTarget> empty = new HashSet<>();
-		for (final DropTarget m : parts) {
+	public final Set<DropTarget<JPanel, JPanel, JPanel>> removeAllLinks(
+			final DragObject<JPanel, JPanel, JPanel> object) {
+		final Set<DropTarget<JPanel, JPanel, JPanel>> empty = new HashSet<>();
+		for (final DropTarget<JPanel, JPanel, JPanel> m : parts) {
 			((MidiInstrumentDropTarget) m).clearTargets(object, empty);
 		}
-		object.clearTargets();
 		parts.removeAll(empty);
 		return empty;
 	}
@@ -575,40 +562,35 @@ public class MidiInstrument implements DropTargetContainer {
 		return name;
 	}
 
+	/** */
+	@Override
+	public JPanel getDisplayableComponent() {
+		return panel;
+	}
+
 }
 
-class EmptyMidiInstrumentDropTarget implements DropTarget {
-	final Set<DragObject> objects = new HashSet<>();
-	private final DropTargetContainer container;
+class EmptyMidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel> {
+	final Set<DragObject<JPanel, JPanel, JPanel>> objects = new HashSet<>();
+	private final DropTargetContainer<JPanel, JPanel, JPanel> container;
 
-	EmptyMidiInstrumentDropTarget(final DropTargetContainer container) {
+	EmptyMidiInstrumentDropTarget(
+			final DropTargetContainer<JPanel, JPanel, JPanel> container) {
 		this.container = container;
 	}
 
 	@Override
-	public final int compareTo(final DropTarget o) {
-		throw new UnsupportedOperationException();
-	}
-
-	/** */
-	@Override
-	public final void displayParam(final String key, final JPanel panel,
-			final DndPluginCaller caller) {
+	public final int compareTo(final DropTarget<?, ?, ?> o) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final DropTargetContainer getContainer() {
+	public final DropTargetContainer<JPanel, JPanel, JPanel> getContainer() {
 		return container;
 	}
 
 	@Override
 	public final String getName() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public final JPanel getPanel() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -623,12 +605,12 @@ class EmptyMidiInstrumentDropTarget implements DropTarget {
 	}
 
 	@Override
-	public final Iterator<DragObject> iterator() {
+	public final Iterator<DragObject<JPanel, JPanel, JPanel>> iterator() {
 		return objects.iterator();
 	}
 
 	@Override
-	public final void link(final DragObject o) {
+	public final void link(final DragObject<JPanel, JPanel, JPanel> o) {
 		objects.add(o);
 	}
 
@@ -641,23 +623,36 @@ class EmptyMidiInstrumentDropTarget implements DropTarget {
 	public final void setParam(final String key, final Integer value) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public final void displayParam(final String key, final JPanel container,
+			final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public final JPanel getDisplayableComponent() {
+		throw new UnsupportedOperationException();
+	}
 }
 
-class EmptyMidiInstrumentDropTargetContainer implements DropTargetContainer {
+class EmptyMidiInstrumentDropTargetContainer implements
+		DropTargetContainer<JPanel, JPanel, JPanel> {
 
 	private final EmptyMidiInstrumentDropTarget target =
 			new EmptyMidiInstrumentDropTarget(this);
+	private final JPanel panel = new JPanel();
 
 	@Override
 	public final void clearTargets() {
-		for (final DragObject d : target.objects) {
+		for (final DragObject<JPanel, JPanel, JPanel> d : target.objects) {
 			d.clearTargets();
 		}
 		target.objects.clear();
 	}
 
 	@Override
-	public final DropTarget createNewTarget(final JPanel panel) {
+	public final DropTarget<JPanel, JPanel, JPanel> createNewTarget() {
 		return target;
 	}
 
@@ -667,11 +662,11 @@ class EmptyMidiInstrumentDropTargetContainer implements DropTargetContainer {
 	}
 
 	@Override
-	public final Iterator<DropTarget> iterator() {
+	public final Iterator<DropTarget<JPanel, JPanel, JPanel>> iterator() {
 		if (target.objects.isEmpty()) {
 			return java.util.Collections.emptyIterator();
 		}
-		return new Iterator<DropTarget>() {
+		return new Iterator<DropTarget<JPanel, JPanel, JPanel>>() {
 
 			boolean hasNext = true;
 
@@ -681,7 +676,7 @@ class EmptyMidiInstrumentDropTargetContainer implements DropTargetContainer {
 			}
 
 			@Override
-			public final DropTarget next() {
+			public final DropTarget<JPanel, JPanel, JPanel> next() {
 				hasNext = false;
 				return target;
 			}
@@ -695,189 +690,20 @@ class EmptyMidiInstrumentDropTargetContainer implements DropTargetContainer {
 	}
 
 	@Override
-	public Set<DropTarget> removeAllLinks(final DragObject object) {
+	public Set<DropTarget<JPanel, JPanel, JPanel>> removeAllLinks(
+			final DragObject<JPanel, JPanel, JPanel> object) {
 		target.objects.remove(object);
 		if (target.objects.isEmpty()) {
-			final Set<DropTarget> s = new HashSet<>();
+			final Set<DropTarget<JPanel, JPanel, JPanel>> s = new HashSet<>();
 			s.add(target);
 			return s;
 		}
 		return java.util.Collections.emptySet();
 	}
 
-}
-
-class MidiInstrumentDropTarget implements DropTarget {
-
-	private final MidiInstrument midiInstrument;
-	private final Set<DragObject> objects = new HashSet<>();
-	private final JPanel panel;
-	private final int number;
-	private final Map<String, Integer> params = new HashMap<>();
-
-	MidiInstrumentDropTarget(final MidiInstrument midiInstrument, int id,
-			final JPanel panel) {
-		this.midiInstrument = midiInstrument;
-		number = id;
-		if (panel == null) {
-			this.panel = new JPanel();
-		} else {
-			this.panel = panel;
-		}
-	}
-
 	@Override
-	public final int compareTo(final DropTarget o) {
-		if (!MidiInstrumentDropTarget.class.isInstance(o)) {
-			return this.getClass().hashCode() - o.getClass().hashCode();
-		}
-		return compareTo((MidiInstrumentDropTarget) o);
-	}
-
-	public final int compareTo(final MidiInstrumentDropTarget o) {
-		if (midiInstrument != o.midiInstrument) {
-			return midiInstrument.id - o.midiInstrument.id;
-		}
-		return number - o.number;
-	}
-
-	/** */
-	@Override
-	public final void displayParam(final String key, final JPanel panel,
-			final DndPluginCaller caller) {
-		panel.setLayout(new BorderLayout());
-		if (key.equals("map")) {
-			final Set<Integer> maps = ((AbcCreator) caller).getMaps();
-			final Integer map = params.get(key);
-			final int mapId;
-			if (map == null) {
-				mapId = 0xffffffff;
-			} else {
-				mapId = map.intValue();
-			}
-			panel.setLayout(new GridLayout(0, 2));
-			class SharedObject {
-				JPanel panel;
-			}
-			final SharedObject shared = new SharedObject();
-			for (final int i : maps) {
-				final JPanel mapPanel = new JPanel();
-				if (i == mapId) {
-					mapPanel.setBackground(Color.LIGHT_GRAY);
-					shared.panel = mapPanel;
-				} else {
-					mapPanel.setBackground(Color.WHITE);
-				}
-				mapPanel.addMouseListener(new MouseListener() {
-
-					@Override
-					public void mouseClicked(final MouseEvent e) {
-						e.consume();
-					}
-
-					@Override
-					public final void mouseEntered(final MouseEvent e) {
-						mapPanel.setBackground(Color.BLUE);
-					}
-
-					@Override
-					public void mouseExited(MouseEvent e) {
-						final Integer map = params.get(key);
-						final int mapId;
-						if (map == null) {
-							mapId = 0;
-						} else {
-							mapId = map.intValue();
-						}
-						mapPanel.setBackground(i == mapId ? Color.LIGHT_GRAY
-								: Color.WHITE);
-
-					}
-
-					@Override
-					public final void mousePressed(final MouseEvent e) {
-						e.consume();
-					}
-
-					@Override
-					public final void mouseReleased(final MouseEvent e) {
-						params.put(key, i);
-						if (shared.panel != null) {
-							shared.panel.setBackground(Color.WHITE);
-						}
-						shared.panel = mapPanel;
-					}
-				});
-				mapPanel.add(new JLabel("Map " + i));
-				panel.add(mapPanel);
-			}
-		} else {
-			panel.add(new JLabel("TODO param"));
-		}
-
-	}
-
-	@Override
-	public final DropTargetContainer getContainer() {
-		return midiInstrument;
-	}
-
-	@Override
-	public final String getName() {
-		return midiInstrument.getName();
-	}
-
-	@Override
-	public final JPanel getPanel() {
+	public final JPanel getDisplayableComponent() {
 		return panel;
 	}
 
-	@Override
-	public final Map<String, Integer> getParams() {
-		return params;
-	}
-
-	@Override
-	public final Set<String> getParamsToSet() {
-		return midiInstrument.paramKeys;
-	}
-
-	public final int hashcode() {
-		return number + midiInstrument.id << 4;
-	}
-
-	@Override
-	public final Iterator<DragObject> iterator() {
-		return objects.iterator();
-	}
-
-	@Override
-	public final void link(final DragObject o) {
-		objects.add(o);
-	}
-
-	@Override
-	public final String printParam(final Entry<String, Integer> param) {
-		if (param.getKey().equals("map")) {
-			return String.valueOf(param.getValue());
-		}
-		return null;
-	}
-
-	@Override
-	public final void setParam(final String key, final Integer value) {
-		params.put(key, value);
-	}
-
-	@Override
-	public final String toString() {
-		return midiInstrument.getName() + " " + number;
-	}
-
-	protected final void clearTargets(final DragObject object,
-			final Set<DropTarget> empty) {
-		if (objects.remove(object) && objects.isEmpty()) {
-			empty.add(this);
-		}
-	}
 }

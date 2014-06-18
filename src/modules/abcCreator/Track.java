@@ -1,26 +1,31 @@
 package modules.abcCreator;
 
+import java.awt.BorderLayout;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.JPanel;
+
 
 /**
  * @author Nelphindal
  */
-class Track implements DragObject, Comparable<Track> {
+class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 
 	private final int idBrute;
 	private final String name;
 
-	private final Map<DropTarget, Short> volumeMap = new HashMap<>();
-	private final Set<DropTarget> targets = new HashSet<>();
-	private final Map<String, String> params = new HashMap<>();
+	private final Set<DropTarget<JPanel, JPanel, JPanel>> targets = new HashSet<>();
+	private final Map<DndPluginCallerParams, Integer> params = new HashMap<>();
 	private final Set<Track> aliases;
 	private final Track original;
+	private final JPanel panel = new JPanel();
 
-	private DropTargetContainer c;
+	private DropTargetContainer<JPanel, JPanel, JPanel> c;
+	private DoubleMap<BruteParams, DropTarget<JPanel, JPanel, JPanel>, Object> paramMap
+	= new DoubleMap<>();
 
 	/**
 	 * Creates a new track
@@ -41,6 +46,8 @@ class Track implements DragObject, Comparable<Track> {
 		}
 		aliases = new HashSet<>();
 		original = null;
+
+		panel.setLayout(new BorderLayout());
 	}
 
 	private Track(final Track track) {
@@ -49,11 +56,12 @@ class Track implements DragObject, Comparable<Track> {
 		aliases = null;
 		original = track;
 		track.aliases.add(this);
+		panel.setLayout(new BorderLayout());
 	}
 
 	/** */
 	@Override
-	public final void addTarget(final DropTarget target) {
+	public final void addTarget(final DropTarget<JPanel, JPanel, JPanel> target) {
 		if (c != target.getContainer()) {
 			c = target.getContainer();
 		}
@@ -62,10 +70,10 @@ class Track implements DragObject, Comparable<Track> {
 
 	/** */
 	@Override
-	public final DropTarget[] clearTargets() {
-		final DropTarget[] t = getTargets();
+	public DropTarget<JPanel, JPanel, JPanel>[] clearTargets() {
+		final DropTarget<JPanel, JPanel, JPanel>[] t = getTargets();
 		targets.clear();
-		volumeMap.clear();
+		paramMap.clear();
 		return t;
 	}
 
@@ -96,7 +104,7 @@ class Track implements DragObject, Comparable<Track> {
 
 	/**  */
 	@Override
-	public final DragObject[] getAliases() {
+	public final DragObject<JPanel, JPanel, JPanel>[] getAliases() {
 		if (original != null) {
 			return original.getAliases();
 		}
@@ -120,37 +128,35 @@ class Track implements DragObject, Comparable<Track> {
 
 	/** */
 	@Override
-	public final DragObject getOriginal() {
+	public final DragObject<JPanel, JPanel, JPanel> getOriginal() {
 		return original;
 	}
 
 	/** */
 	@Override
-	public final String getParam(final String key) {
-		return params.get(key);
+	public final int getParam(final DndPluginCallerParams param) {
+		return params.get(param);
 	}
 
 	@Override
-	public final String getParam(final String key, final DropTarget target) {
-		if (key.equals("volume")) {
-			final Short v = volumeMap.get(target);
-			if (v == null) {
-				return "0";
-			}
-			return v.toString();
-		}
-		return null;
+	public final Object getParam(final DndPluginCallerParams param,
+			final DropTarget<JPanel, JPanel, JPanel> target) {
+		final Object value = paramMap.get((BruteParams) param, target);
+		if (value == null)
+			return param.defaultValue();
+		return value;
 	}
 
 	/** */
 	@Override
-	public final DropTargetContainer getTargetContainer() {
+	public final DropTargetContainer<JPanel, JPanel, JPanel> getTargetContainer() {
 		return c;
 	}
 
 	/** */
+	@SuppressWarnings("unchecked")
 	@Override
-	public final DropTarget[] getTargets() {
+	public final DropTarget<JPanel, JPanel, JPanel>[] getTargets() {
 		return targets.toArray(new DropTarget[targets.size()]);
 	}
 
@@ -158,16 +164,6 @@ class Track implements DragObject, Comparable<Track> {
 	@Override
 	public final boolean isAlias() {
 		return aliases == null;
-	}
-
-	/** */
-	@Override
-	public final void setParam(final String key, final String value) {
-		params.put(key, value);
-	}
-
-	public final void setVolume(final DropTarget target, int value) {
-		volumeMap.put(target, Short.valueOf((short) value));
 	}
 
 	/**
@@ -178,4 +174,27 @@ class Track implements DragObject, Comparable<Track> {
 	public final String toString() {
 		return idBrute + " " + name + " " + targets;
 	}
+
+	@Override
+	public final JPanel getDisplayableComponent() {
+		return panel;
+	}
+
+	public final static BruteParams[] getParams() {
+		return BruteParams.valuesLocal();
+	}
+
+
+	@Override
+	public final void setParam(final DndPluginCallerParams param,
+			final DropTarget<JPanel, JPanel, JPanel> target, int value) {
+		paramMap.put((BruteParams) param, target, value);
+	}
+
+	@Override
+	public final void setParam(final DndPluginCallerParams param, int value) {
+		params.put(param, value);
+	}
+
+	
 }

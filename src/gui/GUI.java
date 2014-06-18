@@ -437,6 +437,7 @@ public class GUI implements GUIInterface {
 		return pressed;
 	}
 
+	/** */
 	@Override
 	public final Component getProgressBar() {
 		return bar;
@@ -641,6 +642,14 @@ public class GUI implements GUIInterface {
 		}
 	}
 
+	final Dimension getFrameSize() {
+		return mainFrame.getSize();
+	}
+	
+	final void setFrameSize(final Dimension d) {
+		mainFrame.setSize(d);
+	}
+	
 	final void revalidate(boolean pack, boolean toFront) {
 		if (master.isInterrupted()) {
 			return;

@@ -1,16 +1,20 @@
 package modules.fileEditor;
 
-import gui.GUIPlugin;
-
-import javax.swing.JPanel;
-
 import util.Path;
 import modules.FileEditor;
-import modules.songData.SongDataContainer;
 
 
+/**
+ * GUIPlugin to change the title of one or more songs
+ * 
+ * @author Nelphindal
+ */
 public final class ChangeTitleGUI extends FileEditorPlugin {
 
+	/**
+	 * @param fileEditor
+	 * @param root
+	 */
 	public ChangeTitleGUI(final FileEditor fileEditor, final Path root) {
 		super(fileEditor, root);
 	}

@@ -1,28 +1,34 @@
 package modules.abcCreator;
 
+import java.awt.Container;
+
+
 /**
  * @author Nelphindal
+ * @param <C>
+ * @param <D>
+ * @param <T>
  */
-public interface DragObject {
+public interface DragObject<C extends Container, D extends Container, T extends Container> {
 
 	/**
 	 * adds a new association with given target
 	 * 
 	 * @param target
 	 */
-	void addTarget(final DropTarget target);
+	void addTarget(final DropTarget<C, D, T> target);
 
 	/**
 	 * deletes all associations with this object to any target
 	 * 
 	 * @return the former targets
 	 */
-	DropTarget[] clearTargets();
+	DropTarget<C, D, T>[] clearTargets();
 
 	/**
 	 * @return a copy of this object
 	 */
-	DragObject clone();
+	DragObject<C, D, T> clone();
 
 	/**
 	 * Forgets about this to be an alias
@@ -32,7 +38,7 @@ public interface DragObject {
 	/**
 	 * @return an array containing all aliases
 	 */
-	DragObject[] getAliases();
+	DragObject<C, D, T>[] getAliases();
 
 	/**
 	 * @return an unique id, used to sort instances of DragObject
@@ -49,30 +55,30 @@ public interface DragObject {
 	/**
 	 * @return the original object
 	 */
-	DragObject getOriginal();
+	DragObject<C, D, T> getOriginal();
 
 	/**
-	 * @param key
-	 * @return the value to given key set by {@link #setParam(String, String)}
+	 * @param param
+	 * @return the value to given key set by {@link #setParam(DndPluginCallerParams, int)}
 	 */
-	String getParam(String key);
+	int getParam(DndPluginCallerParams param);
 
 	/**
-	 * @param key
+	 * @param param
 	 * @param target
-	 * @return the value to given key linked to given target
+	 * @return the value to given param linked to given target
 	 */
-	String getParam(String key, DropTarget target);
+	Object getParam(DndPluginCallerParams param, DropTarget<C, D, T> target);
 
 	/**
 	 * @return the container
 	 */
-	DropTargetContainer getTargetContainer();
+	DropTargetContainer<C, D, T> getTargetContainer();
 
 	/**
 	 * @return all targets associated with this object
 	 */
-	DropTarget[] getTargets();
+	DropTarget<C, D, T>[] getTargets();
 
 	/**
 	 * @return true if this instance was created by #createAlias()
@@ -80,11 +86,26 @@ public interface DragObject {
 	boolean isAlias();
 
 	/**
-	 * Adds a new option described by given key-value-pair
+	 * Adds a new option described by given param and sets the value
 	 * 
+	 * @param param
+	 * @param value
+	 */
+	void setParam(DndPluginCallerParams param, int value);
+
+	/**
+	 * Adds a new option described by given pair of param and target
+	 * 
+	 * @param param
+	 * @param target
 	 * @param key
 	 * @param value
 	 */
-	void setParam(String key, String value);
+	void setParam(DndPluginCallerParams param, DropTarget<C, D, T> target, int value);
+
+	/**
+	 * @return the Component to display <i>this</i> DropTarget
+	 */
+	C getDisplayableComponent();
 
 }

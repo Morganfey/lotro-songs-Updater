@@ -903,6 +903,13 @@ public abstract class MidiParser {
 	public final Set<Integer> tracks() {
 		return eventsEncoded.keySet();
 	}
+	
+	/**
+	 * @return the map mapping ids of midi-tracks to subsequent numbers
+	 */
+	public final Map<Integer, Integer> renumberMap() {
+		return new HashMap<>(renumberMap);
+	}
 
 	private final void parseIfNeeded() throws FileNotFoundException {
 		if (lastParsedMidi != midi) {

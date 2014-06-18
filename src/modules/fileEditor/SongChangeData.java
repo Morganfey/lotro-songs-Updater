@@ -10,6 +10,10 @@ import util.Path;
 import modules.songData.SongData;
 
 
+/**
+ * Container holding all extracted and edited data of a song
+ * @author Nelphindal
+ */
 public class SongChangeData {
 
 	private final Map<Integer, String> titles = new HashMap<>();
@@ -23,6 +27,7 @@ public class SongChangeData {
 	private final String[] date;
 	private final Path file;
 
+	@SuppressWarnings("unused")
 	private boolean dirty;
 
 	enum Instrument {
@@ -60,6 +65,9 @@ public class SongChangeData {
 
 	}
 
+	/**
+	 * @param voices
+	 */
 	public SongChangeData(final SongData voices) {
 		date = util.Time.date(voices.getLastModification()).split(" ");
 		file = voices.getPath();
@@ -132,8 +140,8 @@ public class SongChangeData {
 				}
 			}
 		}
-		for (final String monthE : util.Time.getMonthNames()) {
-
+		for (@SuppressWarnings("unused") final String monthE : util.Time.getMonthNames()) {
+			 // TODO
 		}
 		return title;
 	}
@@ -181,6 +189,7 @@ public class SongChangeData {
 				return durationNew;
 			}
 		} else {
+			@SuppressWarnings("unused")
 			int colIdx = title.indexOf(":");
 
 			// TODO alternative duration search
@@ -232,13 +241,16 @@ public class SongChangeData {
 		return title;
 	}
 
-
+	/**
+	 * @return the title of the song
+	 */
 	public final String getTitle() {
 		final Set<String> set = new HashSet<String>(titles.values());
 		if (set.isEmpty()) {
 			System.out.println("missing title");
 			return file.getFileName().replaceFirst("\\.abc", "");
-		} if (set.size() == 1) {
+		}
+		if (set.size() == 1) {
 			return set.iterator().next();
 		}
 		System.out.println("no global title");
@@ -252,6 +264,10 @@ public class SongChangeData {
 		return ret.trim();
 	}
 
+	/**
+	 * Sets the title of the song
+	 * @param string
+	 */
 	public final void setTitle(final String string) {
 		for (final Integer i : indices.keySet()) {
 			if (!titles.put(i, string).equals(string))
@@ -259,11 +275,15 @@ public class SongChangeData {
 		}
 	}
 
+	/**
+	 * Tries to apply the global name schme to the song
+	 */
 	public final void uniform() {
 		final Set<String> set = new HashSet<String>(duration.values());
+		@SuppressWarnings("unused")
 		final String duration;
 		if (set.isEmpty()) {
-
+			// TODO calculate duration
 		} else if (set.size() == 1) {
 			duration = set.iterator().next();
 		}

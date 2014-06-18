@@ -29,6 +29,7 @@ public final class EditorPlugin extends GUIPlugin {
 		this.title = title;
 	}
 
+	/** */
 	@Override
 	protected final boolean display(final JPanel panel) {
 		final JPanel panelButton = new JPanel();

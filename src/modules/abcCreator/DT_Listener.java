@@ -1,24 +1,21 @@
 package modules.abcCreator;
 
+import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.swing.JPanel;
 
-import modules.abcCreator.DragAndDropPlugin.State;
+final class DT_Listener<C extends Container, D extends Container, P extends Container, T extends Container>
+		extends DNDListener<C, D, T> {
 
+	private final DropTarget<C, D, T> target;
 
-final class DT_Listener extends DNDListener {
-
-	private final JPanel panel;
-	private final DropTarget target;
-
-	DT_Listener(final JPanel panel, final DropTarget target, final State state) {
+	DT_Listener(final DropTarget<C, D, T> target,
+			final DragAndDropPlugin<C, D, T>.State state) {
 		super(state);
-		this.panel = panel;
 		this.target = target;
-		panel.setBackground(DNDListener.C_INACTIVE_TARGET);
+		target.getDisplayableComponent().setBackground(DNDListener.C_INACTIVE_TARGET);
 	}
 
 	@Override
@@ -36,29 +33,28 @@ final class DT_Listener extends DNDListener {
 	}
 
 	private final void mark(boolean active) {
-		final Set<DragObject> objects = new HashSet<>();
-		for (final DragObject o : target) {
+		final Set<DragObject<?, ?, ?>> objects = new HashSet<>();
+		for (final DragObject<?, ?, ?> o : target) {
 			objects.add(o);
-			state.objectToPanel.get(o).setBackground(
+			o.getDisplayableComponent().setBackground(
 					active ? DNDListener.C_SELECTED0 : DNDListener.C_INACTIVE);
 		}
-		state.targetContainerToPanel.get(target.getContainer()).setBackground(
-				active ? DNDListener.C_SELECTED0
-						: DNDListener.C_INACTIVE_TARGET);
-		panel.setBackground(active ? DNDListener.C_ACTIVE
-				: DNDListener.C_INACTIVE_TARGET);
-		for (final DropTarget t : target.getContainer()) {
+		target.getContainer()
+				.getDisplayableComponent()
+				.setBackground(
+						active ? DNDListener.C_SELECTED0 : DNDListener.C_INACTIVE_TARGET);
+		target.getDisplayableComponent().setBackground(
+				active ? DNDListener.C_ACTIVE : DNDListener.C_INACTIVE_TARGET);
+		for (final DropTarget<?, ?, ?> t : target.getContainer()) {
 			if (t == target) {
 				continue;
 			}
-			state.targetToPanel.get(t).setBackground(
-					active ? DNDListener.C_SELECTED1
-							: DNDListener.C_INACTIVE_TARGET);
-			for (final DragObject o : t) {
+			t.getDisplayableComponent().setBackground(
+					active ? DNDListener.C_SELECTED1 : DNDListener.C_INACTIVE_TARGET);
+			for (final DragObject<?, ?, ?> o : t) {
 				if (!objects.contains(o)) {
-					state.objectToPanel.get(o).setBackground(
-							active ? DNDListener.C_SELECTED1
-									: DNDListener.C_INACTIVE);
+					o.getDisplayableComponent().setBackground(
+							active ? DNDListener.C_SELECTED1 : DNDListener.C_INACTIVE);
 				}
 			}
 		}

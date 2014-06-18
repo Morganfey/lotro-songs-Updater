@@ -1,14 +1,17 @@
 package modules.abcCreator;
 
+import java.awt.Container;
 import java.util.Set;
-
-import javax.swing.JPanel;
 
 
 /**
  * @author Nelphindal
+ * @param <C>
+ * @param <D>
+ * @param <T>
  */
-public interface DropTargetContainer extends Iterable<DropTarget> {
+public interface DropTargetContainer<C extends Container, D extends Container, T extends Container>
+		extends Iterable<DropTarget<C, D, T>> {
 
 	/**
 	 * Unlinks every DropTarget with its DragObjects and deletes all DropTargets
@@ -19,11 +22,11 @@ public interface DropTargetContainer extends Iterable<DropTarget> {
 	/**
 	 * Creates a new DropTarget and initializes it,
 	 * 
-	 * @param panel
-	 *            the panel to be used to display created DropTarget
+	 * @param comp
+	 *            the component to be used to display created DropTarget
 	 * @return the created DropTarget
 	 */
-	DropTarget createNewTarget(final JPanel panel);
+	DropTarget<C, D, T> createNewTarget();
 
 	/**
 	 * Returns a name usable for a GUI
@@ -39,5 +42,10 @@ public interface DropTargetContainer extends Iterable<DropTarget> {
 	 * @param object
 	 * @return A Set of formerly linked DropTargets
 	 */
-	Set<DropTarget> removeAllLinks(final DragObject object);
+	Set<DropTarget<C, D, T>> removeAllLinks(final DragObject<C, D, T> object);
+
+	/**
+	 * @return the Component to display <i>this</i> DropTarget
+	 */
+	T getDisplayableComponent();
 }

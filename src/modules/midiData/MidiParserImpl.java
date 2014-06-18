@@ -254,7 +254,7 @@ final class MidiParserImpl extends MidiParser {
 										}
 									}
 									eventsDecoded.addNote(
-											renumberMap.get(track),
+											renumberMap.get(track) - 1,
 											noteOn.getKey(), start, end,
 											noteOn.getVelocity());
 									break;
@@ -283,7 +283,7 @@ final class MidiParserImpl extends MidiParser {
 		} finally {
 			io.close(in);
 		}
-		nextN = -1;
+		nextN = 0;
 		eventCount = 0;
 		midiHeaderBuffer.rewind();
 		if (midiHeaderBuffer.getInt() != MidiParser.MIDI_HEADER_INT) {

@@ -237,7 +237,7 @@ public class MidiMap {
 	public final void init(final JPanel mainPanel) {
 //		System.out.println(parser.getDuration());
 		d.width = (int) ((parser.getDuration() + 1.0 / 60.0) * scale);
-		d.height = (parser.tracks().size() - 1) * (NOTE_RANGE + 9);
+		d.height = parser.tracks().size() * (NOTE_RANGE + 9);
 		mainPanel.setMaximumSize(d);
 		mainPanel.setMinimumSize(d);
 		mainPanel.setPreferredSize(d);

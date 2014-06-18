@@ -1,24 +1,19 @@
 package modules.abcCreator;
 
+import java.awt.Container;
 import java.awt.event.MouseEvent;
 
-import javax.swing.JPanel;
 
-import modules.abcCreator.DragAndDropPlugin.State;
+final class TC_Listener<C extends Container, D extends Container, P extends Container, T extends Container>
+		extends DNDListener<C, D, T> {
 
+	private final DropTargetContainer<C, D, T> targetC;
 
-final class TC_Listener extends DNDListener {
-
-	private final JPanel panel;
-
-	private final DropTargetContainer targetC;
-
-	public TC_Listener(final DropTargetContainer targetC, final JPanel panel,
-			final State state) {
+	public TC_Listener(final DropTargetContainer<C, D, T> targetC,
+			final DragAndDropPlugin<C, D, T>.State state) {
 		super(state);
-		this.panel = panel;
 		this.targetC = targetC;
-		panel.setBackground(DNDListener.C_INACTIVE_TARGET);
+		targetC.getDisplayableComponent().setBackground(DNDListener.C_INACTIVE_TARGET);
 	}
 
 	@Override
@@ -37,20 +32,20 @@ final class TC_Listener extends DNDListener {
 
 	private final void mark(boolean active) {
 		if (active && state.dragging != null) {
-			panel.setBackground(active ? DNDListener.C_DROP
+			targetC.getDisplayableComponent().setBackground(active ? DNDListener.C_DROP
 					: DNDListener.C_INACTIVE_TARGET);
 		} else {
-			panel.setBackground(active ? DNDListener.C_ACTIVE
+			targetC.getDisplayableComponent().setBackground(active ? DNDListener.C_ACTIVE
 					: DNDListener.C_INACTIVE_TARGET);
 			if (state.dragging == null) {
-				for (final DropTarget t : targetC) {
+				for (final DropTarget<C, D, T> t : targetC) {
 					if (t != state.emptyTarget) {
-						state.targetToPanel.get(t).setBackground(
+						t.getDisplayableComponent().setBackground(
 								active ? DNDListener.C_SELECTED0
 										: DNDListener.C_INACTIVE_TARGET);
 					}
-					for (final DragObject d : t) {
-						state.objectToPanel.get(d).setBackground(
+					for (final DragObject<C, D, T> d : t) {
+						d.getDisplayableComponent().setBackground(
 								active ? DNDListener.C_SELECTED0
 										: DNDListener.C_INACTIVE);
 					}

@@ -26,7 +26,7 @@ import modules.fileEditor.ChangeTitleGUI;
 import modules.fileEditor.EditorPlugin;
 import modules.fileEditor.FileEditorPlugin;
 import modules.fileEditor.SongChangeData;
-import modules.fileEditor.UniformTitlesGUI;
+import modules.fileEditor.UniformSongsGUI;
 import modules.songData.SongDataContainer;
 
 import org.eclipse.jgit.api.Git;
@@ -114,6 +114,9 @@ public class FileEditor implements Module {
 	private final SongDataContainer container;
 	private final Map<Path, SongChangeData> changes = new HashMap<>();
 
+	/**
+	 * 
+	 */
 	public FileEditor() {
 		this.io = null;
 		master = null;
@@ -240,7 +243,8 @@ public class FileEditor implements Module {
 		}
 		if (UNIFORM_SONGS.getValue()) {
 			container.fill();
-			final FileEditorPlugin plugin = new UniformTitlesGUI(this, container.getRoot());
+			final FileEditorPlugin plugin =
+					new UniformSongsGUI(this, container.getRoot());
 			io.handleGUIPlugin(plugin);
 			uniformSongs(plugin.getSelection());
 		}
@@ -271,8 +275,9 @@ public class FileEditor implements Module {
 	}
 
 	private final void changeNumbering(final Set<Path> selection) {
+		@SuppressWarnings("unused")
 		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
-
+		// TODO
 
 	}
 
@@ -280,7 +285,9 @@ public class FileEditor implements Module {
 		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
 		for (final Path file : selectionFiles) {
 			final SongChangeData scd = get(file);
-			final EditorPlugin plugin = new EditorPlugin(scd.getTitle(), "Chance title of " + file.relativize(container.getRoot()));
+			final EditorPlugin plugin =
+					new EditorPlugin(scd.getTitle(), "Chance title of "
+							+ file.relativize(container.getRoot()));
 			io.handleGUIPlugin(plugin);
 			scd.setTitle(plugin.get());
 		}
@@ -352,10 +359,18 @@ public class FileEditor implements Module {
 	}
 
 
+	/**
+	 * @param currentDir
+	 * @return directories at given directory
+	 */
 	public final String[] getDirs(final Path currentDir) {
 		return container.getDirs(currentDir);
 	}
 
+	/**
+	 * @param currentDir
+	 * @return files at given directory
+	 */
 	public final String[] getFiles(final Path currentDir) {
 		return container.getSongs(currentDir);
 	}

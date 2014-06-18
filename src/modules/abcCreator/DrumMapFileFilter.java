@@ -29,6 +29,7 @@ public class DrumMapFileFilter extends util.PathOptionFileFilter {
 					Integer.parseInt(mid);
 					return true;
 				} catch (final Exception e) {
+					// TODO manual check for integer
 				}
 			}
 		}
@@ -86,6 +87,7 @@ public class DrumMapFileFilter extends util.PathOptionFileFilter {
 						Integer.parseInt(mid);
 						return true;
 					} catch (final Exception e) {
+						// TODO manual check for integer
 					}
 				}
 				final File dir = f.toPath().resolve(s).toFile();
@@ -103,6 +105,7 @@ public class DrumMapFileFilter extends util.PathOptionFileFilter {
 					Integer.parseInt(mid);
 					return true;
 				} catch (final Exception e) {
+					// TODO manual check for integer
 				}
 			}
 		}

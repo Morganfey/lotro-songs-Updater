@@ -82,6 +82,10 @@ public final class Path implements Comparable<Path> {
 		}
 		if (FileSystem.type == FileSystem.OSType.WINDOWS)
 			sb.setHead(1);
+		else if (FileSystem.type == FileSystem.OSType.UNIX ||FileSystem.type == FileSystem.OSType.LINUX) {
+			path = rootMap.get("/");
+			sb.setHead(1);
+		}
 		while (pos < sb.length()) {
 			switch (sb.charAt(pos)) {
 				case '!':
@@ -94,6 +98,7 @@ public final class Path implements Comparable<Path> {
 							sb.replace(pos, 3, " ");
 							continue;
 					}
+					break;
 				case '/':
 					final String s = sb.toString().substring(0, pos);
 					if (path == null)

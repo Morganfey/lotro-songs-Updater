@@ -2,7 +2,6 @@ package modules.fileEditor;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -21,7 +20,11 @@ import modules.FileEditor;
 import gui.GUIInterface;
 import gui.GUIPlugin;
 
-
+/**
+ * GUIPlugin allowing to select multiple files intended to edit afterwards
+ * @author Nelphindal
+ *
+ */
 public abstract class FileEditorPlugin extends GUIPlugin {
 
 	private final FileEditor fileEditor;
@@ -30,6 +33,10 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 	private final JLabel pathLabel;
 	private final Set<Path> selection;
 
+	/**
+	 * @param fileEditor
+	 * @param root
+	 */
 	protected FileEditorPlugin(final FileEditor fileEditor, final Path root) {
 		this.fileEditor = fileEditor;
 		currentDir = base = root;
@@ -199,6 +206,9 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 		}
 	}
 
+	/**
+	 * @return the selection
+	 */
 	public final Set<Path> getSelection() {
 		return selection;
 	}

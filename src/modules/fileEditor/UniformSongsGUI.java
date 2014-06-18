@@ -1,38 +1,26 @@
 package modules.fileEditor;
 
-import gui.GUIPlugin;
-import io.IOHandler;
-
-import java.util.Set;
-
-import javax.swing.JPanel;
-
-import modules.songData.SongDataContainer;
+import modules.FileEditor;
 import util.Path;
 
+/**
+ * GUIPlugin to apply the global name scheme to one or more songs 
+ * @author Nelphindal
+ *
+ */
+public class UniformSongsGUI extends FileEditorPlugin {
 
-public final class UniformSongsGUI extends GUIPlugin {
-
-	public UniformSongsGUI(final SongDataContainer container, final IOHandler io) {
-		// TODO Auto-generated constructor stub
+	/**
+	 * @param fileEditor
+	 * @param root
+	 */
+	public UniformSongsGUI(final FileEditor fileEditor, final Path root) {
+		super(fileEditor, root);
 	}
 
 	@Override
-	protected final boolean display(final JPanel panel) {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
-	public final Set<Path> getSelection() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	protected String getTitle() {
-		// TODO Auto-generated method stub
-		return null;
+	protected final String getTitle() {
+		return "Select songs to uniform the titles";
 	}
 
 }

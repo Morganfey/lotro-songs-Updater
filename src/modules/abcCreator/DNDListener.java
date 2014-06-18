@@ -1,13 +1,12 @@
 package modules.abcCreator;
 
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import modules.abcCreator.DragAndDropPlugin.State;
 
-
-abstract class DNDListener implements MouseListener {
+abstract class DNDListener<C extends Container, D extends Container, T extends Container> implements MouseListener {
 
 	protected static final Color C_INACTIVE = Color.WHITE;
 	protected static final Color C_ACTIVE = Color.BLUE;
@@ -17,9 +16,9 @@ abstract class DNDListener implements MouseListener {
 	protected static final Color C_SELECTED1 = Color.ORANGE;
 	protected static final Color C_DROP = Color.BLUE;
 
-	protected final State state;
+	protected final DragAndDropPlugin<C, D, T>.State state;
 
-	protected DNDListener(final State state) {
+	protected DNDListener(final DragAndDropPlugin<C, D, T>.State state) {
 		this.state = state;
 	}
 

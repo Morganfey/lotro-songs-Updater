@@ -1,5 +1,6 @@
 package modules.abcCreator;
 
+import java.awt.Container;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -9,25 +10,17 @@ import javax.swing.JPanel;
 
 /**
  * @author Nelphindal
+ * @param <C>
+ * @param <D>
+ * @param <T>
  */
-public interface DropTarget extends Comparable<DropTarget>,
-		Iterable<DragObject> {
-
-	/**
-	 * Initiates to have the parameter displayed specified by given key, using
-	 * the given panel
-	 * 
-	 * @param key
-	 * @param panel
-	 * @param caller
-	 */
-	void displayParam(final String key, final JPanel panel,
-			final DndPluginCaller caller);
+public interface DropTarget<C extends Container, D extends Container, T extends Container>
+		extends Comparable<DropTarget<?, ?, ?>>, Iterable<DragObject<C, D, T>> {
 
 	/**
 	 * @return the instance created this target.
 	 */
-	DropTargetContainer getContainer();
+	DropTargetContainer<C, D, T> getContainer();
 
 	/**
 	 * Returns a name usable for a GUI.
@@ -37,9 +30,9 @@ public interface DropTarget extends Comparable<DropTarget>,
 	String getName();
 
 	/**
-	 * @return the Panel to draw this DropTarget
+	 * @return the Component to display <i>this</i> DropTarget
 	 */
-	JPanel getPanel();
+	D getDisplayableComponent();
 
 	/**
 	 * @return a map of the parameters linked to this DropTarget
@@ -56,7 +49,7 @@ public interface DropTarget extends Comparable<DropTarget>,
 	 * 
 	 * @param o
 	 */
-	void link(final DragObject o);
+	void link(final DragObject<C, D, T> o);
 
 	/**
 	 * @param param
@@ -65,10 +58,16 @@ public interface DropTarget extends Comparable<DropTarget>,
 	String printParam(final Entry<String, Integer> param);
 
 	/**
-	 * Set a parameter with key to be value
+	 * @param key
+	 * @param container
+	 * @param caller
+	 */
+	void displayParam(String key, JPanel container, DndPluginCaller<C, D, T> caller);
+
+	/**
 	 * 
 	 * @param key
 	 * @param value
 	 */
-	void setParam(final String key, final Integer value);
+	void setParam(String key, Integer value);
 }

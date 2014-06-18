@@ -1,5 +1,7 @@
 package gui;
 
+import java.awt.Dimension;
+
 import javax.swing.JPanel;
 
 
@@ -7,9 +9,9 @@ import javax.swing.JPanel;
  * @author Nelphindal
  */
 public abstract class GUIPlugin {
-	
+
 	private GUI gui;
-	
+
 	final boolean display(final JPanel panel, final GUI gui) {
 		this.gui = gui;
 		return display(panel);
@@ -32,13 +34,16 @@ public abstract class GUIPlugin {
 	final void endDisplay() {
 		gui = null;
 	}
-	
+
 	/**
 	 * Requests the gui to repack
 	 */
 	protected void repack() {
-		if (gui != null)
+		if (gui != null) {
+			final Dimension d = gui.getFrameSize();
 			gui.revalidate(true, false);
+			gui.setFrameSize(d);
+		}
 	}
 
 }

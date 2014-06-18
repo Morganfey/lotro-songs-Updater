@@ -2,38 +2,37 @@ package modules.abcCreator;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
+import java.awt.Container;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import modules.AbcCreator;
-import modules.abcCreator.DragAndDropPlugin.State;
 
 
-final class DO_Listener extends DNDListener {
+final class DO_Listener<C extends Container, D extends Container, T extends Container>
+		extends DNDListener<C, D, T> {
 
-	private final JPanel panel;
-	private final Track track;
-	private final AbcCreator abcCreator;
+	private final DragObject<C, D, T> object;
+	private final DndPluginCaller<C, D, T> caller;
+	private final BruteParams[] params;
+	private BruteParams param;
 
-	private JPanel panelVolume;
+	private JPanel panelOption;
+	private static final Font font = Font.decode("Arial bold 9");
 
-	DO_Listener(final Track track, final JPanel panel, final State state,
-			final AbcCreator abcCreator) {
+	DO_Listener(final DragObject<C, D, T> object,
+			final DragAndDropPlugin<C, D, T>.State state, final BruteParams[] params,
+			final DndPluginCaller<C, D, T> caller) {
 		super(state);
-		this.panel = panel;
-		this.track = track;
-		this.abcCreator = abcCreator;
-		panel.setBackground(DNDListener.C_INACTIVE);
+		this.object = object;
+		this.caller = caller;
+		this.params = params;
+		object.getDisplayableComponent().setBackground(DNDListener.C_INACTIVE);
 	}
 
 	@Override
@@ -43,8 +42,8 @@ final class DO_Listener extends DNDListener {
 
 	@Override
 	public final void mouseEntered(final MouseEvent e) {
-		state.object = track;
-		if (panel != state.dragging) {
+		state.object = object;
+		if (object != state.dragging) {
 			mark(true);
 		}
 		e.consume();
@@ -52,7 +51,7 @@ final class DO_Listener extends DNDListener {
 
 	@Override
 	public final void mouseExited(final MouseEvent e) {
-		if (state.dragging == null || state.dragging != panel) {
+		if (state.dragging == null || state.dragging != object) {
 			mark(false);
 		}
 		state.object = null;
@@ -61,16 +60,16 @@ final class DO_Listener extends DNDListener {
 
 	@Override
 	public final void mousePressed(final MouseEvent e) {
-		state.dragging = panel;
 		mark(false);
-		panel.setBackground(DNDListener.C_DRAGGING);
+		state.dragging = object;
+		object.getDisplayableComponent().setBackground(DNDListener.C_DRAGGING);
 		e.consume();
 	}
 
 	@Override
 	public final void mouseReleased(final MouseEvent e) {
-		state.dragging.setBackground(DNDListener.C_INACTIVE);
-		abcCreator.lockMap();
+		state.dragging.getDisplayableComponent().setBackground(DNDListener.C_INACTIVE);
+		state.dragging = null;
 		synchronized (state) {
 			state.upToDate = false;
 			state.label.setText("");
@@ -78,267 +77,223 @@ final class DO_Listener extends DNDListener {
 		if (state.object != null) {
 			mark(true);
 			if (e.getButton() == MouseEvent.BUTTON1) {
-				if (panelVolume == null) {
-					if (track.getTargetContainer() != state.emptyTarget
-							.getContainer()) {
-						panelVolume = new JPanel();
-						panelVolume.setLayout(new GridLayout(0, 1));
-						displayVolume();
-						panel.add(panelVolume, BorderLayout.SOUTH);
-					}
+				if (panelOption == null) {
+					displayParamMenu();
 				} else {
-					panel.remove(panelVolume);
-					panelVolume = null;
+					object.getDisplayableComponent().remove(panelOption);
+					object.getDisplayableComponent().revalidate();
+					panelOption = null;
 				}
-				panel.revalidate();
+				return;
 			} else if (e.getButton() == MouseEvent.BUTTON3) {
-				final Track clone = track.clone();
-				state.plugin.initTrack(clone);
+				final DragObject<C, D, T> clone = object.clone();
+				state.plugin.initObject(clone);
 				clone.addTarget(state.emptyTarget);
 				state.emptyTarget.link(clone);
-				state.objectRootPanel.revalidate();
+				// TODO revalidate
 			}
 		} else if (state.target != null) {
 			if (state.split) {
-				if (track.getTargetContainer() == state.target.getContainer()) {
-					track.addTarget(state.target);
+				if (object.getTargetContainer() == state.target.getContainer()) {
+					object.addTarget(state.target);
 				} else {
-					relinkTarget();
+					wipeTargetsAndLink();
 				}
 			} else {
-				relinkTarget();
+				wipeTargetsAndLink();
 			}
-			state.instrumentToTrack.get(state.target).add(track.getId());
+			// repaint state.targetContainerToPanel.get(state.targetC)
 		} else if (state.targetC != null) {
-			final DropTarget targetNew;
-			final JPanel panel;
 			if (state.emptyTarget.getContainer() == state.targetC) {
-				targetNew = state.emptyTarget;
-				panel = null;
+				state.target = state.emptyTarget;
 			} else {
-				panel = new JPanel();
-				targetNew = state.targetC.createNewTarget(panel);
+				state.target = state.targetC.createNewTarget();
+				state.plugin.initTarget(state.target);
+				state.plugin.addToCenter(state.target);
 			}
 			if (state.split) {
-				if (state.targetC == track.getTargetContainer()) {
-					track.addTarget(targetNew);
+				if (state.targetC == object.getTargetContainer()) {
+					object.addTarget(state.target);
+					state.target.link(object);
 				} else {
-					relinkContainer();
+					wipeTargetsAndLink();
 				}
 			} else {
-				relinkContainer();
+				wipeTargetsAndLink();
 			}
-			if (!(track.isAlias() && targetNew == state.emptyTarget)) {
-				track.addTarget(targetNew);
-				targetNew.link(track);
-			}
-			if (targetNew != state.emptyTarget) {
-				state.instrumentToTrack.put(targetNew, new HashSet<Integer>());
-				state.instrumentToTrack.get(targetNew).add(track.getId());
-				state.targetToPanel.put(targetNew, panel);
-				DragAndDropPlugin.initInstrumentPanel(state, targetNew);
-			}
+			state.target = null;
+
+		} else {
+			return;
 		}
-		if (panelVolume != null) {
-			panelVolume.removeAll();
-			if (track.getTargetContainer() == state.emptyTarget.getContainer()) {
-				panel.remove(panelVolume);
-				panelVolume = null;
-				panel.revalidate();
-			} else {
-				displayVolume();
-				panelVolume.revalidate();
-			}
+		mark(true);
+		if (panelOption != null) {
+			object.getDisplayableComponent().remove(panelOption);
+			panelOption = null;
 		}
-		state.dragging = null;
-		abcCreator.unlockMap();
+		object.getDisplayableComponent().revalidate();
 	}
 
-	private final void displayVolume() {
-		final DropTarget[] targets = track.getTargets();
-		for (int i = 0; i < targets.length;) {
-			final JPanel panel = new JPanel();
-			final JLabel label = new JLabel();
-			final JSlider slider = new JSlider();
-			final DropTarget target = targets[i];
+	private final void displayParamMenu() {
+		if (object.getTargetContainer() != state.emptyTarget.getContainer()) {
+			panelOption = new JPanel();
+			panelOption.setLayout(new GridLayout(0, 2));
+			for (final BruteParams ps : params) {
+				if (ps == null)
+					continue;
+				final JPanel optionPanel = new JPanel();
+				final JLabel label = new JLabel(ps.toString());
+				label.setFont(font);
+				optionPanel.add(label);
+				optionPanel.setBackground(Color.LIGHT_GRAY);
+				optionPanel.addMouseListener(new MouseListener() {
 
-			slider.setMinimum(-127);
-			slider.setMaximum(127);
-			slider.setValue(0);
-			slider.addChangeListener(new ChangeListener() {
-
-				@Override
-				public final void stateChanged(final ChangeEvent e) {
-					synchronized (state) {
-						if (state.upToDate) {
-							state.upToDate = false;
-							state.io.endProgress();
-						}
+					@Override
+					public final void mouseClicked(final MouseEvent e) {
+						e.consume();
 					}
-					final int value = slider.getValue();
-					label.setText(String.format("%s%3d", value == 0 ? " "
-							: value < 0 ? "-" : "+", Math.abs(value)));
-					track.setVolume(target, value);
-				}
-			});
 
-			label.setFont(Font.decode("Arial 9"));
-			label.setPreferredSize(new Dimension(32, 12));
-			label.setText("   0");
+					@Override
+					public final void mousePressed(final MouseEvent e) {
+						e.consume();
+					}
 
-			panel.setLayout(new BorderLayout());
-			panel.add(new JLabel(targets[i].getName() + ++i),
-					BorderLayout.NORTH);
-			panel.add(label, BorderLayout.EAST);
-			panel.add(slider);
-			panelVolume.add(panel);
+					@Override
+					public final void mouseReleased(final MouseEvent e) {
+						param = ps;
+						e.consume();
+						displayParam();
+					}
+
+					@Override
+					public final void mouseEntered(final MouseEvent e) {
+						optionPanel.setBackground(Color.GREEN);
+						e.consume();
+					}
+
+					@Override
+					public final void mouseExited(final MouseEvent e) {
+						optionPanel.setBackground(Color.LIGHT_GRAY);
+						e.consume();
+					}
+				});
+				panelOption.add(optionPanel);
+			}
+			object.getDisplayableComponent().add(panelOption, BorderLayout.SOUTH);
+			state.plugin.repack();
 		}
+
+	}
+
+	private final void displayParam() {
+		panelOption.removeAll();
+		final DropTarget<C, D, T>[] targets = object.getTargets();
+		param.display(panelOption, object, targets);
+		panelOption.revalidate();
 	}
 
 	private final void mark(boolean active) {
 		if (!active || state.dragging == null) {
-			final Set<DropTarget> targets = new HashSet<>();
+			final Set<DropTarget<?, ?, ?>> targets = new HashSet<>();
 			final Color ct0 =
-					active ? DNDListener.C_SELECTED0
-							: DNDListener.C_INACTIVE_TARGET;
+					active ? DNDListener.C_SELECTED0 : DNDListener.C_INACTIVE_TARGET;
 			final Color ct1 =
-					active ? DNDListener.C_SELECTED1
-							: DNDListener.C_INACTIVE_TARGET;
-			final Color ct2 =
-					active ? Color.CYAN : DNDListener.C_INACTIVE_TARGET;
+					active ? DNDListener.C_SELECTED1 : DNDListener.C_INACTIVE_TARGET;
+			final Color ct2 = active ? Color.CYAN : DNDListener.C_INACTIVE_TARGET;
 //			final Color co0 = active ? C_SELECTED0 : C_INACTIVE;
-			final Color co1 =
-					active ? DNDListener.C_SELECTED1 : DNDListener.C_INACTIVE;
+			final Color co1 = active ? DNDListener.C_SELECTED1 : DNDListener.C_INACTIVE;
 			final Color co2 = active ? Color.CYAN : DNDListener.C_INACTIVE;
-			for (final DropTarget t : track.getTargets()) {
+			for (final DropTarget<?, ?, ?> t : object.getTargets()) {
 				if (t == state.emptyTarget) {
 					continue;
 				}
-				state.targetToPanel.get(t).setBackground(ct0);
+				t.getDisplayableComponent().setBackground(ct0);
 				targets.add(t);
-				for (final DragObject o : t) {
-					if (o != track) {
-						state.objectToPanel.get(o).setBackground(co1);
+				for (final DragObject<?, ?, ?> o : t) {
+					if (o != object) {
+						o.getDisplayableComponent().setBackground(co1);
 					}
 				}
 			}
-			panel.setBackground(active ? DNDListener.C_ACTIVE
-					: DNDListener.C_INACTIVE);
-			state.targetContainerToPanel.get(track.getTargetContainer())
-					.setBackground(ct0);
-			for (final DropTarget t : track.getTargetContainer()) {
+			object.getDisplayableComponent().setBackground(
+					active ? DNDListener.C_ACTIVE : DNDListener.C_INACTIVE);
+			object.getTargetContainer().getDisplayableComponent().setBackground(ct0);
+			for (final DropTarget<?, ?, ?> t : object.getTargetContainer()) {
 				if (t == state.emptyTarget || targets.contains(t)) {
 					continue;
 				}
-				state.targetToPanel.get(t).setBackground(ct1);
+				t.getDisplayableComponent().setBackground(ct1);
 				targets.add(t);
-				for (final DragObject o : t) {
-					if (o != track) {
-						state.objectToPanel.get(o).setBackground(co1);
+				for (final DragObject<?, ?, ?> o : t) {
+					if (o != object) {
+						o.getDisplayableComponent().setBackground(co1);
 					}
 				}
 			}
-			if (track.isAlias()) {
-				state.objectToPanel.get(track.getOriginal()).setBackground(co2);
-				if (track.getOriginal().getTargetContainer() != track
+			if (object.isAlias()) {
+				object.getOriginal().getDisplayableComponent().setBackground(co2);
+				if (object.getOriginal().getTargetContainer() != object
 						.getTargetContainer()) {
-					state.targetContainerToPanel.get(
-							track.getOriginal().getTargetContainer())
+					object.getOriginal().getTargetContainer().getDisplayableComponent()
 							.setBackground(ct2);
 				}
-				for (final DropTarget t : track.getOriginal().getTargets()) {
+				for (final DropTarget<?, ?, ?> t : object.getOriginal().getTargets()) {
 					if (t == state.emptyTarget || targets.contains(t)) {
 						continue;
 					}
-					state.targetToPanel.get(t).setBackground(ct2);
+					t.getDisplayableComponent().setBackground(ct2);
 				}
 			}
-			for (final DragObject alias : track.getAliases()) {
-				if (alias == track) {
+			for (final DragObject<?, ?, ?> alias : object.getAliases()) {
+				if (alias == object) {
 					continue;
 				}
-				state.objectToPanel.get(alias).setBackground(co2);
-				if (alias.getTargetContainer() != track.getTargetContainer()) {
-					state.targetContainerToPanel
-							.get(alias.getTargetContainer()).setBackground(ct2);
+				alias.getDisplayableComponent().setBackground(co2);
+				if (alias.getTargetContainer() != object.getTargetContainer()) {
+					alias.getTargetContainer().getDisplayableComponent()
+							.setBackground(ct2);
 				}
-				for (final DropTarget t : alias.getTargets()) {
+				for (final DropTarget<?, ?, ?> t : alias.getTargets()) {
 					if (t == state.emptyTarget || targets.contains(t)) {
 						continue;
 					}
-					state.targetToPanel.get(t).setBackground(ct2);
+					t.getDisplayableComponent().setBackground(ct2);
 				}
 			}
 		}
 	}
 
-	private final void relinkContainer() {
+	private final void wipeTargetsAndLink() {
 		synchronized (state) {
 			if (state.upToDate) {
 				state.upToDate = false;
 				state.io.endProgress();
 			}
 		}
-		for (final DropTarget target : track.getTargets()) {
+		object.getTargetContainer().removeAllLinks(object);
+		for (final DropTarget<?, D, ?> target : object.clearTargets()) {
 			if (target == state.emptyTarget) {
 				continue;
 			}
-			final Set<Integer> tracks = state.instrumentToTrack.get(target);
-			tracks.remove(track.getId());
-			if (tracks.isEmpty()) {
-				state.instrumentToTrack.remove(target);
-			}
-		}
-		for (final DropTarget targetOld : track.getTargetContainer()
-				.removeAllLinks(track)) {
-			if (targetOld == state.emptyTarget) {
-				continue;
-			}
-			final JPanel panelOld = targetOld.getPanel();
-			state.instrumentRootPanel.remove(panelOld);
-			state.instrumentRootPanel.revalidate();
-			state.instrumentToTrack.remove(targetOld);
-			state.targetToPanel.remove(targetOld);
-		}
-		track.clearTargets();
-		if (track.isAlias()
-				&& state.targetC == state.emptyTarget.getContainer()) {
-			state.object = null;
-			mark(false);
-			state.objectToPanel.remove(track);
-			state.objectRootPanel.remove(panel);
-			state.objectRootPanel.revalidate();
-			track.forgetAlias();
-		}
-	}
-
-	private final void relinkTarget() {
-		synchronized (state) {
-			if (state.upToDate) {
-				state.upToDate = false;
-				state.io.endProgress();
-			}
-		}
-		for (final DropTarget target : track.getTargets()) {
-			if (target == state.emptyTarget) {
-				continue;
-			}
-			final Set<Integer> tracks = state.instrumentToTrack.get(target);
-			tracks.remove(track.getId());
-			if (tracks.isEmpty()) {
+			if (caller.unlink(object, target)) {
 				if (target != state.target) {
-					state.instrumentToTrack.remove(target);
+					final D panel = target.getDisplayableComponent();
+					final Container parent = panel.getParent();
+					parent.remove(panel);
+					if (parent.getComponentCount() == 0) {
+						state.plugin.emptyCenter();
+					} else {
+						parent.validate();
+					}
 				}
 			}
 		}
-		for (final DropTarget target : track.getTargetContainer()
-				.removeAllLinks(track)) {
-			final JPanel panel = target.getPanel();
-			state.instrumentRootPanel.remove(panel);
-			state.instrumentRootPanel.revalidate();
+		object.addTarget(state.target);
+		state.target.link(object);
+		if (state.target != state.emptyTarget) {
+			caller.link(object, state.target);
 		}
-		track.addTarget(state.target);
-		state.target.link(track);
+
 	}
 
 }

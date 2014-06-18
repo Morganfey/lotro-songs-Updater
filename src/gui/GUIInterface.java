@@ -165,6 +165,7 @@ public interface GUIInterface {
 	 */
 	void setProgressTitle(String title);
 
+	/** @return a component to display a progress-bar */
 	Component getProgressBar();
 
 }

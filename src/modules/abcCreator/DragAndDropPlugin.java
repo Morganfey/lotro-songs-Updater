@@ -1,39 +1,22 @@
 package modules.abcCreator;
 
-import gui.GUI;
 import gui.GUIPlugin;
 import io.IOHandler;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridLayout;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JToggleButton;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import modules.AbcCreator;
-import modules.midiData.MidiInstrument;
 import modules.midiData.MidiMap;
 import modules.midiData.MidiParser;
 import util.TaskPool;
@@ -43,149 +26,90 @@ import util.TaskPool;
  * A plugin for drag-and-drop
  * 
  * @author Nelphindal
+ * @param <C>
+ *            Implementing class for object
+ * @param <D>
+ *            Implementing class for target
+ * @param <T>
+ *            Implementing class for container
  */
-public class DragAndDropPlugin extends GUIPlugin {
+public abstract class DragAndDropPlugin<C extends Container, D extends Container, T extends Container>
+		extends GUIPlugin {
 
 	class State {
 
-		DragObject object;
-		DropTarget target;
-		DropTarget emptyTarget;
-		DropTargetContainer targetC;
+		final DropTarget<C, D, T> emptyTarget;
 
-		JPanel dragging;
+		DragObject<C, D, T> object;
+		DropTarget<C, D, T> target;
+		DropTargetContainer<C, D, T> targetC;
+
+		DragObject<C, D, T> dragging;
+
 		boolean running;
 		boolean split;
 		boolean upToDate;
 
 		final IOHandler io;
 		final JLabel label = new JLabel();
-		final DragAndDropPlugin plugin = DragAndDropPlugin.this;
-		final JPanel instrumentRootPanel = new JPanel();
-		final Map<DropTarget, Set<Integer>> instrumentToTrack = new TreeMap<>();
-		final Map<DropTarget, JPanel> targetToPanel = new HashMap<>();
-		final Map<DropTargetContainer, JPanel> targetContainerToPanel = new HashMap<>();
-		final JPanel objectRootPanel;
-		final Map<DragObject, JPanel> objectToPanel = new HashMap<>();
+		final DragAndDropPlugin<C, D, T> plugin = DragAndDropPlugin.this;
 
-		private final JScrollPane scrollPaneObject;
-		private final AbcCreator abcCreator;
-
-		private State(final IOHandler io, final AbcCreator abcCreator) {
+		private State(final IOHandler io, final DropTargetContainer<C, D, T>[] targets) {
 			this.io = io;
-			objectRootPanel = new JPanel();
-			scrollPaneObject = new JScrollPane(objectRootPanel);
-			objectRootPanel.setLayout(new GridLayout(0, 1));
-			this.abcCreator = abcCreator;
+			emptyTarget = targets[targets.length - 1].createNewTarget();
 		}
 
 	}
-
-	private final static void createTargetListener(final State status,
-			final DropTarget target, final JPanel panel) {
-		panel.addMouseListener(new DT_Listener(panel, target, status));
-	}
-
-	final static void initInstrumentPanel(final State state, final DropTarget target) {
-		final JPanel panelNew = target.getPanel();
-		final JPanel paramPanel = new JPanel();
-		final JPanel labelPanel = new JPanel();
-		final JLabel label = new JLabel(target.getName());
-
-		labelPanel.add(label);
-
-		paramPanel.setLayout(new GridLayout(0, 1));
-
-		for (final String param : target.getParamsToSet()) {
-			final JLabel labelP = new JLabel(param);
-			final JPanel panelP0 = new JPanel();
-			final JPanel panelP1 = new JPanel();
-
-			labelP.setFont(Font.decode("Arial bold 9"));
-
-			target.displayParam(param, panelP1, state.abcCreator);
-
-			panelP0.setBackground(Color.WHITE);
-			panelP0.addMouseListener(new MouseListener() {
-
-				private boolean showing;
-				private final Color c = Color.YELLOW.darker();
-
-				@Override
-				public final void mouseClicked(final MouseEvent e) {
-					e.consume();
-				}
-
-				@Override
-				public final void mouseEntered(final MouseEvent e) {
-					panelP0.setBackground(showing ? Color.BLUE : Color.GREEN);
-					e.consume();
-				}
-
-				@Override
-				public void mouseExited(final MouseEvent e) {
-					panelP0.setBackground(showing ? c : Color.WHITE);
-					e.consume();
-				}
-
-				@Override
-				public final void mousePressed(final MouseEvent e) {
-					e.consume();
-				}
-
-				@Override
-				public final void mouseReleased(final MouseEvent e) {
-					if (showing) {
-						paramPanel.remove(panelP1);
-						panelP0.setBackground(c);
-					} else {
-						paramPanel.add(panelP1);
-						panelP0.setBackground(Color.WHITE);
-					}
-					showing ^= true;
-					paramPanel.revalidate();
-				}
-
-			});
-			panelP0.add(labelP);
-			paramPanel.add(panelP0);
-		}
-
-		panelNew.setLayout(new BorderLayout());
-		panelNew.add(labelPanel);
-		panelNew.add(paramPanel, BorderLayout.SOUTH);
-
-		state.targetToPanel.put(target, labelPanel);
-		state.instrumentRootPanel.removeAll();
-		for (final DropTarget t : state.instrumentToTrack.keySet()) {
-			state.instrumentRootPanel.add(t.getPanel());
-		}
-		DragAndDropPlugin.createTargetListener(state, target, labelPanel);
-		state.instrumentRootPanel.revalidate();
-	}
-
-	private final MidiParser parser;
-
-	private final DropTargetContainer[] targets;
-
-	private final TaskPool taskPool;
-
-	private final State state;
 
 	/**
-	 * @param abcCreator
+	 * The parser providing the file
+	 */
+	protected final MidiParser parser;
+
+	/**
+	 * The targets for <i>this</i> plugin
+	 */
+	protected final DropTargetContainer<C, D, T>[] targets;
+
+	/**
+	 * Task pool allocated by initializing instance
+	 */
+	protected final TaskPool taskPool;
+
+	/**
+	 * Container used for the listeners
+	 */
+	protected final State state;
+
+	/**
+	 * The caller initializing <i>this</i> DragAndDropPlugin
+	 */
+	protected final DndPluginCaller<C, D, T> caller;
+
+	/**
+	 * Panel displayed in center
+	 */
+	protected final JPanel panelCenter = new JPanel();
+	/**
+	 * Panel displayed to left
+	 */
+	protected final JPanel panelLeft = new JPanel();
+
+	/**
+	 * @param caller
 	 * @param taskPool
 	 * @param parser
 	 * @param targets
 	 * @param io
 	 */
-	public DragAndDropPlugin(final AbcCreator abcCreator, final TaskPool taskPool,
-			final MidiParser parser, final DropTargetContainer[] targets,
-			final IOHandler io) {
+	public DragAndDropPlugin(final DndPluginCaller<C, D, T> caller,
+			final TaskPool taskPool, final MidiParser parser,
+			final DropTargetContainer<C, D, T>[] targets, final IOHandler io) {
 		this.parser = parser;
 		this.targets = targets;
 		this.taskPool = taskPool;
-		state = new State(io, abcCreator);
+		this.caller = caller;
+		state = new State(io, targets);
 	}
 
 	/**
@@ -193,11 +117,12 @@ public class DragAndDropPlugin extends GUIPlugin {
 	 */
 	@Override
 	protected final boolean display(final JPanel panel) {
-		taskPool.addTask(new Runnable() {
+		final JFrame frame = new JFrame();
+		final Runnable r = new Runnable() {
 
 			@Override
 			public void run() {
-				final JFrame frame = new JFrame();
+
 				final MidiMap map = parser.parse();
 				final JPanel mainPanel = new JPanel() {
 					/**
@@ -221,10 +146,12 @@ public class DragAndDropPlugin extends GUIPlugin {
 
 					@Override
 					public void windowActivated(final WindowEvent e) {
+						// nothing to do
 					}
 
 					@Override
 					public final void windowClosed(final WindowEvent e) {
+						// nothing to do
 					}
 
 					@Override
@@ -234,66 +161,71 @@ public class DragAndDropPlugin extends GUIPlugin {
 
 					@Override
 					public final void windowDeactivated(final WindowEvent e) {
+						// nothing to do
 					}
 
 					@Override
 					public final void windowDeiconified(final WindowEvent e) {
+						// nothing to do
 					}
 
 					@Override
 					public final void windowIconified(final WindowEvent e) {
+						// nothing to do
 					}
 
 					@Override
 					public final void windowOpened(final WindowEvent e) {
+						// nothing to do
 					}
 				});
 
 				frame.add(pane);
 				frame.pack();
 				frame.setTitle(parser.getMidi());
-				frame.setVisible(true);
 			}
-		});
+		};
 
-		final JPanel panelRight, mainPanel;
-		final JScrollPane panelCenter;
-		final Map<Integer, Track> trackList;
+		taskPool.addTask(r);
 
+		final JPanel mainPanel;
+		final Map<Integer, DragObject<C, D, T>> initListLeft = initInitListLeft();
 		state.label.setText("Drag the tracks from left to right");
 		state.running = false;
 		state.upToDate = false;
-		state.targetToPanel.clear();
-		state.instrumentToTrack.clear();
-		state.objectToPanel.clear();
-		state.targetContainerToPanel.clear();
-		state.objectRootPanel.removeAll();
-		state.instrumentRootPanel.removeAll();
-
-		trackList = initLeft();
-		panelCenter = initCenter(trackList);
-		panelRight = initRight();
+		panelLeft.removeAll();
+		panelCenter.removeAll();
 
 		mainPanel = new JPanel();
 		mainPanel.setLayout(new GridLayout(1, 3));
-		mainPanel.add(state.scrollPaneObject);
-		mainPanel.add(panelCenter);
-		mainPanel.add(panelRight);
+		mainPanel.add(initLeft(initListLeft));
+		mainPanel.add(initCenter(initListLeft));
+		mainPanel.add(initRight());
 
 		panel.removeAll();
 		panel.setLayout(new BorderLayout());
 		panel.add(state.label, BorderLayout.NORTH);
 		panel.add(mainPanel);
 		panel.add(createButtonPanel(), BorderLayout.SOUTH);
+		frame.setVisible(true);
 		return false;
 	}
 
 	/**
-	 * @return the number of tracks in the (future) abc
+	 * @return the component to be shown on the bottom.
 	 */
-	public final int getAbcTracks() {
-		return state.instrumentToTrack.size();
-	}
+	protected abstract Component createButtonPanel();
+
+
+	/**
+	 * @return the map needed for {@link #initLeft(Map)} and {@link #initCenter(Map)}
+	 */
+	protected abstract Map<Integer, DragObject<C, D, T>> initInitListLeft();
+
+	/**
+	 * @return the size.
+	 */
+	public abstract int size();
 
 	/** */
 	@Override
@@ -301,172 +233,56 @@ public class DragAndDropPlugin extends GUIPlugin {
 		return "BruTE";
 	}
 
-	private final JPanel createButtonPanel() {
-		final JPanel panel = new JPanel();
-		final JPanel panelCenter = new JPanel();
-		final JToggleButton splitButton = new JToggleButton("Split");
 
-		splitButton.addChangeListener(new ChangeListener() {
+	/**
+	 * @param initListLeft
+	 * @return component to be shown in the center
+	 */
+	protected abstract Component initCenter(
+			final Map<Integer, DragObject<C, D, T>> initListLeft);
 
-			@Override
-			public final void stateChanged(final ChangeEvent e) {
-				state.split ^= true;
-			}
-		});
+	/**
+	 * @param initListLeft
+	 * @return component to be shown to the left
+	 */
+	protected abstract Component initLeft(
+			Map<Integer, DragObject<C, D, T>> initListLeft);
 
-		final JButton testButton = new JButton("Test");
+	/**
+	 * @return component to be shown to the right
+	 */
+	protected abstract Component initRight();
 
-		testButton.addMouseListener(new MouseListener() {
+	/**
+	 * Handles everything needed to show given object
+	 * 
+	 * @param object
+	 */
+	protected abstract void initObject(final DragObject<C, D, T> object);
 
-			@Override
-			public final void mouseClicked(final MouseEvent e) {
-				e.consume();
-			}
+	/**
+	 * Adds given target to the component created by {@link #initCenter(Map)}
+	 * 
+	 * @param target
+	 */
+	protected abstract void addToCenter(final DropTarget<C, D, T> target);
 
-			@Override
-			public final void mouseEntered(final MouseEvent e) {
-				e.consume();
-			}
+	/**
+	 * Handles everything needed to show given target
+	 * 
+	 * @param target
+	 */
+	protected abstract void initTarget(final DropTarget<C, D, T> target);
 
-			@Override
-			public final void mouseExited(final MouseEvent e) {
-				e.consume();
-			}
+	/**
+	 * Notifies <i>this</i> plugin that last target has been removed and the
+	 * center should be now empty
+	 */
+	protected abstract void emptyCenter();
 
-			@Override
-			public final void mousePressed(final MouseEvent e) {
-				e.consume();
-			}
-
-			@Override
-			public final void mouseReleased(final MouseEvent e) {
-				state.abcCreator.lockMap();
-				synchronized (state) {
-					while (state.running) {
-						try {
-							state.wait();
-						} catch (final InterruptedException ie) {
-							ie.printStackTrace();
-						}
-					}
-					if (state.upToDate) {
-						state.io.endProgress();
-					}
-					state.upToDate = false;
-					state.running = true;
-				}
-				taskPool.addTask(new Runnable() {
-
-					@Override
-					public void run() {
-						final boolean success =
-								state.abcCreator.call_back(null, null, getAbcTracks());
-						synchronized (state) {
-							state.notifyAll();
-							state.upToDate = success;
-							state.running = false;
-							if (!success) {
-								state.label.setText("Creating abc failed");
-							} else {
-								state.label.setText("The abc is up-to-date");
-							}
-						}
-					}
-				});
-				e.consume();
-			}
-		});
-
-		testButton
-				.setToolTipText("Starts the transcription. After completion the song will be played using the Abc-Player, if it exists");
-
-		splitButton
-				.setToolTipText("Will split a midi track on multiple abc-tracks when enabled");
-
-		panelCenter.setLayout(new BorderLayout());
-		panelCenter.add(GUI.Button.OK.getButton());
-		panelCenter.add(splitButton, BorderLayout.EAST);
-
-		panel.setLayout(new BorderLayout());
-		panel.add(panelCenter);
-		panel.add(GUI.Button.ABORT.getButton(), BorderLayout.WEST);
-		panel.add(testButton, BorderLayout.EAST);
-		return panel;
+	/** */
+	@Override
+	protected void repack() {
+		super.repack();
 	}
-
-	private final JScrollPane initCenter(final Map<Integer, Track> trackList) {
-		final JScrollPane scrollPane = new JScrollPane(state.instrumentRootPanel);
-
-		final Map<Integer, MidiInstrument> midiMap = parser.instruments();
-		state.emptyTarget = targets[targets.length - 1].createNewTarget(null);
-		for (final Map.Entry<Integer, MidiInstrument> e : midiMap.entrySet()) {
-			final MidiInstrument i = e.getValue();
-			final DropTarget ei;
-			final JPanel panel;
-			if (i == null) {
-				panel = null;
-				ei = state.emptyTarget;
-			} else {
-				panel = new JPanel();
-				ei = i.createNewTarget(panel);
-				final Set<Integer> trackSet = new HashSet<>();
-				trackSet.add(e.getKey());
-				state.instrumentToTrack.put(ei, trackSet);
-			}
-			final Track track = trackList.get(e.getKey());
-			track.addTarget(ei);
-			ei.link(track);
-		}
-		for (final DropTarget dropTarget : state.instrumentToTrack.keySet()) {
-			DragAndDropPlugin.initInstrumentPanel(state, dropTarget);
-		}
-
-		state.instrumentRootPanel.setLayout(new GridLayout(0, 1));
-		return scrollPane;
-	}
-
-	private final Map<Integer, Track> initLeft() {
-		final List<Integer> tracks = new ArrayList<>(parser.tracks());
-		final Map<Integer, String> titles = parser.titles();
-		final Map<Integer, Track> trackList = new TreeMap<>();
-		tracks.remove(Integer.valueOf(0));
-		Collections.sort(tracks);
-		int idx = 2;
-		for (final Integer i : tracks) {
-			final String title = titles.get(i);
-			final Track track = new Track(idx++, i, title);
-			initTrack(track);
-			trackList.put(i, track);
-		}
-
-		return trackList;
-	}
-
-	private final JPanel initRight() {
-		final JPanel mainPanel = new JPanel();
-
-		mainPanel.setLayout(new GridLayout(0, 1));
-
-		for (final DropTargetContainer t : targets) {
-			final JLabel label = new JLabel(t.getName());
-			final JPanel panel = new JPanel();
-			panel.addMouseListener(new TC_Listener(t, panel, state));
-			panel.setMinimumSize(new Dimension(120, 15));
-			panel.setPreferredSize(new Dimension(120, 33));
-			panel.add(label);
-			mainPanel.add(panel);
-			state.targetContainerToPanel.put(t, panel);
-		}
-		return mainPanel;
-	}
-
-	final void initTrack(final Track track) {
-		final JPanel panel = new JPanel();
-		panel.setLayout(new BorderLayout());
-		panel.addMouseListener(new DO_Listener(track, panel, state, state.abcCreator));
-		panel.add(new JLabel(track.getName()));
-		state.objectRootPanel.add(panel);
-		state.objectToPanel.put(track, panel);
-	}
-
 }
