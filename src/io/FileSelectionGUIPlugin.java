@@ -38,10 +38,19 @@ public class FileSelectionGUIPlugin extends GUIPlugin {
 		mode = JFileChooser.FILES_ONLY;
 	}
 
+	/**
+	 * @return the path of selected file
+	 */
+	public final Path getSelection() {
+		if (selected == null) {
+			return null;
+		}
+		return Path.getPath(selected.toString());
+	}
+
 	/** */
 	@Override
-	protected
-	final boolean display(final JPanel panel) {
+	protected final boolean display(final JPanel panel) {
 		final JFileChooser fileChooser = new JFileChooser(startDir);
 		fileChooser.setDialogTitle(title);
 		fileChooser.setFileFilter(filter);
@@ -54,16 +63,6 @@ public class FileSelectionGUIPlugin extends GUIPlugin {
 			GUI.Button.class.notifyAll();
 			return true;
 		}
-	}
-
-	/**
-	 * @return the path of selected file
-	 */
-	public final Path getSelection() {
-		if (selected == null) {
-			return null;
-		}
-		return Path.getPath(selected.toString());
 	}
 
 	/** */

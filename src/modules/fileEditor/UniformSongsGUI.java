@@ -3,10 +3,11 @@ package modules.fileEditor;
 import modules.FileEditor;
 import util.Path;
 
+
 /**
- * GUIPlugin to apply the global name scheme to one or more songs 
+ * GUIPlugin to apply the global name scheme to one or more songs
+ * 
  * @author Nelphindal
- *
  */
 public class UniformSongsGUI extends FileEditorPlugin {
 

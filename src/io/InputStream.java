@@ -18,29 +18,14 @@ import java.util.Queue;
  */
 public class InputStream extends java.io.InputStream implements Closeable {
 
-	private final static byte[] merge(final Queue<byte[]> parts, int stackSize) {
-		if (parts.size() == 1) {
-			return parts.poll();
-		}
-		final byte[] ret = new byte[stackSize];
-		int offset = 0;
-		while (!parts.isEmpty()) {
-			final byte[] part = parts.poll();
-			final int length = part.length;
-			System.arraycopy(part, 0, ret, offset, length);
-			offset += length;
-		}
-		return ret;
-	}
-
 	private final byte[] buffer;
+
 	private int offset = 0;
 	private int len = -1;
 	private final ArrayDeque<Integer> marked = new ArrayDeque<>();
 	private FileInputStream stream;
 	private final Charset cs;
 	private final File file;
-
 	private IOHandler io;
 
 	/**
@@ -62,11 +47,25 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	 * @throws FileNotFoundException
 	 *             if given file does not exist
 	 */
-	public InputStream(final File file, final Charset cs)
-			throws FileNotFoundException {
+	public InputStream(final File file, final Charset cs) throws FileNotFoundException {
 		this.cs = cs;
 		this.file = file;
 		buffer = new byte[16000];
+	}
+
+	private final static byte[] merge(final Queue<byte[]> parts, int stackSize) {
+		if (parts.size() == 1) {
+			return parts.poll();
+		}
+		final byte[] ret = new byte[stackSize];
+		int offset = 0;
+		while (!parts.isEmpty()) {
+			final byte[] part = parts.poll();
+			final int length = part.length;
+			System.arraycopy(part, 0, ret, offset, length);
+			offset += length;
+		}
+		return ret;
 	}
 
 	/**
@@ -282,13 +281,12 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	 *             if offset or length do not fulfill the requirements
 	 */
 	@Override
-	public final int read(byte[] buffer, int offset, int length)
-			throws IOException {
+	public final int read(byte[] buffer, int offset, int length) throws IOException {
 		if (EOFreached()) {
 			return -1;
 		}
-		if (length > buffer.length || length < 0 || offset >= buffer.length
-				|| offset < 0 || length > buffer.length - offset) {
+		if (length > buffer.length || length < 0 || offset >= buffer.length || offset < 0
+				|| length > buffer.length - offset) {
 			throw new IllegalArgumentException();
 		}
 		int read = 0;
@@ -368,8 +366,7 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	}
 
 	/**
-	 * Registers an IO-Handler for managing a ProgressMonitor for
-	 * {@link #read()}
+	 * Registers an IO-Handler for managing a ProgressMonitor for {@link #read()}
 	 * 
 	 * @param io
 	 */
@@ -440,14 +437,13 @@ public class InputStream extends java.io.InputStream implements Closeable {
 		offset = buffered;
 		len = buffered;
 		if (stream.available() > 0) {
-			final int read =
-					stream.read(buffer, buffered, buffer.length - buffered);
+			final int read = stream.read(buffer, buffered, buffer.length - buffered);
 			len += read;
 		}
 	}
 
-	private final int fillExternalBuffer(final byte[] buffer, int offset,
-			int length) throws IOException {
+	private final int fillExternalBuffer(final byte[] buffer, int offset, int length)
+			throws IOException {
 		final int remIntBuffer = len - this.offset;
 		final int lengthRet = Math.min(length, remIntBuffer);
 		System.arraycopy(this.buffer, this.offset, buffer, offset, lengthRet);

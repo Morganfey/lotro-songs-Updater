@@ -28,6 +28,46 @@ import util.TaskPool;
  */
 public class SongDataContainer implements ContainerElement {
 
+	private final DirTree tree;
+
+	private final Set<Path> songsFound = new HashSet<>();
+
+	private final ArrayDeque<ModEntry> queue = new ArrayDeque<>();
+
+	private final IOHandler io;
+
+	private final TaskPool taskPool;
+
+	private boolean dirty = true;
+
+	private final boolean scanNeeded = true;
+
+	private static final String[] is = new String[] { "Clarinet", "Flute", "Horn",
+			"Harp", "Lute", "Theorbo", "Drums", "Bagpipes", "Pibgorn", "Cowbell",
+			"Bagpipe", "Drum", "Strings", "Bass" };
+
+	private static final Map<String, Integer> monthMap = SongDataContainer.createMap();
+
+	/**
+	 * @param sc
+	 */
+	public SongDataContainer(final StartupContainer sc) {
+		io = sc.getIO();
+		taskPool = sc.getTaskPool();
+		final String home =
+				Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY, null);
+		assert home != null;
+		final Path basePath = Path.getPath(home.split("/")).resolve("Music");
+		if (!basePath.exists()) {
+			io.printError(
+					"The default path or the path defined in\nthe config-file does not exist:\n"
+							+ basePath
+							+ "\n Please look into the manual for more information.",
+					false);
+		}
+		tree = new DirTree(basePath);
+	}
+
 	@SuppressWarnings("unused")
 	private final static void cleanUp(final StringBuilder title_i) {
 		int i = title_i.indexOf("]");
@@ -186,16 +226,13 @@ public class SongDataContainer implements ContainerElement {
 
 				// title.replace(start, end, "");
 				if (instrument.charAt(1) > 'Z') {
-					instrument.replace(1, 2, instrument.substring(1, 2)
-							.toUpperCase());
+					instrument.replace(1, 2, instrument.substring(1, 2).toUpperCase());
 				}
-				final String instr =
-						instrument.substring(1, instrument.length() - 1);
+				final String instr = instrument.substring(1, instrument.length() - 1);
 
 				final String[] pattern =
 						new String[] { "[" + instr + "]",
-								"[" + instr.toLowerCase() + "]",
-								" " + instr + " ",
+								"[" + instr.toLowerCase() + "]", " " + instr + " ",
 								" " + instr.toLowerCase() + " " };
 				final int pos_i[] = new int[pattern.length];
 				int pos;
@@ -206,8 +243,7 @@ public class SongDataContainer implements ContainerElement {
 						for (int j = 0; j < pattern.length; j++) {
 							if (pos_i[j] >= 0) {
 								pos_i[j] = title.indexOf(pattern[j], pos_i[j]);
-								if (pos_i[j] >= 0
-										&& (pos < 0 || pos_i[j] < pos)) {
+								if (pos_i[j] >= 0 && (pos < 0 || pos_i[j] < pos)) {
 									pos = pos_i[j];
 									i = j;
 								}
@@ -225,8 +261,7 @@ public class SongDataContainer implements ContainerElement {
 							continue;
 						}
 					}
-					final int posEnd =
-							title.indexOf(" ", pos + instrument.length() - 1);
+					final int posEnd = title.indexOf(" ", pos + instrument.length() - 1);
 					if (pos > 0 && title.charAt(pos - 1) == '[') {
 						--pos;
 					}
@@ -243,18 +278,15 @@ public class SongDataContainer implements ContainerElement {
 					new String[] { " " + instr + ".", " " + instr + ",",
 							" " + instr + " (", " " + instr + " left",
 							" " + instr + " right", " " + instr + " 0",
-							" " + instr + " 1", " " + instr + " 2",
-							" " + instr + " 3", " " + instr + " 4",
-							" " + instr + " 5", " " + instr + " 6",
-							" " + instr + " 7", " " + instr + " 8",
-							" " + instr + " 9", " " + instr + " ",
-							" " + instr + "0", " " + instr + "1",
-							" " + instr + "2", " " + instr + "3",
-							" " + instr + "4", " " + instr + "5",
-							" " + instr + "6", " " + instr + "7",
-							" " + instr + "8", " " + instr + "9",
-							" " + instr + "/", " " + instr + "(",
-							" " + instr + "-", " " + instr.toLowerCase() + ".",
+							" " + instr + " 1", " " + instr + " 2", " " + instr + " 3",
+							" " + instr + " 4", " " + instr + " 5", " " + instr + " 6",
+							" " + instr + " 7", " " + instr + " 8", " " + instr + " 9",
+							" " + instr + " ", " " + instr + "0", " " + instr + "1",
+							" " + instr + "2", " " + instr + "3", " " + instr + "4",
+							" " + instr + "5", " " + instr + "6", " " + instr + "7",
+							" " + instr + "8", " " + instr + "9", " " + instr + "/",
+							" " + instr + "(", " " + instr + "-",
+							" " + instr.toLowerCase() + ".",
 							" " + instr.toLowerCase() + ",",
 							" " + instr.toLowerCase() + " (",
 							" " + instr.toLowerCase() + " left",
@@ -330,8 +362,8 @@ public class SongDataContainer implements ContainerElement {
 					}
 					instrument.append("]");
 					if (instrument.charAt(1) > 'Z') {
-						instrument.replace(1, 2, instrument.substring(1, 2)
-								.toUpperCase());
+						instrument
+								.replace(1, 2, instrument.substring(1, 2).toUpperCase());
 					}
 				}
 				title.replace(pos, end, "");
@@ -376,48 +408,6 @@ public class SongDataContainer implements ContainerElement {
 		return titleNew;
 	}
 
-	private final DirTree tree;
-
-	private final Set<Path> songsFound = new HashSet<>();
-
-	private final ArrayDeque<ModEntry> queue = new ArrayDeque<>();
-
-	private final IOHandler io;
-
-	private final TaskPool taskPool;
-
-	private boolean dirty = true;
-
-	private final boolean scanNeeded = true;
-
-	private static final String[] is = new String[] { "Clarinet", "Flute",
-			"Horn", "Harp", "Lute", "Theorbo", "Drums", "Bagpipes", "Pibgorn",
-			"Cowbell", "Bagpipe", "Drum", "Strings", "Bass" };
-
-	private static final Map<String, Integer> monthMap = SongDataContainer
-			.createMap();
-
-	/**
-	 * @param sc
-	 */
-	public SongDataContainer(final StartupContainer sc) {
-		io = sc.getIO();
-		taskPool = sc.getTaskPool();
-		final String home =
-				Main.getConfigValue(main.Main.GLOBAL_SECTION,
-						main.Main.PATH_KEY, null);
-		assert home != null;
-		final Path basePath = Path.getPath(home.split("/")).resolve("Music");
-		if (!basePath.exists()) {
-			io.printError(
-					"The default path or the path defined in\nthe config-file does not exist:\n"
-							+ basePath
-							+ "\n Please look into the manual for more information.",
-					false);
-		}
-		tree = new DirTree(basePath);
-	}
-
 	/**
 	 * Adds a new song into the queue to be scanned
 	 * 
@@ -440,8 +430,7 @@ public class SongDataContainer implements ContainerElement {
 			return;
 		}
 		if (dirty) {
-			final Path parent =
-					tree.getRoot().getParent().resolve("PluginData");
+			final Path parent = tree.getRoot().getParent().resolve("PluginData");
 			final Path zippedSongDataPath;
 			final Path songDataPath;
 			final Path songDataUpdatePath;
@@ -455,18 +444,14 @@ public class SongDataContainer implements ContainerElement {
 				io.openZipIn(zippedSongDataPath);
 				final InputStream in = io.openIn(songDataPath.toFile());
 				if (songDataPath.toFile().length() == 0) {
-					io.append(songDataPath.toFile(),
-							songDataUpdatePath.toFile(), 0);
+					io.append(songDataPath.toFile(), songDataUpdatePath.toFile(), 0);
 					in.reset();
 				} else {
-					io.append(songDataPath.toFile(),
-							songDataUpdatePath.toFile(), 1);
+					io.append(songDataPath.toFile(), songDataUpdatePath.toFile(), 1);
 				}
 				out = io.openOut(songDataUpdatePath.toFile());
 				io.write(out, SongDataDeserializer_3.getHeader());
-				crawler =
-						new Crawler(io, tree.getRoot(), new ArrayDeque<Path>(),
-								queue);
+				crawler = new Crawler(io, tree.getRoot(), new ArrayDeque<Path>(), queue);
 				scanner = new Scanner(io, queue, out, tree, songsFound);
 				taskPool.addTaskForAll(crawler, scanner);
 				in.registerProgressMonitor(io);
@@ -620,9 +605,7 @@ public class SongDataContainer implements ContainerElement {
 			io.writeln(outMaster, "\t\t[" + songIdx + "] =");
 			io.writeln(outMaster, "\t\t{");
 			final String name;
-			name =
-					path.getFileName().substring(0,
-							path.getFileName().lastIndexOf("."));
+			name = path.getFileName().substring(0, path.getFileName().lastIndexOf("."));
 
 			io.write(outMaster, "\t\t\t[\"Filepath\"] = \"/");
 			if (path.getParent() != tree.getRoot()) {

@@ -44,36 +44,31 @@ public class PathOption extends Option {
 	 * @param guiDescription
 	 *            a short string usable to label <i>this</i> option
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or
-	 *            {@link main.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or {@link main.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or
-	 *            {@link main.Flag#NoLongFlag} to enable this option
+	 *            a unique printable string to register at flags or {@link main.Flag#NoLongFlag} to enable this option
 	 * @param fileFilter
 	 *            FileFilter to use for displaying
 	 * @param selectionMode
 	 *            the mode for selection
 	 * @param section
-	 *            the section identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the section identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param key
-	 *            the key identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the key identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param defaultValue
-	 *            the default value for
-	 *            {@link main.Main#getConfigValue(String, String, String)} * @see
+	 *            the default value for {@link main.Main#getConfigValue(String, String, String)} * @see
 	 *            util.OptionContainer#addOption(String, String, char, String,
 	 *            boolean, Option)
 	 */
-	public PathOption(final OptionContainer optionContainer,
-			final TaskPool taskPool, final String name, final String toolTip,
-			final String guiDescription, char shortFlag, final String longFlag,
-			final PathOptionFileFilter fileFilter, final int selectionMode,
-			final String section, final String key, final String defaultValue) {
-		super(optionContainer, name, toolTip, guiDescription, shortFlag,
-				longFlag, true, section, key, defaultValue);
+	public PathOption(final OptionContainer optionContainer, final TaskPool taskPool,
+			final String name, final String toolTip, final String guiDescription,
+			char shortFlag, final String longFlag, final PathOptionFileFilter fileFilter,
+			final int selectionMode, final String section, final String key,
+			final String defaultValue) {
+		super(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag, true,
+				section, key, defaultValue);
 		filter = fileFilter;
 		this.selectionMode = selectionMode;
 		this.taskPool = taskPool;
@@ -141,8 +136,7 @@ public class PathOption extends Option {
 						} else {
 							value = path.toString();
 						}
-						final JFileChooser fileChooser =
-								new JFileChooser(value);
+						final JFileChooser fileChooser = new JFileChooser(value);
 						final JFrame frame = new JFrame();
 						fileChooser.setFileFilter(filter);
 						fileChooser.setDialogTitle(getDescription());
@@ -186,8 +180,8 @@ public class PathOption extends Option {
 	public final Path getValue() {
 		final String rel = super.value();
 		final String base =
-				main.Main.getConfigValue(main.Main.GLOBAL_SECTION,
-						main.Main.PATH_KEY, null);
+				main.Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY,
+						null);
 		if (rel == null) {
 			return null;
 		}
@@ -246,8 +240,8 @@ public class PathOption extends Option {
 		final File file = filter.value(fileSelected);
 		final Path path = Path.getPath(file.toString());
 		final String base =
-				main.Main.getConfigValue(main.Main.GLOBAL_SECTION,
-						main.Main.PATH_KEY, null);
+				main.Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY,
+						null);
 		super.value(path.relativize(Path.getPath(base.split("/"))));
 	}
 }

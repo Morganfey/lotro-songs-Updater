@@ -52,20 +52,17 @@ public class StartupContainer {
 	 */
 	public final <CE extends ContainerElement> CE getContainerElement(
 			final Class<CE> clazz) {
-		@SuppressWarnings("unchecked")
-		final CE ce = (CE) elements.get(clazz);
+		@SuppressWarnings("unchecked") final CE ce = (CE) elements.get(clazz);
 		if (ce == null) {
 			try {
-				@SuppressWarnings("unchecked")
-				final Class<ContainerElement> clazzCE =
+				@SuppressWarnings("unchecked") final Class<ContainerElement> clazzCE =
 						(Class<ContainerElement>) clazz;
 				final Constructor<CE> c = clazz.getConstructor(getClass());
 				final CE ceNew = c.newInstance(this);
 				elements.put(clazzCE, ceNew);
 				return ceNew;
 			} catch (final Exception e) {
-				io.printError("Error in creating new instance of " + clazz,
-						false);
+				io.printError("Error in creating new instance of " + clazz, false);
 				master.interrupt();
 			}
 		}

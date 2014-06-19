@@ -63,55 +63,25 @@ public class FileEditor implements Module {
 	private static final String DEFAULT_SCHEME =
 			"%title %index/%total [0: (%duration)] [1: %mod]";
 
-	final static BooleanOption createChangeTitleOption(final OptionContainer oc) {
-		return new BooleanOption(oc, "changeTitle",
-				"Changes the title of one or more songs.", "Change song title", 't',
-				"change-title", SECTION, null, false);
-	}
-
-	final static BooleanOption createChangeNumberingOption(final OptionContainer oc) {
-		return new BooleanOption(oc, "changeNumbering",
-				"Changes the numbering of one or more songs.", "Change song numbering",
-				'n', "change-numbering", SECTION, null, false);
-	}
-
-	final static BooleanOption createModDateOption(final OptionContainer oc) {
-		return new BooleanOption(oc, "modDate",
-				"Restores the modification date of files in your repository.",
-				"Restore mod-date", 'm', "rst-mod", SECTION, null, false);
-	}
-
-	final static BooleanOption createUniformSongsOption(final OptionContainer oc) {
-		return new BooleanOption(oc, "uniform",
-				"Changes the titles of songs, matching a name scheme.",
-				"Uniform song titles", Flag.NoShortFlag, "uniform-songs", SECTION, null,
-				false);
-	}
-
-	final static StringOption createSongSchemeOption(final OptionContainer oc) {
-		return new StringOption(oc, "uniformScheme",
-				"Changes the scheme for the uniform-songs option. Please have look"
-						+ "in tha manual for the syntax", "Uniform song titles",
-				Flag.NoShortFlag, "song-scheme", SECTION, "scheme", DEFAULT_SCHEME);
-	}
-
 	final StringOption SONG_SCHEME;
+
 	final BooleanOption MOD_DATE;
+
 	final BooleanOption CHANGE_TITLE;
+
 	final BooleanOption CHANGE_NUMBERING;
+
 	final BooleanOption UNIFORM_SONGS;
 
 	private final IOHandler io;
 	private final CanonicalTreeParser treeParserNew = new CanonicalTreeParser();
-
 	private final CanonicalTreeParser treeParserOld = new CanonicalTreeParser();
-
 	private final Map<String, Integer> changed = new HashMap<>();
-
 	private final Set<String> visited = new HashSet<>();
 
 	private final MasterThread master;
 	private final SongDataContainer container;
+
 	private final Map<Path, SongChangeData> changes = new HashMap<>();
 
 	/**
@@ -143,6 +113,140 @@ public class FileEditor implements Module {
 				FileEditor.createChangeNumberingOption(sc.getOptionContainer());
 		UNIFORM_SONGS = FileEditor.createUniformSongsOption(sc.getOptionContainer());
 		SONG_SCHEME = FileEditor.createSongSchemeOption(sc.getOptionContainer());
+	}
+
+	final static BooleanOption createChangeNumberingOption(final OptionContainer oc) {
+		return new BooleanOption(oc, "changeNumbering",
+				"Changes the numbering of one or more songs.", "Change song numbering",
+				'n', "change-numbering", SECTION, null, false);
+	}
+
+	final static BooleanOption createChangeTitleOption(final OptionContainer oc) {
+		return new BooleanOption(oc, "changeTitle",
+				"Changes the title of one or more songs.", "Change song title", 't',
+				"change-title", SECTION, null, false);
+	}
+
+	final static BooleanOption createModDateOption(final OptionContainer oc) {
+		return new BooleanOption(oc, "modDate",
+				"Restores the modification date of files in your repository.",
+				"Restore mod-date", 'm', "rst-mod", SECTION, null, false);
+	}
+
+	final static StringOption createSongSchemeOption(final OptionContainer oc) {
+		return new StringOption(oc, "uniformScheme",
+				"Changes the scheme for the uniform-songs option. Please have look"
+						+ "in tha manual for the syntax", "Uniform song titles",
+				Flag.NoShortFlag, "song-scheme", SECTION, "scheme", DEFAULT_SCHEME);
+	}
+
+	final static BooleanOption createUniformSongsOption(final OptionContainer oc) {
+		return new BooleanOption(oc, "uniform",
+				"Changes the titles of songs, matching a name scheme.",
+				"Uniform song titles", Flag.NoShortFlag, "uniform-songs", SECTION, null,
+				false);
+	}
+
+	/**
+	 * @param currentDir
+	 * @return directories at given directory
+	 */
+	public final String[] getDirs(final Path currentDir) {
+		return container.getDirs(currentDir);
+	}
+
+	/**
+	 * @param currentDir
+	 * @return files at given directory
+	 */
+	public final String[] getFiles(final Path currentDir) {
+		return container.getSongs(currentDir);
+	}
+
+	@Override
+	public final List<Option> getOptions() {
+		final List<Option> list = new ArrayList<>(4);
+		list.add(UNIFORM_SONGS);
+		list.add(SONG_SCHEME);
+		list.add(CHANGE_TITLE);
+		list.add(CHANGE_NUMBERING);
+		list.add(MOD_DATE);
+		return list;
+	}
+
+	@Override
+	public final int getVersion() {
+		return VERSION;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public final <T extends Module> T init(final StartupContainer sc) {
+		return (T) this;
+	}
+
+	@Override
+	public final void run() {
+		if (getVersion() == 0) {
+			io.printMessage(
+					"Editing of files is not functional",
+					"Module FileEditor has not been implemented yet.\nPlease try it again with a later version.",
+					true);
+			return;
+		}
+		if (master.isInterrupted()) {
+			return;
+		}
+		if (UNIFORM_SONGS.getValue()) {
+			container.fill();
+			final FileEditorPlugin plugin =
+					new UniformSongsGUI(this, container.getRoot());
+			io.handleGUIPlugin(plugin);
+			uniformSongs(plugin.getSelection());
+		}
+		if (CHANGE_TITLE.getValue()) {
+			container.fill();
+			final FileEditorPlugin plugin = new ChangeTitleGUI(this, container.getRoot());
+			io.handleGUIPlugin(plugin);
+			changeTitle(plugin.getSelection());
+		}
+		if (master.isInterrupted()) {
+			return;
+		}
+		if (CHANGE_NUMBERING.getValue()) {
+			container.fill();
+			final FileEditorPlugin plugin =
+					new ChangeNumberingGUI(this, container.getRoot());
+			io.handleGUIPlugin(plugin);
+			changeNumbering(plugin.getSelection());
+		}
+		if (master.isInterrupted()) {
+			return;
+		}
+		progressChanges();
+
+		if (MOD_DATE.getValue()) {
+			resetModDate();
+		}
+	}
+
+	private final void changeNumbering(final Set<Path> selection) {
+		@SuppressWarnings("unused") final TreeSet<Path> selectionFiles =
+				selectFilesOnly(selection);
+		// TODO
+
+	}
+
+	private final void changeTitle(final Set<Path> selection) {
+		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
+		for (final Path file : selectionFiles) {
+			final SongChangeData scd = get(file);
+			final EditorPlugin plugin =
+					new EditorPlugin(scd.getTitle(), "Chance title of "
+							+ file.relativize(container.getRoot()));
+			io.handleGUIPlugin(plugin);
+			scd.setTitle(plugin.get());
+		}
 	}
 
 	private final void diff(final Git session, final RevWalk walk,
@@ -197,6 +301,20 @@ public class FileEditor implements Module {
 
 	}
 
+	private final SongChangeData get(final Path file) {
+		final SongChangeData change = changes.get(file);
+		if (change != null)
+			return change;
+		final SongChangeData data = new SongChangeData(container.getVoices(file));
+		changes.put(file, data);
+		return data;
+	}
+
+	private final void progressChanges() {
+		// TODO Auto-generated method stub
+
+	}
+
 	private final void resetModDate() {
 		final Path repo =
 				container.getRoot().resolve(
@@ -230,68 +348,6 @@ public class FileEditor implements Module {
 		}
 	}
 
-	public final void run() {
-		if (getVersion() == 0) {
-			io.printMessage(
-					"Editing of files is not functional",
-					"Module FileEditor has not been implemented yet.\nPlease try it again with a later version.",
-					true);
-			return;
-		}
-		if (master.isInterrupted()) {
-			return;
-		}
-		if (UNIFORM_SONGS.getValue()) {
-			container.fill();
-			final FileEditorPlugin plugin =
-					new UniformSongsGUI(this, container.getRoot());
-			io.handleGUIPlugin(plugin);
-			uniformSongs(plugin.getSelection());
-		}
-		if (CHANGE_TITLE.getValue()) {
-			container.fill();
-			final FileEditorPlugin plugin = new ChangeTitleGUI(this, container.getRoot());
-			io.handleGUIPlugin(plugin);
-			changeTitle(plugin.getSelection());
-		}
-		if (master.isInterrupted()) {
-			return;
-		}
-		if (CHANGE_NUMBERING.getValue()) {
-			container.fill();
-			final FileEditorPlugin plugin =
-					new ChangeNumberingGUI(this, container.getRoot());
-			io.handleGUIPlugin(plugin);
-			changeNumbering(plugin.getSelection());
-		}
-		if (master.isInterrupted()) {
-			return;
-		}
-		progressChanges();
-
-		if (MOD_DATE.getValue()) {
-			resetModDate();
-		}
-	}
-
-	private final void changeNumbering(final Set<Path> selection) {
-		@SuppressWarnings("unused")
-		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
-		// TODO
-
-	}
-
-	private final void changeTitle(final Set<Path> selection) {
-		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
-		for (final Path file : selectionFiles) {
-			final SongChangeData scd = get(file);
-			final EditorPlugin plugin =
-					new EditorPlugin(scd.getTitle(), "Chance title of "
-							+ file.relativize(container.getRoot()));
-			io.handleGUIPlugin(plugin);
-			scd.setTitle(plugin.get());
-		}
-	}
 
 	private final TreeSet<Path> selectFilesOnly(Set<Path> selection) {
 		final TreeSet<Path> selectionFiles = new TreeSet<>();
@@ -320,58 +376,5 @@ public class FileEditor implements Module {
 			final SongChangeData scd = get(file);
 			scd.uniform();
 		}
-	}
-
-	private final void progressChanges() {
-		// TODO Auto-generated method stub
-
-	}
-
-	private final SongChangeData get(final Path file) {
-		final SongChangeData change = changes.get(file);
-		if (change != null)
-			return change;
-		final SongChangeData data = new SongChangeData(container.getVoices(file));
-		changes.put(file, data);
-		return data;
-	}
-
-	@Override
-	public final List<Option> getOptions() {
-		final List<Option> list = new ArrayList<>(4);
-		list.add(UNIFORM_SONGS);
-		list.add(SONG_SCHEME);
-		list.add(CHANGE_TITLE);
-		list.add(CHANGE_NUMBERING);
-		list.add(MOD_DATE);
-		return list;
-	}
-
-	@Override
-	public final int getVersion() {
-		return VERSION;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public final <T extends Module> T init(final StartupContainer sc) {
-		return (T) this;
-	}
-
-
-	/**
-	 * @param currentDir
-	 * @return directories at given directory
-	 */
-	public final String[] getDirs(final Path currentDir) {
-		return container.getDirs(currentDir);
-	}
-
-	/**
-	 * @param currentDir
-	 * @return files at given directory
-	 */
-	public final String[] getFiles(final Path currentDir) {
-		return container.getSongs(currentDir);
 	}
 }

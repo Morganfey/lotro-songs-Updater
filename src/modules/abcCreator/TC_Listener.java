@@ -4,7 +4,7 @@ import java.awt.Container;
 import java.awt.event.MouseEvent;
 
 
-final class TC_Listener<C extends Container, D extends Container, P extends Container, T extends Container>
+final class TC_Listener<C extends Container, D extends Container, T extends Container>
 		extends DNDListener<C, D, T> {
 
 	private final DropTargetContainer<C, D, T> targetC;
@@ -32,11 +32,11 @@ final class TC_Listener<C extends Container, D extends Container, P extends Cont
 
 	private final void mark(boolean active) {
 		if (active && state.dragging != null) {
-			targetC.getDisplayableComponent().setBackground(active ? DNDListener.C_DROP
-					: DNDListener.C_INACTIVE_TARGET);
+			targetC.getDisplayableComponent().setBackground(
+					active ? DNDListener.C_DROP : DNDListener.C_INACTIVE_TARGET);
 		} else {
-			targetC.getDisplayableComponent().setBackground(active ? DNDListener.C_ACTIVE
-					: DNDListener.C_INACTIVE_TARGET);
+			targetC.getDisplayableComponent().setBackground(
+					active ? DNDListener.C_ACTIVE : DNDListener.C_INACTIVE_TARGET);
 			if (state.dragging == null) {
 				for (final DropTarget<C, D, T> t : targetC) {
 					if (t != state.emptyTarget) {
@@ -45,9 +45,10 @@ final class TC_Listener<C extends Container, D extends Container, P extends Cont
 										: DNDListener.C_INACTIVE_TARGET);
 					}
 					for (final DragObject<C, D, T> d : t) {
-						d.getDisplayableComponent().setBackground(
-								active ? DNDListener.C_SELECTED0
-										: DNDListener.C_INACTIVE);
+						d.getDisplayableComponent()
+								.setBackground(
+										active ? DNDListener.C_SELECTED0
+												: DNDListener.C_INACTIVE);
 					}
 				}
 			}

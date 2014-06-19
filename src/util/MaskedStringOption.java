@@ -38,26 +38,21 @@ public final class MaskedStringOption extends Option {
 	 * @param guiDescription
 	 *            a short string usable to label <i>this</i> option
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or
-	 *            {@link main.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or {@link main.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or
-	 *            {@link main.Flag#NoLongFlag} to enable this option
+	 *            a unique printable string to register at flags or {@link main.Flag#NoLongFlag} to enable this option
 	 * @param section
-	 *            the section identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the section identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param key
-	 *            the key identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the key identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 */
-	public MaskedStringOption(final OptionContainer optionContainer,
-			final String name, final String toolTip,
-			final String guiDescription, char shortFlag, final String longFlag,
-			final String section, final String key) {
-		super(optionContainer, name, toolTip, guiDescription, shortFlag,
-				longFlag, true, section, key, null);
+	public MaskedStringOption(final OptionContainer optionContainer, final String name,
+			final String toolTip, final String guiDescription, char shortFlag,
+			final String longFlag, final String section, final String key) {
+		super(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag, true,
+				section, key, null);
 		content = new StringBuilder(super.value());
 		sb = new StringBuilder(value());
 	}
@@ -155,7 +150,7 @@ public final class MaskedStringOption extends Option {
 	/** */
 	@Override
 	public final void endDisplay() {
-		value(getValueToSave());
+		super.value(getValueToSave());
 	}
 
 	/**

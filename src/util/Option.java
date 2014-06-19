@@ -24,8 +24,7 @@ public abstract class Option {
 	private final String desc, toolTip, section;
 	private final String defaultValue;
 	/**
-	 * The key identifier for
-	 * {@link main.Main#setConfigValue(String, String, String)} and
+	 * The key identifier for {@link main.Main#setConfigValue(String, String, String)} and
 	 * {@link main.Main#getConfigValue(String, String, String)}
 	 */
 	protected final String key;
@@ -54,11 +53,9 @@ public abstract class Option {
 	 * @param guiDescription
 	 *            a short string usable to label <i>this</i> option
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or
-	 *            {@link main.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or {@link main.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or
-	 *            {@link main.Flag#NoLongFlag} to enable this option@see
+	 *            a unique printable string to register at flags or {@link main.Flag#NoLongFlag} to enable this option@see
 	 *            util.OptionContainer#addOption(String, String, char, String,
 	 *            boolean, Option)
 	 * @param argExpected
@@ -66,8 +63,8 @@ public abstract class Option {
 	protected Option(final OptionContainer optionContainer, final String name,
 			final String toolTip, final String guiDescription, char shortFlag,
 			final String longFlag, boolean argExpected) {
-		this(optionContainer, name, toolTip, guiDescription, shortFlag,
-				longFlag, argExpected, null, null, null);
+		this(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag,
+				argExpected, null, null, null);
 	}
 
 	/**
@@ -83,23 +80,18 @@ public abstract class Option {
 	 * @param guiDescription
 	 *            a short string usable to label <i>this</i> option
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or
-	 *            {@link main.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or {@link main.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or
-	 *            {@link main.Flag#NoLongFlag} to enable this option
+	 *            a unique printable string to register at flags or {@link main.Flag#NoLongFlag} to enable this option
 	 * @param argExpected
 	 * @param section
-	 *            the section identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the section identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param key
-	 *            the key identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the key identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param defaultValue
-	 *            the default value for
-	 *            {@link main.Main#getConfigValue(String, String, String)} * @see
+	 *            the default value for {@link main.Main#getConfigValue(String, String, String)} * @see
 	 *            util.OptionContainer#addOption(String, String, char, String,
 	 *            boolean, Option)
 	 */
@@ -114,8 +106,8 @@ public abstract class Option {
 		this.section = section;
 		this.defaultValue = defaultValue;
 		if (optionContainer != null) {
-			optionContainer.addOption(name, toolTip, shortFlag, longFlag,
-					argExpected, this);
+			optionContainer.addOption(name, toolTip, shortFlag, longFlag, argExpected,
+					this);
 		}
 	}
 
@@ -125,8 +117,7 @@ public abstract class Option {
 	 * @param panel
 	 * @param gui
 	 */
-	public final void displayWithGUI(final JPanel panel,
-			final gui.GUIInterface gui) {
+	public final void displayWithGUI(final JPanel panel, final gui.GUIInterface gui) {
 		this.panel = panel;
 		this.gui = gui;
 		display(panel);
@@ -142,8 +133,7 @@ public abstract class Option {
 	}
 
 	/**
-	 * Releases all resources allocated by
-	 * {@link #displayWithGUI(JPanel, gui.GUIInterface)}
+	 * Releases all resources allocated by {@link #displayWithGUI(JPanel, gui.GUIInterface)}
 	 */
 	public void endDisplay() {
 		panel = null;
@@ -195,8 +185,7 @@ public abstract class Option {
 	 * 
 	 * @return identifier registered at OptionContainer
 	 * @see util.OptionContainer
-	 * @see #Option(OptionContainer, String, String, String, char, String,
-	 *      boolean, String, String, String)
+	 * @see #Option(OptionContainer, String, String, String, char, String, boolean, String, String, String)
 	 */
 	public final String name() {
 		return name;

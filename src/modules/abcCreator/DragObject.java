@@ -41,6 +41,11 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	DragObject<C, D, T>[] getAliases();
 
 	/**
+	 * @return the Component to display <i>this</i> DropTarget
+	 */
+	C getDisplayableComponent();
+
+	/**
 	 * @return an unique id, used to sort instances of DragObject
 	 */
 	int getId();
@@ -86,14 +91,6 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	boolean isAlias();
 
 	/**
-	 * Adds a new option described by given param and sets the value
-	 * 
-	 * @param param
-	 * @param value
-	 */
-	void setParam(DndPluginCallerParams param, int value);
-
-	/**
 	 * Adds a new option described by given pair of param and target
 	 * 
 	 * @param param
@@ -104,8 +101,11 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	void setParam(DndPluginCallerParams param, DropTarget<C, D, T> target, int value);
 
 	/**
-	 * @return the Component to display <i>this</i> DropTarget
+	 * Adds a new option described by given param and sets the value
+	 * 
+	 * @param param
+	 * @param value
 	 */
-	C getDisplayableComponent();
+	void setParam(DndPluginCallerParams param, int value);
 
 }

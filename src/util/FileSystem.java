@@ -78,6 +78,12 @@ public abstract class FileSystem {
 	private final static Future<Path> home = FileSystem.getHome();
 
 	/**
+	 * Creates a new FileSystem
+	 */
+	protected FileSystem() {
+	}
+
+	/**
 	 * @return The path equivalent to ~ on linux, %HOME% on windows.
 	 */
 	public final static Path getBase() {
@@ -101,18 +107,15 @@ public abstract class FileSystem {
 	 * @return the selected path
 	 * @throws InterruptedException
 	 */
-	public final static Path getBase(final GUI gui,
-			final String predefinedPath, final String pathRelToDocuments,
-			final String title, final FileFilter ff)
+	public final static Path getBase(final GUI gui, final String predefinedPath,
+			final String pathRelToDocuments, final String title, final FileFilter ff)
 			throws InterruptedException {
 		final String fullPath;
 		if (predefinedPath == null) {
 			switch (FileSystem.type) {
 				case UNIX:
 				case LINUX:
-					fullPath =
-							FileSystem.home + "/Documents/"
-									+ pathRelToDocuments;
+					fullPath = FileSystem.home + "/Documents/" + pathRelToDocuments;
 					break;
 				case WINDOWS:
 					final String version = System.getProperty("os.version");
@@ -126,8 +129,7 @@ public abstract class FileSystem {
 						// 6.2: 8, Server 2012
 						// 6.3: 8.1, Server 2012 R2
 						// %userProfile% = <root>/Users/<username>
-						final String relPath =
-								"\\Documents\\" + pathRelToDocuments;
+						final String relPath = "\\Documents\\" + pathRelToDocuments;
 						fullPath = FileSystem.home + relPath;
 					}
 					break;
@@ -227,12 +229,6 @@ public abstract class FileSystem {
 	 */
 	final static FileSystem getInstance() {
 		return FileSystem.instance;
-	}
-
-	/**
-	 * Creates a new FileSystem
-	 */
-	protected FileSystem() {
 	}
 
 	/**

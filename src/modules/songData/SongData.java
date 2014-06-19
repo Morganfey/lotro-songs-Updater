@@ -12,17 +12,9 @@ import util.Path;
  */
 public class SongData {
 
-	final static SongData create(final ModEntry song, final Map<String, String> voices) {
-		final TreeMap<Integer, String> voicesMap = new TreeMap<>();
-		for (final Map.Entry<String, String> v : voices.entrySet()) {
-			voicesMap.put(Integer.parseInt(v.getKey()), v.getValue());
-		}
-		return new SongData(song.getKey(), voicesMap, song.getValue());
-	}
-
 	private final TreeMap<Integer, String> sortedVoices;
-	private final Path song;
 
+	private final Path song;
 	private long mod;
 
 	SongData(final Path song, final Map<Integer, String> voices, long mod) {
@@ -35,11 +27,12 @@ public class SongData {
 		this.mod = mod;
 	}
 
-	/**
-	 * @return the voices of this song
-	 */
-	public final Map<Integer, String> voices() {
-		return sortedVoices;
+	final static SongData create(final ModEntry song, final Map<String, String> voices) {
+		final TreeMap<Integer, String> voicesMap = new TreeMap<>();
+		for (final Map.Entry<String, String> v : voices.entrySet()) {
+			voicesMap.put(Integer.parseInt(v.getKey()), v.getValue());
+		}
+		return new SongData(song.getKey(), voicesMap, song.getValue());
 	}
 
 	/**
@@ -54,6 +47,13 @@ public class SongData {
 	 */
 	public final Path getPath() {
 		return song;
+	}
+
+	/**
+	 * @return the voices of this song
+	 */
+	public final Map<Integer, String> voices() {
+		return sortedVoices;
 	}
 
 	final void setLastModification(final Path file) {

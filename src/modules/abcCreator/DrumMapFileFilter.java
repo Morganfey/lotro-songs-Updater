@@ -9,6 +9,12 @@ import java.io.File;
 public class DrumMapFileFilter extends util.PathOptionFileFilter {
 
 	/**
+	 * 
+	 */
+	public DrumMapFileFilter() {
+	}
+
+	/**
 	 * Checks if given file is a directory and contains at least one map.
 	 * 
 	 * @param f
@@ -34,12 +40,6 @@ public class DrumMapFileFilter extends util.PathOptionFileFilter {
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * 
-	 */
-	public DrumMapFileFilter() {
 	}
 
 	/**

@@ -97,6 +97,22 @@ public class MasterThread extends Thread {
 		this.taskPool = taskPool;
 	}
 
+	public static void sleep(long millis) {
+		MasterThread master = null;
+		if (MasterThread.class.isInstance(Thread.currentThread())) {
+			master = MasterThread.class.cast(Thread.currentThread());
+			master.state.handleEvent(Event.CLEAR_INT);
+		}
+		try {
+			Thread.sleep(millis);
+		} catch (final InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			if (master != null)
+				master.state.handleEvent(Event.CLEAR_INT);
+		}
+	}
+
 	/** */
 	@Override
 	public synchronized void interrupt() {
@@ -133,15 +149,13 @@ public class MasterThread extends Thread {
 		io = sc.io;
 		wd = sc.workingDirectory;
 		waitForConfigParse();
-		if (main.Main.getConfigValue(main.Main.GLOBAL_SECTION,
-				main.Main.PATH_KEY, null) == null) {
+		if (main.Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY, null) == null) {
 			main.Main.setConfigValue(
 					main.Main.GLOBAL_SECTION,
 					main.Main.PATH_KEY,
-					FileSystem
-							.getBase()
-							.resolve("Documents",
-									"The Lord of The Rings Online").toString());
+					FileSystem.getBase()
+							.resolve("Documents", "The Lord of The Rings Online")
+							.toString());
 		}
 		try {
 			final Set<String> moduleSelection = init();
@@ -152,23 +166,19 @@ public class MasterThread extends Thread {
 			final ArrayDeque<Option> options = new ArrayDeque<>();
 			for (final String module : possibleModules) {
 				if (moduleSelection.contains(module)) {
-					options.addAll(modulesLocal.get(module).instance
-							.getOptions());
+					options.addAll(modulesLocal.get(module).instance.getOptions());
 				}
 			}
 			if (!options.isEmpty()) {
 				options.addFirst(new StringOption(sc.optionContainer, "name",
 						"Your name. Will be used to identify you."
 								+ "Several operations will use it"
-								+ " for more information, read the manual",
-						"Name", Flag.NoShortFlag, "name", Main.GLOBAL_SECTION,
-						Main.NAME_KEY));
+								+ " for more information, read the manual", "Name",
+						Flag.NoShortFlag, "name", Main.GLOBAL_SECTION, Main.NAME_KEY));
 				waitForOSInit();
 				io.getOptions(options);
-				if (isInterrupted()) {
-					return;
-				}
-				Main.flushConfig();
+				if (!isInterrupted())
+					Main.flushConfig();
 			}
 			for (final String module : possibleModules) {
 				if (moduleSelection.contains(module)) {
@@ -238,14 +248,13 @@ public class MasterThread extends Thread {
 				if (suppressUnknownHost) {
 					return false;
 				}
-				System.err.println("connection to " + e.getMessage()
-						+ " failed");
+				System.err.println("connection to " + e.getMessage() + " failed");
 				suppressUnknownHost = true;
 			} else {
 				e.printStackTrace();
 			}
-			io.printError("Failed to contact github to check if module\n"
-					+ info.name + "\n is up to date", false);
+			io.printError("Failed to contact github to check if module\n" + info.name
+					+ "\n is up to date", false);
 		}
 		return false;
 	}
@@ -407,8 +416,7 @@ public class MasterThread extends Thread {
 					JarFile jar = null;
 					try {
 						jar = new JarFile(wd.toFile());
-						final ZipEntry entry =
-								jar.getEntry(name.replaceAll("\\.", "/"));
+						final ZipEntry entry = jar.getEntry(name.replaceAll("\\.", "/"));
 						final byte[] bytes = new byte[(int) entry.getSize()];
 						final InputStream in = jar.getInputStream(entry);
 						for (int offset = 0, read; (read =
@@ -552,6 +560,7 @@ public class MasterThread extends Thread {
 
 	private final void runModule(final String module) {
 		if (isInterrupted()) {
+			modulesLocal.get(module).clear().run();
 			return;
 		}
 		final Module m = modulesLocal.get(module).clear().init(sc);
@@ -664,14 +673,17 @@ public class MasterThread extends Thread {
 }
 
 enum Event {
-	INT;
+	INT, CLEAR_INT;
 }
 
 final class ThreadState {
-	private boolean interrupted = false;
+	private boolean interrupted = false, locked = true;
 
 	public final void handleEvent(final Event event) {
 		switch (event) {
+			case CLEAR_INT:
+				locked = !locked;
+				break;
 			case INT:
 				interrupted = true;
 				break;
@@ -679,6 +691,6 @@ final class ThreadState {
 	}
 
 	public final boolean isInterrupted() {
-		return interrupted;
+		return interrupted && locked;
 	}
 }

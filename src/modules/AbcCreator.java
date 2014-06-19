@@ -203,56 +203,6 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 
 	private static final Path javaPath = AbcCreator.getJavaPath();
 
-	private final static PathOption createDrumMaps(final OptionContainer optionContainer,
-			final TaskPool taskPool) {
-		final PathOptionFileFilter ff = AbcCreator.DRUM_MAP_FILTER;
-		return new PathOption(optionContainer, taskPool, "drumMapsDir",
-				"Select a directory containing default drum maps", "Drum Maps",
-				Flag.NoShortFlag, "drums", ff, JFileChooser.FILES_AND_DIRECTORIES,
-				AbcCreator.SECTION, AbcCreator.DRUM_MAP_KEY, null);
-	}
-
-	private final static PathOption createInstrMap(final OptionContainer optionContainer,
-			final TaskPool taskPool) {
-		final PathOptionFileFilter ff = AbcCreator.INSTR_MAP_FILTER;
-		return new PathOption(
-				optionContainer,
-				taskPool,
-				"midi2abcMap",
-				"Select a custom map, to map midi-instruments on the isntruments used in LoTRO",
-				"Instrument Map", Flag.NoShortFlag, "mapping", ff,
-				JFileChooser.FILES_ONLY, AbcCreator.SECTION, "instrumentMap", null);
-	}
-
-	private final static PathOption createPathToAbcPlayer(
-			final OptionContainer optionContainer, final TaskPool taskPool) {
-		final PathOptionFileFilter ff = AbcCreator.EXEC_FILTER;
-		return new PathOption(
-				optionContainer,
-				taskPool,
-				"abcPlayer",
-				"The path to the abc-player. Leave it blank if you dont have an abc-player or you do not want to play songs to test",
-				"Abc-Player", 'a', "abc-player", ff, JFileChooser.FILES_ONLY,
-				AbcCreator.SECTION, "player", null);
-	}
-
-	private final static StringOption createStyle(final OptionContainer optionContainer) {
-		return new StringOption(optionContainer, "style",
-				"The style to use for generated abc. Possible values are rocks and TSO",
-				"Style", Flag.NoShortFlag, "style", AbcCreator.SECTION, "style", "Rocks");
-	}
-
-	private final static Path getJavaPath() {
-		final Path javaBin = Path.getPath(System.getProperty("java.home")).resolve("bin");
-		final Path javaPath;
-		if (FileSystem.type == FileSystem.OSType.WINDOWS) {
-			javaPath = javaBin.resolve("java.exe");
-		} else {
-			javaPath = javaBin.resolve("java");
-		}
-		return javaPath;
-	}
-
 	private final PathOption ABC_PLAYER;
 
 	private final PathOption DRUM_MAPS;
@@ -354,6 +304,56 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		brutesAbc = bruteDir.resolve("new.abc");
 		dragAndDropPlugin = new AbcMapPlugin(this, taskPool, parser, targets, io);
 		initState = abc.initState;
+	}
+
+	private final static PathOption createDrumMaps(final OptionContainer optionContainer,
+			final TaskPool taskPool) {
+		final PathOptionFileFilter ff = AbcCreator.DRUM_MAP_FILTER;
+		return new PathOption(optionContainer, taskPool, "drumMapsDir",
+				"Select a directory containing default drum maps", "Drum Maps",
+				Flag.NoShortFlag, "drums", ff, JFileChooser.FILES_AND_DIRECTORIES,
+				AbcCreator.SECTION, AbcCreator.DRUM_MAP_KEY, null);
+	}
+
+	private final static PathOption createInstrMap(final OptionContainer optionContainer,
+			final TaskPool taskPool) {
+		final PathOptionFileFilter ff = AbcCreator.INSTR_MAP_FILTER;
+		return new PathOption(
+				optionContainer,
+				taskPool,
+				"midi2abcMap",
+				"Select a custom map, to map midi-instruments on the isntruments used in LoTRO",
+				"Instrument Map", Flag.NoShortFlag, "mapping", ff,
+				JFileChooser.FILES_ONLY, AbcCreator.SECTION, "instrumentMap", null);
+	}
+
+	private final static PathOption createPathToAbcPlayer(
+			final OptionContainer optionContainer, final TaskPool taskPool) {
+		final PathOptionFileFilter ff = AbcCreator.EXEC_FILTER;
+		return new PathOption(
+				optionContainer,
+				taskPool,
+				"abcPlayer",
+				"The path to the abc-player. Leave it blank if you dont have an abc-player or you do not want to play songs to test",
+				"Abc-Player", 'a', "abc-player", ff, JFileChooser.FILES_ONLY,
+				AbcCreator.SECTION, "player", null);
+	}
+
+	private final static StringOption createStyle(final OptionContainer optionContainer) {
+		return new StringOption(optionContainer, "style",
+				"The style to use for generated abc. Possible values are rocks and TSO",
+				"Style", Flag.NoShortFlag, "style", AbcCreator.SECTION, "style", "Rocks");
+	}
+
+	private final static Path getJavaPath() {
+		final Path javaBin = Path.getPath(System.getProperty("java.home")).resolve("bin");
+		final Path javaPath;
+		if (FileSystem.type == FileSystem.OSType.WINDOWS) {
+			javaPath = javaBin.resolve("java.exe");
+		} else {
+			javaPath = javaBin.resolve("java");
+		}
+		return javaPath;
 	}
 
 	/**
@@ -462,6 +462,13 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		return new AbcCreator(this, sc);
 	}
 
+	/** */
+	@Override
+	public final void link(final DragObject<JPanel, JPanel, JPanel> object,
+			final DropTarget<JPanel, JPanel, JPanel> target) {
+		dragAndDropPlugin.link(object, target);
+	}
+
 	/**
 	 * Asks the user which midi to transcribe and calls brute offering a GUI.
 	 */
@@ -492,6 +499,23 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		} finally {
 			bruteDir.delete();
 		}
+	}
+
+	@Override
+	public final TreeSet<DropTarget<?, ?, ?>> sortedTargets() {
+		return dragAndDropPlugin.targets();
+	}
+
+	/** */
+	@Override
+	public final boolean unlink(final DragObject<?, ?, ?> object,
+			final DropTarget<?, ?, ?> target) {
+		return dragAndDropPlugin.unlink(object, target);
+	}
+
+	@Override
+	public final DndPluginCallerParams[] valuesGlobal() {
+		return BruteParams.valuesGlobal();
 	}
 
 	private final int call(final Path location, final CallType type, final Path wd,
@@ -981,6 +1005,7 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		}
 	}
 
+
 	private final void writeAbcTrack(final OutputStream out,
 			final DropTarget<JPanel, JPanel, JPanel> abcTrack,
 			final Map<DragObject<JPanel, JPanel, JPanel>, Integer> abcPartMap) {
@@ -1004,31 +1029,6 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				io.write(out, "\r\n");
 			}
 		}
-	}
-
-	/** */
-	@Override
-	public final void link(final DragObject<JPanel, JPanel, JPanel> object,
-			final DropTarget<JPanel, JPanel, JPanel> target) {
-		dragAndDropPlugin.link(object, target);
-	}
-
-	/** */
-	@Override
-	public final boolean unlink(final DragObject<?, ?, ?> object,
-			final DropTarget<?, ?, ?> target) {
-		return dragAndDropPlugin.unlink(object, target);
-	}
-
-	@Override
-	public final TreeSet<DropTarget<?, ?, ?>> sortedTargets() {
-		return dragAndDropPlugin.targets();
-	}
-
-
-	@Override
-	public final DndPluginCallerParams[] valuesGlobal() {
-		return BruteParams.valuesGlobal();
 	}
 
 }

@@ -18,9 +18,21 @@ public interface DropTarget<C extends Container, D extends Container, T extends 
 		extends Comparable<DropTarget<?, ?, ?>>, Iterable<DragObject<C, D, T>> {
 
 	/**
+	 * @param key
+	 * @param container
+	 * @param caller
+	 */
+	void displayParam(String key, JPanel container, DndPluginCaller<C, D, T> caller);
+
+	/**
 	 * @return the instance created this target.
 	 */
 	DropTargetContainer<C, D, T> getContainer();
+
+	/**
+	 * @return the Component to display <i>this</i> DropTarget
+	 */
+	D getDisplayableComponent();
 
 	/**
 	 * Returns a name usable for a GUI.
@@ -28,11 +40,6 @@ public interface DropTarget<C extends Container, D extends Container, T extends 
 	 * @return a name.
 	 */
 	String getName();
-
-	/**
-	 * @return the Component to display <i>this</i> DropTarget
-	 */
-	D getDisplayableComponent();
 
 	/**
 	 * @return a map of the parameters linked to this DropTarget
@@ -58,14 +65,6 @@ public interface DropTarget<C extends Container, D extends Container, T extends 
 	String printParam(final Entry<String, Integer> param);
 
 	/**
-	 * @param key
-	 * @param container
-	 * @param caller
-	 */
-	void displayParam(String key, JPanel container, DndPluginCaller<C, D, T> caller);
-
-	/**
-	 * 
 	 * @param key
 	 * @param value
 	 */

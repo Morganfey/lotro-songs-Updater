@@ -6,8 +6,8 @@ import modules.FileEditor;
 
 /**
  * GUIPlugin to change the numbering of songs
+ * 
  * @author Nelphindal
- *
  */
 public final class ChangeNumberingGUI extends FileEditorPlugin {
 

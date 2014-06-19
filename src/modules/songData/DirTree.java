@@ -45,8 +45,7 @@ final class DirTree {
 			final SongData sd = t.files.get(path.getFileName());
 			if (sd == null) {
 				t.files.put(path.getFileName(), songdata);
-			} else if (sd.getLastModification() < songdata
-					.getLastModification()) {
+			} else if (sd.getLastModification() < songdata.getLastModification()) {
 				t.files.put(path.getFileName(), songdata);
 			} else {
 				return;
@@ -93,10 +92,8 @@ final class DirTree {
 	final Iterator<Path> dirsIterator() {
 		return new Iterator<Path>() {
 			private DirTree currentTree = walkTo(base);
-			private Iterator<String> iter = currentTree.directories.keySet()
-					.iterator();
-			private final ArrayDeque<Iterator<String>> iterStack =
-					new ArrayDeque<>();
+			private Iterator<String> iter = currentTree.directories.keySet().iterator();
+			private final ArrayDeque<Iterator<String>> iterStack = new ArrayDeque<>();
 
 			@Override
 			public boolean hasNext() {
@@ -139,12 +136,9 @@ final class DirTree {
 			private DirTree currentTree = walkTo(base);
 			private Iterator<String> dirIter = currentTree.directories.keySet()
 					.iterator();
-			private Iterator<String> fileIter = currentTree.files.keySet()
-					.iterator();
-			private final ArrayDeque<Iterator<String>> dirIterStack =
-					new ArrayDeque<>();
-			private final ArrayDeque<Iterator<String>> fileIterStack =
-					new ArrayDeque<>();
+			private Iterator<String> fileIter = currentTree.files.keySet().iterator();
+			private final ArrayDeque<Iterator<String>> dirIterStack = new ArrayDeque<>();
+			private final ArrayDeque<Iterator<String>> fileIterStack = new ArrayDeque<>();
 
 			@Override
 			public boolean hasNext() {
@@ -158,8 +152,7 @@ final class DirTree {
 							dirIterStack.add(dirIter);
 							fileIterStack.add(fileIter);
 							currentTree = currentTree.directories.get(nextDir);
-							dirIter =
-									currentTree.directories.keySet().iterator();
+							dirIter = currentTree.directories.keySet().iterator();
 							fileIter = currentTree.files.keySet().iterator();
 						}
 						continue;

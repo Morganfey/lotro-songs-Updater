@@ -12,11 +12,6 @@ public abstract class GUIPlugin {
 
 	private GUI gui;
 
-	final boolean display(final JPanel panel, final GUI gui) {
-		this.gui = gui;
-		return display(panel);
-	}
-
 	/**
 	 * Use the given panel to display any stuff this GUIPlugin is intended to
 	 * do.
@@ -31,10 +26,6 @@ public abstract class GUIPlugin {
 	 */
 	protected abstract String getTitle();
 
-	final void endDisplay() {
-		gui = null;
-	}
-
 	/**
 	 * Requests the gui to repack
 	 */
@@ -44,6 +35,15 @@ public abstract class GUIPlugin {
 			gui.revalidate(true, false);
 			gui.setFrameSize(d);
 		}
+	}
+
+	final boolean display(final JPanel panel, final GUI gui) {
+		this.gui = gui;
+		return display(panel);
+	}
+
+	final void endDisplay() {
+		gui = null;
 	}
 
 }

@@ -9,8 +9,8 @@ import util.Path;
 
 final class SongDataDeserializer {
 
-	final static void deserialize(final InputStream in,
-			final SongDataContainer sdc, final Path base) throws IOException {
+	final static void deserialize(final InputStream in, final SongDataContainer sdc,
+			final Path base) throws IOException {
 		if (in == null || in.EOFreached()) {
 			return;
 		}

@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-final class DT_Listener<C extends Container, D extends Container, P extends Container, T extends Container>
+final class DT_Listener<C extends Container, D extends Container, T extends Container>
 		extends DNDListener<C, D, T> {
 
 	private final DropTarget<C, D, T> target;

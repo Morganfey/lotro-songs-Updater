@@ -1,9 +1,11 @@
 package util;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -14,6 +16,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import main.MasterThread;
 
 
 /**
@@ -27,6 +31,75 @@ public final class Path implements Comparable<Path> {
 	private static final Map<String, Path> rootMap = new HashMap<>();
 	private static final Path[] roots = Path.createRoots();
 	private static final ArrayDeque<Integer> reusableHashes = new ArrayDeque<>();
+
+	private final String[] dirs;
+
+	private final int hash;
+
+	private final Map<String, WeakReference<Path>> successors = new TreeMap<>();
+
+	private File file = null;
+
+	private final String filename;
+
+	private final Path parent;
+
+	private final String str;
+
+	private final String pathStr;
+	private final static StringBuilder relativizer = new StringBuilderPath();
+
+	/**
+	 * creates new path with parent != root
+	 */
+	private Path(final Path parent, final String name) {
+		filename = name;
+		this.parent = parent;
+		if (parent.parent == null) {
+			str = parent.str + name;
+			pathStr = parent.pathStr + name;
+		} else {
+			FileSystem.getInstance();
+			str = parent.str + "/" + name;
+			pathStr = parent.pathStr + FileSystem.getFileSeparator() + name;
+		}
+		parent.successors.put(name, new WeakReference<>(this));
+		if (parent.dirs == null) {
+			dirs = new String[0];
+		} else {
+			dirs = new String[parent.dirs.length + 1];
+			dirs[parent.dirs.length] = parent.filename;
+			System.arraycopy(parent.dirs, 0, dirs, 0, parent.dirs.length);
+		}
+
+		synchronized (Path.class) {
+			if (!Path.reusableHashes.isEmpty()) {
+				hash = Path.reusableHashes.remove();
+			} else {
+				hash = ++Path.nextHash;
+			}
+		}
+	}
+
+	/**
+	 * creates a new base for absolute paths
+	 * 
+	 * @param name
+	 */
+	private Path(final String name) {
+		dirs = null;
+		filename = name;
+		parent = null;
+		if (name.endsWith(FileSystem.getFileSeparator())) {
+			str = name.substring(0, name.length() - 1) + "/";
+			pathStr = name;
+		} else {
+			str = name + "/";
+			pathStr = name + FileSystem.getFileSeparator();
+		}
+
+		hash = ++Path.nextHash;
+	}
 
 	/**
 	 * Parses the given string <i>name</i> and returns a path representing the
@@ -82,7 +155,8 @@ public final class Path implements Comparable<Path> {
 		}
 		if (FileSystem.type == FileSystem.OSType.WINDOWS)
 			sb.setHead(1);
-		else if (FileSystem.type == FileSystem.OSType.UNIX ||FileSystem.type == FileSystem.OSType.LINUX) {
+		else if (FileSystem.type == FileSystem.OSType.UNIX
+				|| FileSystem.type == FileSystem.OSType.LINUX) {
 			path = rootMap.get("/");
 			sb.setHead(1);
 		}
@@ -90,7 +164,7 @@ public final class Path implements Comparable<Path> {
 			switch (sb.charAt(pos)) {
 				case '!':
 					if (path == null)
-						return Path.rootMap.get(sb.toString().substring(0,  pos));
+						return Path.rootMap.get(sb.toString().substring(0, pos));
 					return path.resolve(sb.toString().substring(0, pos));
 				case '%':
 					switch (sb.getByte(pos + 1)) {
@@ -105,7 +179,7 @@ public final class Path implements Comparable<Path> {
 						path = Path.rootMap.get(s);
 					else
 						path = path.getPathFunc(s);
-					sb.setHead(pos+1);
+					sb.setHead(pos + 1);
 					pos = 0;
 					continue;
 			}
@@ -151,15 +225,29 @@ public final class Path implements Comparable<Path> {
 	}
 
 	private final static boolean delete(final File file) {
+		if (!file.exists())
+			return false;
 		if (file.isDirectory()) {
 			for (final File f : file.listFiles()) {
 				Path.delete(f);
 			}
 		}
-		if (!file.delete()) {
-			return false;
+		for (int i = 0; i < 5; i++) {
+			try {
+				java.nio.file.Files.delete(file.toPath());
+				return true;
+			} catch (final Exception e) {
+				if (DirectoryNotEmptyException.class.isInstance(e))
+					return false;
+//				System.err.print(e.getMessage());
+			}
+			MasterThread.sleep(500);
 		}
-		return true;
+		try {
+			new FileOutputStream(file).close();
+		} catch (final Exception e) { // nothing to do
+		}
+		return false;
 	}
 
 	final static Future<Path> getPathFSInit(final String... name) {
@@ -202,69 +290,6 @@ public final class Path implements Comparable<Path> {
 		for (final Path root : Path.roots) {
 			root.invalidateFilesRek();
 		}
-	}
-
-	private final String[] dirs;
-	private final int hash;
-	private final Map<String, WeakReference<Path>> successors = new TreeMap<>();
-
-	private File file = null;
-	private final String filename;
-	private final Path parent;
-	private final String str;
-	private final String pathStr;
-	private final static StringBuilder relativizer = new StringBuilderPath();
-
-	/**
-	 * creates new path with parent != root
-	 */
-	private Path(final Path parent, final String name) {
-		filename = name;
-		this.parent = parent;
-		if (parent.parent == null) {
-			str = parent.str + name;
-			pathStr = parent.pathStr + name;
-		} else {
-			FileSystem.getInstance();
-			str = parent.str + "/" + name;
-			pathStr = parent.pathStr + FileSystem.getFileSeparator() + name;
-		}
-		parent.successors.put(name, new WeakReference<>(this));
-		if (parent.dirs == null) {
-			dirs = new String[0];
-		} else {
-			dirs = new String[parent.dirs.length + 1];
-			dirs[parent.dirs.length] = parent.filename;
-			System.arraycopy(parent.dirs, 0, dirs, 0, parent.dirs.length);
-		}
-
-		synchronized (Path.class) {
-			if (!Path.reusableHashes.isEmpty()) {
-				hash = Path.reusableHashes.remove();
-			} else {
-				hash = ++Path.nextHash;
-			}
-		}
-	}
-
-	/**
-	 * creates a new base for absolute paths
-	 * 
-	 * @param name
-	 */
-	private Path(final String name) {
-		dirs = null;
-		filename = name;
-		parent = null;
-		if (name.endsWith(FileSystem.getFileSeparator())) {
-			str = name.substring(0, name.length() - 1) + "/";
-			pathStr = name;
-		} else {
-			str = name + "/";
-			pathStr = name + FileSystem.getFileSeparator();
-		}
-
-		hash = ++Path.nextHash;
 	}
 
 	/** */
@@ -332,7 +357,11 @@ public final class Path implements Comparable<Path> {
 	 * @see File#delete()
 	 */
 	public final boolean delete() {
-		return Path.delete(toFile());
+		if (Path.delete(toFile()))
+			return true;
+		System.err.println("Failed to delete " + pathStr
+				+ " - It will be deleted after terminating");
+		return false;
 	}
 
 	/** */

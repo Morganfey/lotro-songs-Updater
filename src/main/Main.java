@@ -52,10 +52,8 @@ public class Main {
 	private static final Path homeSetting = Main.homeDir
 			.resolve(".BruteWithSongbookUpdater"); // TODO toolname
 
-	private final static Map<String, Map<String, String>> configOld =
-			new HashMap<>();
-	private final static Map<String, Map<String, String>> configNew =
-			new HashMap<>();
+	private final static Map<String, Map<String, String>> configOld = new HashMap<>();
+	private final static Map<String, Map<String, String>> configNew = new HashMap<>();
 	private static TaskPool taskPool;
 
 	/**
@@ -81,8 +79,8 @@ public class Main {
 							final Map<String, String> map =
 									Main.configOld.get(entryMap.getKey());
 							if (map == null) {
-								Main.configOld.put(entryMap.getKey(),
-										entryMap.getValue());
+								Main.configOld
+										.put(entryMap.getKey(), entryMap.getValue());
 							} else {
 								map.putAll(entryMap.getValue());
 							}
@@ -95,10 +93,9 @@ public class Main {
 					for (final Map.Entry<String, Map<String, String>> entryMap : Main.configOld
 							.entrySet()) {
 						final Set<String> keysToRemove = new HashSet<>();
-						for (final Map.Entry<String, String> map : entryMap
-								.getValue().entrySet()) {
-							if (map.getValue() == null
-									|| map.getValue().isEmpty()) {
+						for (final Map.Entry<String, String> map : entryMap.getValue()
+								.entrySet()) {
+							if (map.getValue() == null || map.getValue().isEmpty()) {
 								keysToRemove.add(map.getKey());
 							}
 						}
@@ -118,8 +115,8 @@ public class Main {
 						.entrySet()) {
 					sb.append(sections.getKey());
 					sb.append(FileSystem.getLineSeparator());
-					for (final Map.Entry<String, String> entries : sections
-							.getValue().entrySet()) {
+					for (final Map.Entry<String, String> entries : sections.getValue()
+							.entrySet()) {
 						sb.append("\t");
 						sb.append(entries.getKey());
 						sb.append(" = ");
@@ -129,9 +126,7 @@ public class Main {
 				}
 
 				try {
-					out =
-							new java.io.FileOutputStream(
-									Main.homeSetting.toFile());
+					out = new java.io.FileOutputStream(Main.homeSetting.toFile());
 					out.write(sb.toString().getBytes());
 					out.flush();
 					out.close();
@@ -156,8 +151,8 @@ public class Main {
 	 * @return the value in the config, or defaultValue if the key in given
 	 *         section does not exist
 	 */
-	public final static String getConfigValue(final String section,
-			final String key, final String defaultValue) {
+	public final static String getConfigValue(final String section, final String key,
+			final String defaultValue) {
 		synchronized (Main.configOld) {
 			synchronized (Main.configNew) {
 				final Map<String, String> map0 = Main.configNew.get(section);
@@ -186,8 +181,7 @@ public class Main {
 	 *            currently ignored
 	 * @throws InterruptedException
 	 */
-	public final static void main(final String[] args)
-			throws InterruptedException {
+	public final static void main(final String[] args) throws InterruptedException {
 		final StartupContainer sc = new StartupContainer();
 		final IOHandler io;
 		Main.taskPool = sc.createTaskPool();
@@ -208,8 +202,7 @@ public class Main {
 						sc.notifyAll();
 					}
 					final InputStream in =
-							sc.io.openIn(Main.homeSetting.toFile(),
-									FileSystem.UTF8);
+							sc.io.openIn(Main.homeSetting.toFile(), FileSystem.UTF8);
 					final StringBuilder sb = new StringBuilder();
 					String section = null;
 					try {
@@ -258,14 +251,13 @@ public class Main {
 	 * @param key
 	 * @param value
 	 */
-	public final static void setConfigValue(final String section,
-			final String key, final String value) {
+	public final static void setConfigValue(final String section, final String key,
+			final String value) {
 		synchronized (Main.configOld) {
 			synchronized (Main.configNew) {
 				if (value == null) {
 					if (Main.getConfigValue(section, key, null) != null) {
-						final Map<String, String> map0 =
-								Main.configNew.get(section);
+						final Map<String, String> map0 = Main.configNew.get(section);
 						if (map0 == null) {
 							final Map<String, String> map1 = new HashMap<>();
 							map1.put(key, null);
@@ -275,10 +267,8 @@ public class Main {
 						}
 					}
 				} else {
-					final Map<String, String> mapOld =
-							Main.configOld.get(section);
-					final Map<String, String> map0 =
-							Main.configNew.get(section);
+					final Map<String, String> mapOld = Main.configOld.get(section);
+					final Map<String, String> map0 = Main.configNew.get(section);
 					if (mapOld != null) {
 						final String valueOld = mapOld.get(key);
 						if (valueOld != null && valueOld.equals(value)) {
@@ -326,8 +316,7 @@ public class Main {
 			final String jarPath;
 			if (FileSystem.type == FileSystem.OSType.WINDOWS) {
 				jarPath =
-						url.getPath().substring(0).split("!")[0].replaceAll(
-								"/", "\\\\");
+						url.getPath().substring(0).split("!")[0].replaceAll("/", "\\\\");
 			} else {
 				jarPath = url.getPath().split("!")[0];
 			}
@@ -342,8 +331,8 @@ public class Main {
 		os.io = new IOHandler(os, icon);
 	}
 
-	private final static String parseConfig(final StringBuilder line,
-			final String section) {
+	private final static String
+			parseConfig(final StringBuilder line, final String section) {
 		int idx = 0;
 		if (line.length() == 0) {
 			return section;

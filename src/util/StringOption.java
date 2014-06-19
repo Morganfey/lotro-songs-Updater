@@ -34,26 +34,21 @@ public final class StringOption extends Option {
 	 * @param guiDescription
 	 *            a short string usable to label <i>this</i> option
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or
-	 *            {@link main.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or {@link main.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or
-	 *            {@link main.Flag#NoLongFlag} to enable this option
+	 *            a unique printable string to register at flags or {@link main.Flag#NoLongFlag} to enable this option
 	 * @param section
-	 *            the section identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the section identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param key
-	 *            the key identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the key identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 */
-	public StringOption(final OptionContainer optionContainer,
-			final String name, final String toolTip,
-			final String guiDescription, char shortFlag, final String longFlag,
-			final String section, final String key) {
-		this(optionContainer, name, toolTip, guiDescription, shortFlag,
-				longFlag, section, key, null);
+	public StringOption(final OptionContainer optionContainer, final String name,
+			final String toolTip, final String guiDescription, char shortFlag,
+			final String longFlag, final String section, final String key) {
+		this(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag,
+				section, key, null);
 	}
 
 	/**
@@ -69,28 +64,24 @@ public final class StringOption extends Option {
 	 * @param guiDescription
 	 *            a short string usable to label <i>this</i> option
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or
-	 *            {@link main.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or {@link main.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or
-	 *            {@link main.Flag#NoLongFlag} to enable this option
+	 *            a unique printable string to register at flags or {@link main.Flag#NoLongFlag} to enable this option
 	 * @param section
-	 *            the section identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the section identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param key
-	 *            the key identifier for this option, to access by
-	 *            {@link main.Main#getConfigValue(String, String, String)} and
+	 *            the key identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 * @param defaultValue
 	 *            the value returned if the key does not exist in given section
 	 */
-	public StringOption(final OptionContainer optionContainer,
-			final String name, final String toolTip,
-			final String guiDescription, char shortFlag, final String longFlag,
-			final String section, final String key, final String defaultValue) {
-		super(optionContainer, name, toolTip, guiDescription, shortFlag,
-				longFlag, true, section, key, defaultValue);
+	public StringOption(final OptionContainer optionContainer, final String name,
+			final String toolTip, final String guiDescription, char shortFlag,
+			final String longFlag, final String section, final String key,
+			final String defaultValue) {
+		super(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag, true,
+				section, key, defaultValue);
 	}
 
 	/** */

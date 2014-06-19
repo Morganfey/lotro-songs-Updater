@@ -25,6 +25,22 @@ public class Flag {
 	public static final char NoShortFlag = 5;
 	private static final int PRIMITIVE = 1;
 
+	private final Set<String> enabledFlags = new HashSet<>();
+
+	private final Map<String, String> help = new HashMap<>();
+	private final Map<String, String> idToLong = new HashMap<>();
+	private final Map<String, Integer> idToShort = new HashMap<>();
+	private final Map<String, String> longToId = new HashMap<>();
+	private final String name;
+	private final Collection<String> registeredFlags = new ArrayDeque<>();
+	private final Map<Integer, String> shortToId = new HashMap<>();
+	private final Map<String, Integer> status = new HashMap<>();
+	private final Map<String, String> values = new HashMap<>();
+
+	private Flag(final String name) {
+		this.name = name;
+	}
+
 	/**
 	 * Returns the instance used for given class.
 	 * 
@@ -34,22 +50,6 @@ public class Flag {
 	 */
 	public final static Flag getInstance(final Class<?> clazz) {
 		return new Flag(clazz.getSimpleName());
-	}
-
-	private final Set<String> enabledFlags = new HashSet<>();
-	private final Map<String, String> help = new HashMap<>();
-	private final Map<String, String> idToLong = new HashMap<>();
-	private final Map<String, Integer> idToShort = new HashMap<>();
-	private final Map<String, String> longToId = new HashMap<>();
-	private final String name;
-	private final Collection<String> registeredFlags = new ArrayDeque<>();
-	private final Map<Integer, String> shortToId = new HashMap<>();
-	private final Map<String, Integer> status = new HashMap<>();
-
-	private final Map<String, String> values = new HashMap<>();
-
-	private Flag(final String name) {
-		this.name = name;
 	}
 
 	/**
@@ -167,14 +167,13 @@ public class Flag {
 		for (final String fOption : registeredFlags) {
 			outPart2 +=
 					"\n"
-							+ String.format("%s %-16s : %s", idToShort
-									.get(fOption) == Flag.NoShortFlag ? "  "
-									: "-"
-											+ (char) idToShort.get(fOption)
-													.intValue(), idToLong
-									.get(fOption) == Flag.NoLongFlag ? ""
-									: "--" + idToLong.get(fOption), help
-									.get(fOption));
+							+ String.format("%s %-16s : %s",
+									idToShort.get(fOption) == Flag.NoShortFlag ? "  "
+											: "-"
+													+ (char) idToShort.get(fOption)
+															.intValue(), idToLong
+											.get(fOption) == Flag.NoLongFlag ? "" : "--"
+											+ idToLong.get(fOption), help.get(fOption));
 		}
 		return outPart1 + outPart2 + outPart3;
 	}
@@ -188,11 +187,9 @@ public class Flag {
 	 *            a description to be printed in a help message to explain this
 	 *            option
 	 * @param shortFlag
-	 *            a unique printable char to enable this option or
-	 *            {@link #NoShortFlag}
+	 *            a unique printable char to enable this option or {@link #NoShortFlag}
 	 * @param longFlag
-	 *            a unique string literal to enable this option or
-	 *            {@link #NoLongFlag}
+	 *            a unique string literal to enable this option or {@link #NoLongFlag}
 	 * @param argExpected
 	 *            <i>true</i>if this option needs a additional value
 	 */

@@ -29,6 +29,13 @@ public final class EditorPlugin extends GUIPlugin {
 		this.title = title;
 	}
 
+	/**
+	 * @return the entered content
+	 */
+	public final String get() {
+		return content;
+	}
+
 	/** */
 	@Override
 	protected final boolean display(final JPanel panel) {
@@ -40,13 +47,6 @@ public final class EditorPlugin extends GUIPlugin {
 		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
 		panelButton.add(GUIInterface.Button.ABORT.getButton(), BorderLayout.WEST);
 		return false;
-	}
-
-	/**
-	 * @return the entered content
-	 */
-	public final String get() {
-		return content;
 	}
 
 	/** */

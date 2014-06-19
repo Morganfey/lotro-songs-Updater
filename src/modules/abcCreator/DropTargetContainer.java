@@ -29,6 +29,11 @@ public interface DropTargetContainer<C extends Container, D extends Container, T
 	DropTarget<C, D, T> createNewTarget();
 
 	/**
+	 * @return the Component to display <i>this</i> DropTarget
+	 */
+	T getDisplayableComponent();
+
+	/**
 	 * Returns a name usable for a GUI
 	 * 
 	 * @return a name
@@ -43,9 +48,4 @@ public interface DropTargetContainer<C extends Container, D extends Container, T
 	 * @return A Set of formerly linked DropTargets
 	 */
 	Set<DropTarget<C, D, T>> removeAllLinks(final DragObject<C, D, T> object);
-
-	/**
-	 * @return the Component to display <i>this</i> DropTarget
-	 */
-	T getDisplayableComponent();
 }

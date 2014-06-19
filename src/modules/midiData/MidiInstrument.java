@@ -83,6 +83,31 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 			.buildInstrumentMap();
 
 	/**
+	 * Creates a new instrument
+	 * 
+	 * @param name
+	 */
+	protected MidiInstrument(final String name) {
+		this(name, new String[0]);
+	}
+
+	/**
+	 * Creates a new instrument
+	 * 
+	 * @param name
+	 * @param params
+	 */
+	protected MidiInstrument(final String name, final String... params) {
+		this.name = name;
+		name0 = name.substring(0, 1).toUpperCase() + name.substring(1);
+		id = ++MidiInstrument.counter;
+		for (final String p : params) {
+			paramKeys.add(p);
+		}
+
+	}
+
+	/**
 	 * Returns an array containing each instrument.
 	 * 
 	 * @return an array containing each instrument.
@@ -492,31 +517,6 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 		return map;
 	}
 
-	/**
-	 * Creates a new instrument
-	 * 
-	 * @param name
-	 */
-	protected MidiInstrument(final String name) {
-		this(name, new String[0]);
-	}
-
-	/**
-	 * Creates a new instrument
-	 * 
-	 * @param name
-	 * @param params
-	 */
-	protected MidiInstrument(final String name, final String... params) {
-		this.name = name;
-		name0 = name.substring(0, 1).toUpperCase() + name.substring(1);
-		id = ++MidiInstrument.counter;
-		for (final String p : params) {
-			paramKeys.add(p);
-		}
-
-	}
-
 	/** */
 	@Override
 	public final void clearTargets() {
@@ -530,6 +530,12 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 				new MidiInstrumentDropTarget(this, ++MidiInstrument.counter);
 		parts.add(t);
 		return t;
+	}
+
+	/** */
+	@Override
+	public JPanel getDisplayableComponent() {
+		return panel;
 	}
 
 	/** */
@@ -562,12 +568,6 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 		return name;
 	}
 
-	/** */
-	@Override
-	public JPanel getDisplayableComponent() {
-		return panel;
-	}
-
 }
 
 class EmptyMidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel> {
@@ -585,8 +585,19 @@ class EmptyMidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel
 	}
 
 	@Override
+	public final void displayParam(final String key, final JPanel container,
+			final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final DropTargetContainer<JPanel, JPanel, JPanel> getContainer() {
 		return container;
+	}
+
+	@Override
+	public final JPanel getDisplayableComponent() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -623,17 +634,6 @@ class EmptyMidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel
 	public final void setParam(final String key, final Integer value) {
 		throw new UnsupportedOperationException();
 	}
-
-	@Override
-	public final void displayParam(final String key, final JPanel container,
-			final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public final JPanel getDisplayableComponent() {
-		throw new UnsupportedOperationException();
-	}
 }
 
 class EmptyMidiInstrumentDropTargetContainer implements
@@ -654,6 +654,11 @@ class EmptyMidiInstrumentDropTargetContainer implements
 	@Override
 	public final DropTarget<JPanel, JPanel, JPanel> createNewTarget() {
 		return target;
+	}
+
+	@Override
+	public final JPanel getDisplayableComponent() {
+		return panel;
 	}
 
 	@Override
@@ -699,11 +704,6 @@ class EmptyMidiInstrumentDropTargetContainer implements
 			return s;
 		}
 		return java.util.Collections.emptySet();
-	}
-
-	@Override
-	public final JPanel getDisplayableComponent() {
-		return panel;
 	}
 
 }

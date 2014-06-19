@@ -92,22 +92,6 @@ public class GUI implements GUIInterface {
 
 	private static final String waitText = "Please wait ...";
 
-	/**
-	 * Enables a component by calling {@link Component#setEnabled(boolean)}
-	 * 
-	 * @param c
-	 * @param b
-	 */
-	public final static void setEnabled(final Component c, boolean b) {
-		if (c instanceof Container) {
-			for (final Component o : ((Container) c).getComponents()) {
-				GUI.setEnabled(o, b);
-			}
-		} else {
-			c.setEnabled(b);
-		}
-	}
-
 	private final JFrame mainFrame;
 
 	private final JTextArea text;
@@ -227,6 +211,22 @@ public class GUI implements GUIInterface {
 
 		mainFrame.pack();
 		mainFrame.setVisible(true);
+	}
+
+	/**
+	 * Enables a component by calling {@link Component#setEnabled(boolean)}
+	 * 
+	 * @param c
+	 * @param b
+	 */
+	public final static void setEnabled(final Component c, boolean b) {
+		if (c instanceof Container) {
+			for (final Component o : ((Container) c).getComponents()) {
+				GUI.setEnabled(o, b);
+			}
+		} else {
+			c.setEnabled(b);
+		}
 	}
 
 	/** */
@@ -642,28 +642,6 @@ public class GUI implements GUIInterface {
 		}
 	}
 
-	final Dimension getFrameSize() {
-		return mainFrame.getSize();
-	}
-	
-	final void setFrameSize(final Dimension d) {
-		mainFrame.setSize(d);
-	}
-	
-	final void revalidate(boolean pack, boolean toFront) {
-		if (master.isInterrupted()) {
-			return;
-		}
-		if (pack) {
-			mainFrame.pack();
-		}
-		mainFrame.revalidate();
-		mainFrame.repaint();
-		if (toFront) {
-			mainFrame.toFront();
-		}
-	}
-
 	private final void waitForButton() {
 		try {
 			synchronized (Button.class) {
@@ -685,6 +663,28 @@ public class GUI implements GUIInterface {
 		mainFrame.add(wait);
 		wait.setText(GUI.waitText);
 		revalidate(true, false);
+	}
+
+	final Dimension getFrameSize() {
+		return mainFrame.getSize();
+	}
+
+	final void revalidate(boolean pack, boolean toFront) {
+		if (master.isInterrupted()) {
+			return;
+		}
+		if (pack) {
+			mainFrame.pack();
+		}
+		mainFrame.revalidate();
+		mainFrame.repaint();
+		if (toFront) {
+			mainFrame.toFront();
+		}
+	}
+
+	final void setFrameSize(final Dimension d) {
+		mainFrame.setSize(d);
 	}
 
 }

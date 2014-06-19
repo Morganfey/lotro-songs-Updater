@@ -2,6 +2,7 @@ package modules.abcCreator;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -90,7 +91,6 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 				state.plugin.initObject(clone);
 				clone.addTarget(state.emptyTarget);
 				state.emptyTarget.link(clone);
-				// TODO revalidate
 			}
 		} else if (state.target != null) {
 			if (state.split) {
@@ -102,7 +102,6 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			} else {
 				wipeTargetsAndLink();
 			}
-			// repaint state.targetContainerToPanel.get(state.targetC)
 		} else if (state.targetC != null) {
 			if (state.emptyTarget.getContainer() == state.targetC) {
 				state.target = state.emptyTarget;
@@ -122,7 +121,15 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 				wipeTargetsAndLink();
 			}
 			state.target = null;
-
+			if (object.isAlias() && state.targetC == state.emptyTarget.getContainer()) {
+				object.forgetAlias();
+				state.emptyTarget.getContainer().removeAllLinks(object);
+				final Container parent = object.getDisplayableComponent().getParent();
+				parent.remove(object.getDisplayableComponent());
+				parent.revalidate();
+				mark(false);
+				return;
+			}
 		} else {
 			return;
 		}
@@ -132,6 +139,13 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			panelOption = null;
 		}
 		object.getDisplayableComponent().revalidate();
+	}
+
+	private final void displayParam() {
+		panelOption.removeAll();
+		final DropTarget<C, D, T>[] targets = object.getTargets();
+		param.display(panelOption, object, targets);
+		panelOption.revalidate();
 	}
 
 	private final void displayParamMenu() {
@@ -154,18 +168,6 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 					}
 
 					@Override
-					public final void mousePressed(final MouseEvent e) {
-						e.consume();
-					}
-
-					@Override
-					public final void mouseReleased(final MouseEvent e) {
-						param = ps;
-						e.consume();
-						displayParam();
-					}
-
-					@Override
 					public final void mouseEntered(final MouseEvent e) {
 						optionPanel.setBackground(Color.GREEN);
 						e.consume();
@@ -176,6 +178,18 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 						optionPanel.setBackground(Color.LIGHT_GRAY);
 						e.consume();
 					}
+
+					@Override
+					public final void mousePressed(final MouseEvent e) {
+						e.consume();
+					}
+
+					@Override
+					public final void mouseReleased(final MouseEvent e) {
+						param = ps;
+						e.consume();
+						displayParam();
+					}
 				});
 				panelOption.add(optionPanel);
 			}
@@ -183,13 +197,6 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			state.plugin.repack();
 		}
 
-	}
-
-	private final void displayParam() {
-		panelOption.removeAll();
-		final DropTarget<C, D, T>[] targets = object.getTargets();
-		param.display(panelOption, object, targets);
-		panelOption.revalidate();
 	}
 
 	private final void mark(boolean active) {

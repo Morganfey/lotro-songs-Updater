@@ -53,8 +53,7 @@ public final class SongbookUpdater implements Module {
 	 * @param sc
 	 * @throws InterruptedException
 	 */
-	public SongbookUpdater(final StartupContainer sc)
-			throws InterruptedException {
+	public SongbookUpdater(final StartupContainer sc) throws InterruptedException {
 		io = null;
 		master = null;
 		pluginDataPath = null;
@@ -75,8 +74,7 @@ public final class SongbookUpdater implements Module {
 	 */
 	private SongbookUpdater(final StartupContainer sc, final SongbookUpdater old) {
 		io = sc.getIO();
-		final String home =
-				Main.getConfigValue(Main.GLOBAL_SECTION, Main.PATH_KEY, null);
+		final String home = Main.getConfigValue(Main.GLOBAL_SECTION, Main.PATH_KEY, null);
 		final Path basePath = Path.getPath(home.split("/"));
 		pluginDataPath = basePath.resolve("PluginData");
 		songbookPlugindataPath = pluginDataPath.resolve("SongbookUpdateData");
@@ -124,14 +122,12 @@ public final class SongbookUpdater implements Module {
 		if (!pluginDataPath.exists()) {
 			if (!pluginDataPath.toFile().mkdir()) {
 				io.printMessage(null,
-						"Missing PluginData directory could not be created",
-						true);
+						"Missing PluginData directory could not be created", true);
 			}
 			return;
 		} else {
 			final File userIni =
-					pluginDataPath.getParent().resolve("UserPreferences.ini")
-							.toFile();
+					pluginDataPath.getParent().resolve("UserPreferences.ini").toFile();
 			final InputStream in = io.openIn(userIni);
 			if (userIni.length() != 0) {
 				do {
@@ -164,8 +160,7 @@ public final class SongbookUpdater implements Module {
 		masterPluginData.deleteOnExit();
 
 		// write master plugindata and updateFileNew
-		io.startProgress("Writing " + masterPluginData.getName(),
-				container.size());
+		io.startProgress("Writing " + masterPluginData.getName(), container.size());
 		container.writeNewSongbookData(masterPluginData);
 
 		io.startProgress("", profiles.size());
@@ -195,8 +190,7 @@ public final class SongbookUpdater implements Module {
 		}
 		masterPluginData.delete();
 		io.endProgress();
-		io.printMessage(null,
-				"Update of your songbook is complete.\nAvailable songs: "
-						+ container.size(), true);
+		io.printMessage(null, "Update of your songbook is complete.\nAvailable songs: "
+				+ container.size(), true);
 	}
 }

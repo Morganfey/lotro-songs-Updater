@@ -48,8 +48,8 @@ public abstract class MidiParser {
 
 		@Override
 		public final String toString() {
-			return "End of track signaled, but header said its longer: "
-					+ trackLen + " bytes left";
+			return "End of track signaled, but header said its longer: " + trackLen
+					+ " bytes left";
 		}
 	}
 
@@ -135,8 +135,7 @@ public abstract class MidiParser {
 		}
 
 		@Override
-		final ParseState getNext(byte read)
-				throws UnsupportedOperationException {
+		final ParseState getNext(byte read) throws UnsupportedOperationException {
 			throw new UnsupportedOperationException();
 		}
 
@@ -214,8 +213,8 @@ public abstract class MidiParser {
 					channel = MidiParser.this.channel;
 				}
 				lastEvent =
-						new NoteOffEvent((byte) k, (byte) v, (byte) channel,
-								DELTA.delta, format);
+						new NoteOffEvent((byte) k, (byte) v, (byte) channel, DELTA.delta,
+								format);
 				return DELTA;
 			}
 			return null;
@@ -247,8 +246,8 @@ public abstract class MidiParser {
 				v = 0xff & read;
 				if (v == 0) {
 					lastEvent =
-							new NoteOffEvent((byte) k, (byte) v,
-									(byte) channel, DELTA.delta, format);
+							new NoteOffEvent((byte) k, (byte) v, (byte) channel,
+									DELTA.delta, format);
 				} else {
 					lastEvent =
 							new NoteOnEvent((byte) k, (byte) v, (byte) channel,
@@ -299,8 +298,7 @@ public abstract class MidiParser {
 		abstract void end() throws ParsingException;
 
 		@Override
-		final ParseState getNext(byte read)
-				throws UnsupportedOperationException {
+		final ParseState getNext(byte read) throws UnsupportedOperationException {
 			throw new UnsupportedOperationException();
 		}
 
@@ -512,28 +510,16 @@ public abstract class MidiParser {
 	/** Header of a track within a midi file, byte equivalent */
 	protected static final int TRACK_HEADER_INT = 0x4d54726b;
 
-	private final static Set<ParseState> instancesOfParseState =
-			new HashSet<>();
-
-	/**
-	 * Creates a new Parser using giving implementation.
-	 * 
-	 * @param sc
-	 * @return the selected parser
-	 */
-	public final static MidiParser createInstance(final StartupContainer sc) {
-		return new MidiParserImpl(sc);
-	}
+	private final static Set<ParseState> instancesOfParseState = new HashSet<>();
 
 	/** The master thread, to check for interruption */
 	protected final MasterThread master;
 
 	/** A map holding the parsed data */
-	protected final Map<Integer, List<MidiEvent>> eventsEncoded =
-			new HashMap<>();
+	protected final Map<Integer, List<MidiEvent>> eventsEncoded = new HashMap<>();
+
 	/** A map holding the parsed data */
 	protected final MidiMap eventsDecoded = new MidiMap(this);
-
 	/** A map to keep track of skipped tracks and resulting renumbering */
 	protected final Map<Integer, Integer> renumberMap = new HashMap<>();
 
@@ -545,9 +531,9 @@ public abstract class MidiParser {
 
 	/** implementing sub classes have to set the actual parsed duration */
 	protected double duration;
+
 	/** File currently being handled in this parser */
 	protected Path midi;
-
 	/** Number of tracks */
 	protected int ntracks;
 
@@ -566,6 +552,7 @@ public abstract class MidiParser {
 			channel = 0xff & c;
 		}
 	};
+
 	private final ParseState_Delta DELTA = new ParseState_Delta();
 	private final ParseState DISCARD_UNTIL_EOX = new ParseState() {
 
@@ -583,7 +570,6 @@ public abstract class MidiParser {
 		}
 
 	};
-
 	private final ParseState_ReadN DISCARD_N = new ParseState_ReadN() {
 
 		@Override
@@ -594,6 +580,7 @@ public abstract class MidiParser {
 			}
 		}
 	};
+
 	private final ParseState EOT = new ParseState_EOT();
 	private final ParseState_Header HEADER = new ParseState_Header();
 	private final ParseState_Type TYPE = new ParseState_Type();
@@ -617,13 +604,13 @@ public abstract class MidiParser {
 	private final ParseState_NoteOff NOTE_OFF = new ParseState_NoteOff();
 	private final ParseState_ProgramChange PROGRAM_CHANGE =
 			new ParseState_ProgramChange();
-
 	private final ParseState TEMPO = new ParseState_Tempo();
 
 	private final ParseState TIME = new ParseState_Time();
 
 	/** A map mapping channels to instruments */
 	private final Map<Byte, Byte> channelsToInstrument = new HashMap<>();
+
 	/** A map holding the instruments */
 	private final Map<Integer, MidiInstrument> instruments = new HashMap<>();
 	/** A map holding the titles */
@@ -639,7 +626,6 @@ public abstract class MidiParser {
 	private int lockRead = 0;
 	private long mod;
 	private ParseState state = HEADER;
-
 	private int trackLen;
 
 	/**
@@ -649,6 +635,16 @@ public abstract class MidiParser {
 	protected MidiParser(final IOHandler io, final MasterThread master) {
 		this.io = io;
 		this.master = master;
+	}
+
+	/**
+	 * Creates a new Parser using giving implementation.
+	 * 
+	 * @param sc
+	 * @return the selected parser
+	 */
+	public final static MidiParser createInstance(final StartupContainer sc) {
+		return new MidiParserImpl(sc);
 	}
 
 	/**
@@ -705,9 +701,8 @@ public abstract class MidiParser {
 				if (!map.containsKey(track)) {
 					final Byte channelObject = tracksToChannel.get(track);
 					final byte channel =
-							(byte) (channelObject == null
-									? track.byteValue() - 1 : channelObject
-											.byteValue());
+							(byte) (channelObject == null ? track.byteValue() - 1
+									: channelObject.byteValue());
 					if (channel == 9 || channel == 10) {
 						map.put(track, MidiInstrument.DRUMS);
 					} else {
@@ -715,8 +710,7 @@ public abstract class MidiParser {
 						if (channel == -1) {
 							i = MidiInstrument.get(track.byteValue());
 						} else {
-							final Byte instrument =
-									channelsToInstrument.get(channel);
+							final Byte instrument = channelsToInstrument.get(channel);
 							if (instrument == null) {
 								i = null;
 							} else {
@@ -749,8 +743,7 @@ public abstract class MidiParser {
 	 *            working directory for BruTE
 	 */
 	public final void midi2abc(final Path wd) {
-		final io.OutputStream gram =
-				io.openOut(wd.resolve("out.gram").toFile());
+		final io.OutputStream gram = io.openOut(wd.resolve("out.gram").toFile());
 		final io.OutputStream mf = io.openOut(wd.resolve("out.mf").toFile());
 		// TODO make midi2abc yourself
 		io.close(gram);
@@ -796,6 +789,13 @@ public abstract class MidiParser {
 			}
 		}
 
+	}
+
+	/**
+	 * @return the map mapping ids of midi-tracks to subsequent numbers
+	 */
+	public final Map<Integer, Integer> renumberMap() {
+		return new HashMap<>(renumberMap);
 	}
 
 	/**
@@ -903,13 +903,6 @@ public abstract class MidiParser {
 	public final Set<Integer> tracks() {
 		return eventsEncoded.keySet();
 	}
-	
-	/**
-	 * @return the map mapping ids of midi-tracks to subsequent numbers
-	 */
-	public final Map<Integer, Integer> renumberMap() {
-		return new HashMap<>(renumberMap);
-	}
 
 	private final void parseIfNeeded() throws FileNotFoundException {
 		if (lastParsedMidi != midi) {
@@ -984,8 +977,7 @@ public abstract class MidiParser {
 	 * @throws IOException
 	 *             if an I/O-Error occurs
 	 */
-	protected abstract void createMidiMap() throws ParsingException,
-			IOException;
+	protected abstract void createMidiMap() throws ParsingException, IOException;
 
 	/**
 	 * Decodes the previously read midi-map

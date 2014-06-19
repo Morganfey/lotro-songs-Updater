@@ -26,8 +26,8 @@ public class CreateBuilds {
 								.replace('.', '/')
 								+ ".class");
 		final Path root =
-				Path.getPath(url.toString().substring(5).split("/"))
-						.getParent().getParent();
+				Path.getPath(url.toString().substring(5).split("/")).getParent()
+						.getParent();
 		final Path p = root.resolve("modules");
 		final Path info = root.getParent().resolve("moduleInfo");
 		info.toFile().mkdirs();
@@ -60,14 +60,11 @@ public class CreateBuilds {
 							}
 							final Method m = clazz.getMethod("getVersion");
 							final int version =
-									((Integer) m.invoke(clazz.newInstance()))
-											.intValue();
+									((Integer) m.invoke(clazz.newInstance())).intValue();
 							final java.io.OutputStream out =
 									new java.io.FileOutputStream(info.resolve(
-											s.substring(0, s.length() - 6))
-											.toFile());
-							out.write(ByteBuffer.allocate(4).putInt(version)
-									.array());
+											s.substring(0, s.length() - 6)).toFile());
+							out.write(ByteBuffer.allocate(4).putInt(version).array());
 							out.flush();
 							out.close();
 							System.out.println(s + " version:" + version);

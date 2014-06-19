@@ -271,17 +271,6 @@ class StringBuilder {
 		content[cIdx][--head] = c;
 	}
 
-	final void appendLast(char c) {
-		if (tail == content[cIdx].length) {
-			if (head == 0) {
-				growAndCopy();
-			} else {
-				tail = 0;
-			}
-		}
-		content[cIdx][tail++] = c;
-	}
-
 	final StringBuilder appendFirst(final String s) {
 		if (isEmpty()) {
 			set(s);
@@ -304,6 +293,17 @@ class StringBuilder {
 		System.arraycopy(array, 0, content[cIdx], PATTERN_SIZE, array.length);
 		tail += array.length;
 		return this;
+	}
+
+	final void appendLast(char c) {
+		if (tail == content[cIdx].length) {
+			if (head == 0) {
+				growAndCopy();
+			} else {
+				tail = 0;
+			}
+		}
+		content[cIdx][tail++] = c;
 	}
 
 	final StringBuilder appendLast(final String s) {
@@ -339,7 +339,7 @@ class StringBuilder {
 	}
 
 	final byte getByte(int pos) {
-		return (byte) (((charAt(pos) - '0') << 4) | (charAt(pos + 1) - '0'));
+		return (byte) (charAt(pos) - '0' << 4 | charAt(pos + 1) - '0');
 
 	}
 

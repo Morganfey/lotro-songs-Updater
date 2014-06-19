@@ -25,8 +25,8 @@ public class ZipCompression {
 	 * @param files
 	 *            files to compress
 	 */
-	public static final void compress(final File zippedFile,
-			final IOHandler ioHandler, final File... files) {
+	public static final void compress(final File zippedFile, final IOHandler ioHandler,
+			final File... files) {
 		try {
 			if (!zippedFile.exists()) {
 				// create file write zip header
@@ -36,13 +36,11 @@ public class ZipCompression {
 				ioHandler.close(out);
 			}
 			final ZipFile zip = new ZipFile(zippedFile);
-			final ZipOutputStreams outs =
-					ZipCompression.openOut(zip, ioHandler);
+			final ZipOutputStreams outs = ZipCompression.openOut(zip, ioHandler);
 			final ZipOutputStream out = outs.zipOutputStream;
 			final java.nio.file.Path zipPath = zippedFile.toPath().getParent();
 			for (final File file : files) {
-				final String relName =
-						zipPath.relativize(file.toPath()).toString();
+				final String relName = zipPath.relativize(file.toPath()).toString();
 				final ZipEntry entry = new ZipEntry(relName);
 				final InputStream in = ioHandler.openIn(file);
 				final byte[] buff = new byte[16000];
@@ -65,10 +63,9 @@ public class ZipCompression {
 		}
 	}
 
-	private static final ZipOutputStreams openOut(
-			final ZipFile zippedUpdateFile, final IOHandler ioHandler) {
-		final OutputStream out =
-				ioHandler.openOut(new File(zippedUpdateFile.getName()));
+	private static final ZipOutputStreams openOut(final ZipFile zippedUpdateFile,
+			final IOHandler ioHandler) {
+		final OutputStream out = ioHandler.openOut(new File(zippedUpdateFile.getName()));
 		return new ZipOutputStreams(out, new ZipOutputStream(out));
 	}
 }
@@ -78,8 +75,7 @@ class ZipOutputStreams {
 	final OutputStream out;
 	final ZipOutputStream zipOutputStream;
 
-	public ZipOutputStreams(final OutputStream out,
-			final ZipOutputStream zipOutputStream) {
+	public ZipOutputStreams(final OutputStream out, final ZipOutputStream zipOutputStream) {
 		this.out = out;
 		this.zipOutputStream = zipOutputStream;
 	}

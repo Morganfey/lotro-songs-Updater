@@ -11,16 +11,16 @@ import javax.swing.JPanel;
 public interface DndPluginCallerParams {
 
 	/**
+	 * @return the value to use whenever <i>this</i> paremeter has not been set.
+	 */
+	Object defaultValue();
+
+	/**
 	 * Called by the GUI whenever <i>this</i> shall be displayed using given panel. Accessing the global parameters.
 	 * 
 	 * @param panel
 	 */
 	void display(final JPanel panel);
-
-	/**
-	 * @return the name of <i>this</i> param, to be used in a GUI
-	 */
-	String value();
 
 	/**
 	 * Called by the GUI whenever <i>this</i> shall be displayed using given panel. Accessing the local parameters.
@@ -33,7 +33,7 @@ public interface DndPluginCallerParams {
 			JPanel panel, DragObject<C, D, T> object, DropTarget<C, D, T>[] targets);
 
 	/**
-	 * @return the value to use whenever <i>this</i> paremeter has not been set.
+	 * @return the name of <i>this</i> param, to be used in a GUI
 	 */
-	Object defaultValue();
+	String value();
 }

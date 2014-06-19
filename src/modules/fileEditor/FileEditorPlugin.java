@@ -20,10 +20,11 @@ import modules.FileEditor;
 import gui.GUIInterface;
 import gui.GUIPlugin;
 
+
 /**
  * GUIPlugin allowing to select multiple files intended to edit afterwards
+ * 
  * @author Nelphindal
- *
  */
 public abstract class FileEditorPlugin extends GUIPlugin {
 
@@ -44,25 +45,11 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 		pathLabel = new JLabel();
 	}
 
-	@Override
-	protected final boolean display(final JPanel panel) {
-		final JPanel panelSelection = new JPanel();
-		final JPanel panelButton = new JPanel();
-		final JScrollPane scroll = new JScrollPane(panelSelection);
-
-		scroll.setSize(400, 400);
-		scroll.setPreferredSize(scroll.getSize());
-
-		panelButton.setLayout(new BorderLayout());
-		panelSelection.setLayout(new GridLayout(0, 1));
-		panel.setLayout(new BorderLayout());
-		panel.add(scroll);
-		panel.add(pathLabel, BorderLayout.NORTH);
-		panel.add(panelButton, BorderLayout.SOUTH);
-		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
-		panelButton.add(GUIInterface.Button.ABORT.getButton(), BorderLayout.WEST);
-		displayDir(panelSelection, scroll);
-		return false;
+	/**
+	 * @return the selection
+	 */
+	public final Set<Path> getSelection() {
+		return selection;
 	}
 
 	private final void displayDir(final JPanel panel, final JScrollPane scroll) {
@@ -206,10 +193,24 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 		}
 	}
 
-	/**
-	 * @return the selection
-	 */
-	public final Set<Path> getSelection() {
-		return selection;
+	@Override
+	protected final boolean display(final JPanel panel) {
+		final JPanel panelSelection = new JPanel();
+		final JPanel panelButton = new JPanel();
+		final JScrollPane scroll = new JScrollPane(panelSelection);
+
+		scroll.setSize(400, 400);
+		scroll.setPreferredSize(scroll.getSize());
+
+		panelButton.setLayout(new BorderLayout());
+		panelSelection.setLayout(new GridLayout(0, 1));
+		panel.setLayout(new BorderLayout());
+		panel.add(scroll);
+		panel.add(pathLabel, BorderLayout.NORTH);
+		panel.add(panelButton, BorderLayout.SOUTH);
+		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
+		panelButton.add(GUIInterface.Button.ABORT.getButton(), BorderLayout.WEST);
+		displayDir(panelSelection, scroll);
+		return false;
 	}
 }

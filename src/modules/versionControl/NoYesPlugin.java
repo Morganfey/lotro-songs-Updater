@@ -35,6 +35,13 @@ public final class NoYesPlugin extends GUIPlugin {
 		this.progress = progress;
 	}
 
+	/**
+	 * @return true if yes was activated
+	 */
+	public final boolean get() {
+		return gui.getPressedButton() == GUI.Button.YES;
+	}
+
 	/** */
 	@Override
 	protected final boolean display(final JPanel panel) {
@@ -51,13 +58,6 @@ public final class NoYesPlugin extends GUIPlugin {
 		if (progress)
 			panel.add(gui.getProgressBar(), BorderLayout.NORTH);
 		return false;
-	}
-
-	/**
-	 * @return true if yes was activated
-	 */
-	public final boolean get() {
-		return gui.getPressedButton() == GUI.Button.YES;
 	}
 
 	/** */

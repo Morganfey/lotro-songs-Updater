@@ -24,8 +24,8 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 	private final JPanel panel = new JPanel();
 
 	private DropTargetContainer<JPanel, JPanel, JPanel> c;
-	private DoubleMap<BruteParams, DropTarget<JPanel, JPanel, JPanel>, Object> paramMap
-	= new DoubleMap<>();
+	private final DoubleMap<BruteParams, DropTarget<JPanel, JPanel, JPanel>, Object> paramMap =
+			new DoubleMap<>();
 
 	/**
 	 * Creates a new track
@@ -57,6 +57,10 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 		original = track;
 		track.aliases.add(this);
 		panel.setLayout(new BorderLayout());
+	}
+
+	public final static BruteParams[] getParams() {
+		return BruteParams.valuesLocal();
 	}
 
 	/** */
@@ -110,6 +114,11 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 		}
 		return aliases.toArray(new Track[aliases.size()]);
 
+	}
+
+	@Override
+	public final JPanel getDisplayableComponent() {
+		return panel;
 	}
 
 	/**
@@ -166,6 +175,18 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 		return aliases == null;
 	}
 
+	@Override
+	public final void setParam(final DndPluginCallerParams param,
+			final DropTarget<JPanel, JPanel, JPanel> target, int value) {
+		paramMap.put((BruteParams) param, target, value);
+	}
+
+
+	@Override
+	public final void setParam(final DndPluginCallerParams param, int value) {
+		params.put(param, value);
+	}
+
 	/**
 	 * Returns a string representing this track.
 	 * Format is "id name [targets]
@@ -175,26 +196,5 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 		return idBrute + " " + name + " " + targets;
 	}
 
-	@Override
-	public final JPanel getDisplayableComponent() {
-		return panel;
-	}
 
-	public final static BruteParams[] getParams() {
-		return BruteParams.valuesLocal();
-	}
-
-
-	@Override
-	public final void setParam(final DndPluginCallerParams param,
-			final DropTarget<JPanel, JPanel, JPanel> target, int value) {
-		paramMap.put((BruteParams) param, target, value);
-	}
-
-	@Override
-	public final void setParam(final DndPluginCallerParams param, int value) {
-		params.put(param, value);
-	}
-
-	
 }

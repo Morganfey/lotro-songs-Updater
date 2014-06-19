@@ -21,20 +21,18 @@ import modules.abcCreator.DragObject;
 import modules.abcCreator.DropTarget;
 import modules.abcCreator.DropTargetContainer;
 
-/** 
- * 
+
+/**
  * @author Nelphindal
- *
  */
-public class MidiInstrumentDropTarget implements
-		DropTarget<JPanel, JPanel, JPanel> {
+public class MidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel> {
 
 	private final MidiInstrument midiInstrument;
-	private final Set<DragObject<JPanel, JPanel, JPanel>> objects =
-			new HashSet<>();
+	private final Set<DragObject<JPanel, JPanel, JPanel>> objects = new HashSet<>();
 	private final JPanel panel;
 	private final int number;
 	private final Map<String, Integer> params = new HashMap<>();
+
 	MidiInstrumentDropTarget(final MidiInstrument midiInstrument, int id) {
 		this.midiInstrument = midiInstrument;
 		number = id;
@@ -141,9 +139,14 @@ public class MidiInstrumentDropTarget implements
 
 	/** */
 	@Override
-	public final DropTargetContainer<JPanel, JPanel, JPanel>
-			getContainer() {
+	public final DropTargetContainer<JPanel, JPanel, JPanel> getContainer() {
 		return midiInstrument;
+	}
+
+	/** */
+	@Override
+	public final JPanel getDisplayableComponent() {
+		return panel;
 	}
 
 	/** */
@@ -172,8 +175,7 @@ public class MidiInstrumentDropTarget implements
 
 	/** */
 	@Override
-	public final Iterator<DragObject<JPanel, JPanel, JPanel>>
-			iterator() {
+	public final Iterator<DragObject<JPanel, JPanel, JPanel>> iterator() {
 		return objects.iterator();
 	}
 
@@ -206,20 +208,14 @@ public class MidiInstrumentDropTarget implements
 
 	/**
 	 * Helper function to clear out all instruments playing object
+	 * 
 	 * @param object
 	 * @param empty
 	 */
-	protected final void clearTargets(
-			final DragObject<JPanel, JPanel, JPanel> object,
+	protected final void clearTargets(final DragObject<JPanel, JPanel, JPanel> object,
 			final Set<DropTarget<JPanel, JPanel, JPanel>> empty) {
 		if (objects.remove(object) && objects.isEmpty()) {
 			empty.add(this);
 		}
-	}
-
-	/** */
-	@Override
-	public final JPanel getDisplayableComponent() {
-		return panel;
 	}
 }

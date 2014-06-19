@@ -26,8 +26,7 @@ public class OutputStream extends FileOutputStream {
 	 * @throws FileNotFoundException
 	 *             if <i>file</i> exists and is no regular file
 	 */
-	public OutputStream(final File file, final Charset cs)
-			throws FileNotFoundException {
+	public OutputStream(final File file, final Charset cs) throws FileNotFoundException {
 		this(file, cs, false);
 	}
 

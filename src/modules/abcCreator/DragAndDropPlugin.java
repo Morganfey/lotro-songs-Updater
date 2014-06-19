@@ -113,6 +113,24 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 	}
 
 	/**
+	 * @return the size.
+	 */
+	public abstract int size();
+
+	/**
+	 * Adds given target to the component created by {@link #initCenter(Map)}
+	 * 
+	 * @param target
+	 */
+	protected abstract void addToCenter(final DropTarget<C, D, T> target);
+
+
+	/**
+	 * @return the component to be shown on the bottom.
+	 */
+	protected abstract Component createButtonPanel();
+
+	/**
 	 * Displays the tracks, instruments and their association
 	 */
 	@Override
@@ -212,27 +230,17 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 	}
 
 	/**
-	 * @return the component to be shown on the bottom.
+	 * Notifies <i>this</i> plugin that last target has been removed and the
+	 * center should be now empty
 	 */
-	protected abstract Component createButtonPanel();
+	protected abstract void emptyCenter();
 
-
-	/**
-	 * @return the map needed for {@link #initLeft(Map)} and {@link #initCenter(Map)}
-	 */
-	protected abstract Map<Integer, DragObject<C, D, T>> initInitListLeft();
-
-	/**
-	 * @return the size.
-	 */
-	public abstract int size();
 
 	/** */
 	@Override
 	protected final String getTitle() {
 		return "BruTE";
 	}
-
 
 	/**
 	 * @param initListLeft
@@ -242,16 +250,15 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 			final Map<Integer, DragObject<C, D, T>> initListLeft);
 
 	/**
+	 * @return the map needed for {@link #initLeft(Map)} and {@link #initCenter(Map)}
+	 */
+	protected abstract Map<Integer, DragObject<C, D, T>> initInitListLeft();
+
+	/**
 	 * @param initListLeft
 	 * @return component to be shown to the left
 	 */
-	protected abstract Component initLeft(
-			Map<Integer, DragObject<C, D, T>> initListLeft);
-
-	/**
-	 * @return component to be shown to the right
-	 */
-	protected abstract Component initRight();
+	protected abstract Component initLeft(Map<Integer, DragObject<C, D, T>> initListLeft);
 
 	/**
 	 * Handles everything needed to show given object
@@ -261,11 +268,9 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 	protected abstract void initObject(final DragObject<C, D, T> object);
 
 	/**
-	 * Adds given target to the component created by {@link #initCenter(Map)}
-	 * 
-	 * @param target
+	 * @return component to be shown to the right
 	 */
-	protected abstract void addToCenter(final DropTarget<C, D, T> target);
+	protected abstract Component initRight();
 
 	/**
 	 * Handles everything needed to show given target
@@ -273,12 +278,6 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 	 * @param target
 	 */
 	protected abstract void initTarget(final DropTarget<C, D, T> target);
-
-	/**
-	 * Notifies <i>this</i> plugin that last target has been removed and the
-	 * center should be now empty
-	 */
-	protected abstract void emptyCenter();
 
 	/** */
 	@Override

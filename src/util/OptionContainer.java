@@ -14,6 +14,20 @@ import main.Main;
  */
 public class OptionContainer {
 
+	private final Map<String, Option> options = new HashMap<>();
+
+	private final Flag flags;
+
+	/**
+	 * Creates a new option container. All options will be backed up to given
+	 * flags
+	 * 
+	 * @param flags
+	 */
+	public OptionContainer(final Flag flags) {
+		this.flags = flags;
+	}
+
 	/**
 	 * @param section
 	 * @param key
@@ -39,20 +53,6 @@ public class OptionContainer {
 		Main.setConfigValue(section, key, value);
 	}
 
-	private final Map<String, Option> options = new HashMap<>();
-
-	private final Flag flags;
-
-	/**
-	 * Creates a new option container. All options will be backed up to given
-	 * flags
-	 * 
-	 * @param flags
-	 */
-	public OptionContainer(final Flag flags) {
-		this.flags = flags;
-	}
-
 	/**
 	 * Registers a option
 	 * 
@@ -61,19 +61,16 @@ public class OptionContainer {
 	 * @param tooltip
 	 *            a description to be printed in the help message
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or
-	 *            {@link main.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or {@link main.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or
-	 *            {@link main.Flag#NoLongFlag} to enable this option
+	 *            a unique printable string to register at flags or {@link main.Flag#NoLongFlag} to enable this option
 	 * @param argExpected
 	 * @param option
 	 *            the Option to be registered
 	 * @see Flag#registerOption(String, String, char, String, boolean)
 	 */
-	public final void addOption(final String id, final String tooltip,
-			char shortFlag, final String longFlag, boolean argExpected,
-			final Option option) {
+	public final void addOption(final String id, final String tooltip, char shortFlag,
+			final String longFlag, boolean argExpected, final Option option) {
 		flags.registerOption(id, tooltip, shortFlag, longFlag, argExpected);
 		options.put(id, option);
 	}

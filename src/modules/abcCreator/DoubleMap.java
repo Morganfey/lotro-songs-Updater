@@ -3,9 +3,10 @@ package modules.abcCreator;
 import java.util.HashMap;
 import java.util.Map;
 
+
 class DoubleMap<K0, K1, V> {
-	
-	
+
+
 	private final Map<K0, Map<K1, V>> map = new HashMap<>();
 
 	public final void clear() {
@@ -18,10 +19,6 @@ class DoubleMap<K0, K1, V> {
 			return null;
 		return e0.get(key1);
 	}
-	
-	public String toString() {
-		return map.toString();
-	}
 
 	public V put(final K0 key0, final K1 key1, final V value) {
 		final Map<K1, V> e0 = map.get(key0);
@@ -33,6 +30,11 @@ class DoubleMap<K0, K1, V> {
 			e1 = e0;
 		}
 		return e1.put(key1, value);
+	}
+
+	@Override
+	public String toString() {
+		return map.toString();
 	}
 
 }

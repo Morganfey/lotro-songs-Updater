@@ -41,6 +41,7 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 	private final Map<MidiInstrumentDropTarget, Set<Integer>> instrumentToTrack =
 			new TreeMap<>();
 
+	private JPanel panelLeft;
 	private JScrollPane center;
 	private Container empty;
 
@@ -58,190 +59,6 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 			final DropTargetContainer<JPanel, JPanel, JPanel>[] targets,
 			final IOHandler io) {
 		super(abcCreator, taskPool, parser, targets, io);
-	}
-
-	/**
-	 * Initializes the panel displaying all future instrument of created
-	 * abc-file.
-	 */
-	@Override
-	protected final JScrollPane initCenter(
-			final Map<Integer, DragObject<JPanel, JPanel, JPanel>> trackList) {
-		final JPanel panel = new JPanel();
-		final TreeSet<DropTarget<JPanel, JPanel, JPanel>> set = new TreeSet<>();
-		for (final DragObject<JPanel, JPanel, JPanel> o : trackList.values()) {
-			for (final DropTarget<JPanel, JPanel, JPanel> t : o.getTargets()) {
-				if (t != state.emptyTarget)
-					set.add(t);
-			}
-		}
-		panel.setLayout(new GridLayout(0, 1));
-		for (final DropTarget<JPanel, JPanel, JPanel> t : set) {
-			initTarget(t);
-			panel.add(t.getDisplayableComponent());
-
-		}
-		center = new JScrollPane(panel);
-		return center;
-	}
-
-	/**
-	 * Creates the tracks and initializes their listeners
-	 */
-	@Override
-	protected final JScrollPane initLeft(
-			Map<Integer, DragObject<JPanel, JPanel, JPanel>> trackList) {
-		final Set<Integer> midiIds = parser.tracks();
-		final Map<Integer, String> titles = parser.titles();
-		final Map<Integer, MidiInstrument> instruments = parser.instruments();
-		final Map<Integer, Integer> idBrute = parser.renumberMap();
-		final JScrollPane scrollPane;
-		final JPanel panel;
-
-		midiIds.remove(0);
-		panel = new JPanel();
-		panel.setLayout(new GridLayout(0, 1));
-		for (final Integer id : midiIds) {
-			final Track track = new Track(idBrute.get(id), id, titles.get(id));
-			trackList.put(id, track);
-			panel.add(track.getDisplayableComponent());
-			track.getDisplayableComponent().add(new JLabel(track.getName()));
-			track.getDisplayableComponent().addMouseListener(
-					new DO_Listener<JPanel, JPanel, JPanel>(track, state, Track
-							.getParams(), caller));
-			final MidiInstrument instrument = instruments.get(id);
-			final DropTarget<JPanel, JPanel, JPanel> target;
-			if (instrument == null) {
-				target = state.emptyTarget;
-			} else {
-				target = instrument.createNewTarget();
-				track.addTarget((MidiInstrumentDropTarget) target);
-			}
-			target.link(track);
-			link(track, target);
-		}
-		scrollPane = new JScrollPane(panel);
-		return scrollPane;
-	}
-
-	/**
-	 * Creates the panel for the instrument-categories.
-	 */
-	@Override
-	protected final JPanel initRight() {
-		final JPanel mainPanel = new JPanel();
-		mainPanel.setLayout(new GridLayout(0, 1));
-
-		for (final DropTargetContainer<JPanel, JPanel, JPanel> t : targets) {
-			final JLabel label = new JLabel(t.getName());
-			final JPanel panel = t.getDisplayableComponent();
-			panel.removeAll(); // needed in case of not first run
-			panel.addMouseListener(new TC_Listener<JPanel, JPanel, JPanel, JPanel>(t,
-					state));
-			panel.setMinimumSize(new Dimension(120, 15));
-			panel.setPreferredSize(new Dimension(120, 33));
-			panel.add(label);
-			mainPanel.add(panel);
-		}
-		return mainPanel;
-	}
-
-	/** */
-	@Override
-	protected final void initObject(final DragObject<JPanel, JPanel, JPanel> object) {
-		// TODO nothing to do?
-	}
-
-	/** */
-	@Override
-	protected final void initTarget(final DropTarget<JPanel, JPanel, JPanel> target) {
-		final Font font = Font.decode("Arial bold 9");
-		final JPanel panelNew = target.getDisplayableComponent();
-
-		final JPanel labelPanel = new JPanel();
-		final JLabel label = new JLabel(target.getName());
-
-		labelPanel.add(label);
-
-		final JPanel paramPanel = new JPanel();
-		paramPanel.setLayout(new GridLayout(0, 1));
-
-		for (final String param : target.getParamsToSet()) {
-			final JLabel labelP = new JLabel(param);
-			final JPanel panelP0 = new JPanel();
-			final JPanel panelP1 = new JPanel();
-
-			labelP.setFont(font);
-
-			target.displayParam(param, panelP1, caller);
-
-			panelP0.setBackground(Color.WHITE);
-			panelP0.addMouseListener(new MouseListener() {
-
-				private boolean showing;
-				private final Color c = Color.YELLOW.darker();
-
-				@Override
-				public final void mouseClicked(final MouseEvent e) {
-					e.consume();
-				}
-
-				@Override
-				public final void mouseEntered(final MouseEvent e) {
-					panelP0.setBackground(showing ? Color.BLUE : Color.GREEN);
-					e.consume();
-				}
-
-				@Override
-				public void mouseExited(final MouseEvent e) {
-					panelP0.setBackground(showing ? c : Color.WHITE);
-					e.consume();
-				}
-
-				@Override
-				public final void mousePressed(final MouseEvent e) {
-					e.consume();
-				}
-
-				@Override
-				public final void mouseReleased(final MouseEvent e) {
-					if (showing) {
-						paramPanel.remove(panelP1);
-						panelP0.setBackground(c);
-					} else {
-						paramPanel.add(panelP1);
-						panelP0.setBackground(Color.WHITE);
-					}
-					showing ^= true;
-					paramPanel.revalidate();
-				}
-
-			});
-			panelP0.add(labelP);
-			paramPanel.add(panelP0);
-		}
-
-		panelNew.setLayout(new BorderLayout());
-		panelNew.add(labelPanel);
-		labelPanel.setBackground(null);
-		panelNew.add(paramPanel, BorderLayout.SOUTH);
-
-		target.getDisplayableComponent().addMouseListener(
-				new DT_Listener<JPanel, JPanel, JPanel, JPanel>(target, state));
-	}
-
-	/** Creates a map, mapping the tracks. */
-	@Override
-	protected final Map<Integer, DragObject<JPanel, JPanel, JPanel>> initInitListLeft() {
-		return new HashMap<>();
-	}
-
-	/**
-	 * @return the count of instruments in created abc
-	 */
-	@Override
-	public final int size() {
-		return instrumentToTrack.size();
 	}
 
 	/**
@@ -274,6 +91,21 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 	}
 
 	/**
+	 * @return the count of instruments in created abc
+	 */
+	@Override
+	public final int size() {
+		return instrumentToTrack.size();
+	}
+
+	/**
+	 * @return a tree containing all currently mapped instruments.
+	 */
+	public final TreeSet<DropTarget<?, ?, ?>> targets() {
+		return new TreeSet<DropTarget<?, ?, ?>>(instrumentToTrack.keySet());
+	}
+
+	/**
 	 * Unlinks object with target
 	 * 
 	 * @param object
@@ -292,18 +124,11 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 		return false;
 	}
 
-	/**
-	 * @return a tree containing all currently mapped instruments.
-	 */
-	public final TreeSet<DropTarget<?, ?, ?>> targets() {
-		return new TreeSet<DropTarget<?, ?, ?>>(instrumentToTrack.keySet());
-	}
-
 	/** */
 	@Override
 	protected final void addToCenter(final DropTarget<JPanel, JPanel, JPanel> target) {
 		final Container c =
-				((Container) ((Container) center.getComponent(0)).getComponent(0));
+				(Container) ((Container) center.getComponent(0)).getComponent(0);
 		if (empty != null) {
 			empty = null;
 			c.removeAll();
@@ -320,20 +145,7 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 		center.revalidate();
 	}
 
-	/** */
 	@Override
-	protected final void emptyCenter() {
-		empty = center.getParent();
-		final Container c =
-				((Container) ((Container) center.getComponent(0)).getComponent(0));
-		final JLabel label = new JLabel("- empty -");
-		label.setForeground(Color.WHITE);
-		c.add(label);
-		emptyC = c.getBackground();
-		c.setBackground(Color.RED);
-		empty.validate();
-	}
-
 	protected final JPanel createButtonPanel() {
 		final JPanel panel = new JPanel();
 		final JPanel panelCenter = new JPanel();
@@ -453,8 +265,6 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 				}
 			}
 
-			protected abstract void trigger();
-
 			protected final void exit() {
 				panelCenter.remove(globalMenu);
 				globalMenu.removeAll();
@@ -465,6 +275,8 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 				testButton.setVisible(true);
 				panel.revalidate();
 			}
+
+			protected abstract void trigger();
 		}
 		;
 
@@ -500,6 +312,8 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 				testButton.setVisible(false);
 
 				for (final DndPluginCallerParams m : caller.valuesGlobal()) {
+					if (m == null)
+						continue;
 					final JPanel optionPanel = new JPanel();
 					final JButton button = new JButton(m.toString());
 					final MenuListener listener = new MenuListener(button) {
@@ -560,6 +374,199 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 		panel.add(GUI.Button.ABORT.getButton(), BorderLayout.WEST);
 		panel.add(testButton, BorderLayout.EAST);
 		return panel;
+	}
+
+	/** */
+	@Override
+	protected final void emptyCenter() {
+		empty = center.getParent();
+		final Container c =
+				(Container) ((Container) center.getComponent(0)).getComponent(0);
+		final JLabel label = new JLabel("- empty -");
+		label.setForeground(Color.WHITE);
+		c.add(label);
+		emptyC = c.getBackground();
+		c.setBackground(Color.RED);
+		empty.validate();
+	}
+
+	/**
+	 * Initializes the panel displaying all future instrument of created
+	 * abc-file.
+	 */
+	@Override
+	protected final JScrollPane initCenter(
+			final Map<Integer, DragObject<JPanel, JPanel, JPanel>> trackList) {
+		final JPanel panel = new JPanel();
+		final TreeSet<DropTarget<JPanel, JPanel, JPanel>> set = new TreeSet<>();
+		for (final DragObject<JPanel, JPanel, JPanel> o : trackList.values()) {
+			for (final DropTarget<JPanel, JPanel, JPanel> t : o.getTargets()) {
+				if (t != state.emptyTarget)
+					set.add(t);
+			}
+		}
+		panel.setLayout(new GridLayout(0, 1));
+		for (final DropTarget<JPanel, JPanel, JPanel> t : set) {
+			initTarget(t);
+			panel.add(t.getDisplayableComponent());
+
+		}
+		center = new JScrollPane(panel);
+		return center;
+	}
+
+	/** Creates a map, mapping the tracks. */
+	@Override
+	protected final Map<Integer, DragObject<JPanel, JPanel, JPanel>> initInitListLeft() {
+		return new HashMap<>();
+	}
+
+	/**
+	 * Creates the tracks and initializes their listeners
+	 */
+	@Override
+	protected final JScrollPane initLeft(
+			Map<Integer, DragObject<JPanel, JPanel, JPanel>> trackList) {
+		final Set<Integer> midiIds = parser.tracks();
+		final Map<Integer, String> titles = parser.titles();
+		final Map<Integer, MidiInstrument> instruments = parser.instruments();
+		final Map<Integer, Integer> idBrute = parser.renumberMap();
+		final JScrollPane scrollPane;
+
+		midiIds.remove(0);
+		panelLeft = new JPanel();
+		panelLeft.setLayout(new GridLayout(0, 1));
+		for (final Integer id : midiIds) {
+			final Track track = new Track(idBrute.get(id), id, titles.get(id));
+			trackList.put(id, track);
+			panelLeft.add(track.getDisplayableComponent());
+			track.getDisplayableComponent().add(new JLabel(track.getName()));
+			track.getDisplayableComponent().addMouseListener(
+					new DO_Listener<JPanel, JPanel, JPanel>(track, state, Track
+							.getParams(), caller));
+			final MidiInstrument instrument = instruments.get(id);
+			final DropTarget<JPanel, JPanel, JPanel> target;
+			if (instrument == null) {
+				target = state.emptyTarget;
+			} else {
+				target = instrument.createNewTarget();
+				track.addTarget(target);
+			}
+			target.link(track);
+			link(track, target);
+		}
+		scrollPane = new JScrollPane(panelLeft);
+		return scrollPane;
+	}
+
+	/** */
+	@Override
+	protected final void initObject(final DragObject<JPanel, JPanel, JPanel> object) {
+		panelLeft.add(object.getDisplayableComponent());
+		object.getDisplayableComponent().add(new JLabel(object.getName()));
+		object.getDisplayableComponent().addMouseListener(
+				new DO_Listener<JPanel, JPanel, JPanel>(object, state, Track.getParams(),
+						caller));
+		panelLeft.revalidate();
+	}
+
+	/**
+	 * Creates the panel for the instrument-categories.
+	 */
+	@Override
+	protected final JPanel initRight() {
+		final JPanel mainPanel = new JPanel();
+		mainPanel.setLayout(new GridLayout(0, 1));
+
+		for (final DropTargetContainer<JPanel, JPanel, JPanel> t : targets) {
+			final JLabel label = new JLabel(t.getName());
+			final JPanel panel = t.getDisplayableComponent();
+			panel.removeAll(); // needed in case of not first run
+			panel.addMouseListener(new TC_Listener<JPanel, JPanel, JPanel>(t, state));
+			panel.setMinimumSize(new Dimension(120, 15));
+			panel.setPreferredSize(new Dimension(120, 33));
+			panel.add(label);
+			mainPanel.add(panel);
+		}
+		return mainPanel;
+	}
+
+	/** */
+	@Override
+	protected final void initTarget(final DropTarget<JPanel, JPanel, JPanel> target) {
+		final Font font = Font.decode("Arial bold 9");
+		final JPanel panelNew = target.getDisplayableComponent();
+
+		final JPanel labelPanel = new JPanel();
+		final JLabel label = new JLabel(target.getName());
+
+		labelPanel.add(label);
+
+		final JPanel paramPanel = new JPanel();
+		paramPanel.setLayout(new GridLayout(0, 1));
+
+		for (final String param : target.getParamsToSet()) {
+			final JLabel labelP = new JLabel(param);
+			final JPanel panelP0 = new JPanel();
+			final JPanel panelP1 = new JPanel();
+
+			labelP.setFont(font);
+
+			target.displayParam(param, panelP1, caller);
+
+			panelP0.setBackground(Color.WHITE);
+			panelP0.addMouseListener(new MouseListener() {
+
+				private boolean showing;
+				private final Color c = Color.YELLOW.darker();
+
+				@Override
+				public final void mouseClicked(final MouseEvent e) {
+					e.consume();
+				}
+
+				@Override
+				public final void mouseEntered(final MouseEvent e) {
+					panelP0.setBackground(showing ? Color.BLUE : Color.GREEN);
+					e.consume();
+				}
+
+				@Override
+				public void mouseExited(final MouseEvent e) {
+					panelP0.setBackground(showing ? c : Color.WHITE);
+					e.consume();
+				}
+
+				@Override
+				public final void mousePressed(final MouseEvent e) {
+					e.consume();
+				}
+
+				@Override
+				public final void mouseReleased(final MouseEvent e) {
+					if (showing) {
+						paramPanel.remove(panelP1);
+						panelP0.setBackground(c);
+					} else {
+						paramPanel.add(panelP1);
+						panelP0.setBackground(Color.WHITE);
+					}
+					showing ^= true;
+					paramPanel.revalidate();
+				}
+
+			});
+			panelP0.add(labelP);
+			paramPanel.add(panelP0);
+		}
+
+		panelNew.setLayout(new BorderLayout());
+		panelNew.add(labelPanel);
+		labelPanel.setBackground(null);
+		panelNew.add(paramPanel, BorderLayout.SOUTH);
+
+		target.getDisplayableComponent().addMouseListener(
+				new DT_Listener<JPanel, JPanel, JPanel>(target, state));
 	}
 
 }

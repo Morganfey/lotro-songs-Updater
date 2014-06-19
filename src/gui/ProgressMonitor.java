@@ -29,11 +29,9 @@ public class ProgressMonitor {
 	 *            message to be shown
 	 * @param paramInt
 	 *            units representing 100%, -1 if unknown. The scale size can be
-	 *            set later by calling
-	 *            {@link #beginTaskPreservingProgress(String, int)}
+	 *            set later by calling {@link #beginTaskPreservingProgress(String, int)}
 	 */
-	public final synchronized void beginTask(final String paramString,
-			int paramInt) {
+	public final synchronized void beginTask(final String paramString, int paramInt) {
 		if (paramInt < 0) {
 			progress = -1;
 		} else {
@@ -50,8 +48,8 @@ public class ProgressMonitor {
 	 * @param paramInt
 	 *            units representing 100%
 	 */
-	public final synchronized void beginTaskPreservingProgress(
-			final String paramString, int paramInt) {
+	public final synchronized void beginTaskPreservingProgress(final String paramString,
+			int paramInt) {
 		if (!init) {
 			startSafe();
 		}

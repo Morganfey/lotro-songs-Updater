@@ -42,9 +42,7 @@ public interface GUIInterface {
 		final JButton button;
 
 		Button() {
-			button =
-					new JButton(name().charAt(0)
-							+ name().substring(1).toUpperCase());
+			button = new JButton(name().charAt(0) + name().substring(1).toUpperCase());
 		}
 
 		/**
@@ -84,6 +82,9 @@ public interface GUIInterface {
 	 * @return the last pressed button.
 	 */
 	Button getPressedButton();
+
+	/** @return a component to display a progress-bar */
+	Component getProgressBar();
 
 	/**
 	 * Initializes all componets allowing to display a progress
@@ -149,8 +150,7 @@ public interface GUIInterface {
 	void setProgressSize(int size);
 
 	/**
-	 * Works like combined {@link #setProgressTitle(String)} and
-	 * {@link #setProgressSize(int)}. {@link #initProgress()} will be called as
+	 * Works like combined {@link #setProgressTitle(String)} and {@link #setProgressSize(int)}. {@link #initProgress()} will be called as
 	 * needed.
 	 * 
 	 * @param size
@@ -164,8 +164,5 @@ public interface GUIInterface {
 	 * @param title
 	 */
 	void setProgressTitle(String title);
-
-	/** @return a component to display a progress-bar */
-	Component getProgressBar();
 
 }
