@@ -444,16 +444,21 @@ public final class VersionControl implements Module {
 
 			if (!band.resolve(".git").exists()) {
 				checkoutBand();
+				if (!band.resolve(".git").exists())
+					gitSession_band = null;
+				else
+					gitSession_band = Git.open(band.toFile());
+			} else
+				gitSession_band = Git.open(band.toFile());
+			if (gitSession_band != null) {
+				final StoredConfig config = gitSession_band.getRepository().getConfig();
+				config.setString("user", null, "name", name);
+				config.setString("user", null, "email", EMAIL.value());
+				config.setString("branch", branch, "merge", "refs/heads/" + branch);
+				config.setString("branch", branch, "remote", "origin");
+				config.setString("remote", "origin", "url", remoteURL);
+				config.save();
 			}
-			gitSession_band = Git.open(band.toFile());
-
-			final StoredConfig config = gitSession_band.getRepository().getConfig();
-			config.setString("user", null, "name", name);
-			config.setString("user", null, "email", EMAIL.value());
-			config.setString("branch", branch, "merge", "refs/heads/" + branch);
-			config.setString("branch", branch, "remote", "origin");
-			config.setString("remote", "origin", "url", remoteURL);
-			config.save();
 		} catch (final JGitInternalException | IOException e) {
 			io.handleException(ExceptionHandle.CONTINUE, e);
 			return;
@@ -467,9 +472,11 @@ public final class VersionControl implements Module {
 			}
 			gotoBand(gitSession_band);
 		} finally {
-			gitSession_band.close();
 			if (gitSession_bboard != null) {
 				gitSession_bboard.close();
+			}
+			if (gitSession_band != null) {
+				gitSession_band.close();
 			}
 		}
 	}
@@ -532,13 +539,15 @@ public final class VersionControl implements Module {
 
 	private final void checkoutBand() {
 		final NoYesPlugin plugin =
-				new NoYesPlugin("Local repo directory does not exist", "The directory "
-						+ band + " does not exist or is no git-repository.\n"
+				new NoYesPlugin("Local repo directory does not exist", "The directory\n"
+						+ band + "\ndoes not exist or is no git-repository.\n"
 						+ "It can take a while to create it. Continue?", io.getGUI(),
 						false);
+		io.handleGUIPlugin(plugin);
 		if (!plugin.get()) {
 			return;
 		}
+		band.getParent().toFile().mkdirs();
 		try {
 			Git.init().setDirectory(band.toFile()).call();
 		} catch (final GitAPIException e) {
@@ -548,12 +557,13 @@ public final class VersionControl implements Module {
 
 		try {
 			final Git gitSession = Git.open(band.toFile());
+			final StoredConfig config = gitSession.getRepository().getConfig();
+			config.setString("remote", "origin", "url", DEFAULT_GIT_URL_HTTPS);
+			config.setString("branch", BRANCH.value(), "remote", BRANCH.value());
+			config.setString("branch", BRANCH.value(), "merge", "+refs/heads/" + BRANCH.value());
+			config.save();
 
-			final FetchResult fetchResult =
-					gitSession.fetch().setProgressMonitor(getProgressMonitor()).call();
-
-			final ObjectId remoteHead =
-					fetchResult.getAdvertisedRef("HEAD").getObjectId();
+			final ObjectId remoteHead = getRemoteHead(gitSession);
 
 			final DiffCommand diffCommand = gitSession.diff();
 			final List<DiffEntry> diffs;
@@ -574,7 +584,14 @@ public final class VersionControl implements Module {
 					io.updateProgress(1);
 					continue;
 				}
-				final String file = diff.getOldPath();
+				final String file0 = diff.getOldPath();
+				final String file;
+				if (file0.startsWith("enc")) {
+					file = file0.substring(4) + ".abc";
+					encrypt(file0, file, false);
+				} else {
+					file = file0;
+				}
 				io.setProgressTitle("checking out " + file);
 				// unstage to make checkout working
 				gitSession.reset().setRef(remoteHead.getName()).addPath(file).call();
@@ -832,6 +849,8 @@ public final class VersionControl implements Module {
 	}
 
 	private final void gotoBand(final Git gitSession) {
+		if (gitSession == null)
+			return;
 		try {
 			final String branch = gitSession.getRepository().getBranch();
 			if (!branch.equals(BRANCH.value())) {

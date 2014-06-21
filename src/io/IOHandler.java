@@ -338,7 +338,7 @@ public class IOHandler {
 			final Exception exception) {
 		if (!handle.suppress()) {
 			if (!closed) {
-				exception.printStackTrace();
+//				exception.printStackTrace();
 				gui.printErrorMessage(exception.toString().replaceAll(": ", "\n"));
 			}
 			if (handle.terminate()) {
