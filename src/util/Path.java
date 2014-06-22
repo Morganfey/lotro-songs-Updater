@@ -1,11 +1,9 @@
 package util;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -16,8 +14,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import main.MasterThread;
 
 
 /**
@@ -232,21 +228,21 @@ public final class Path implements Comparable<Path> {
 				Path.delete(f);
 			}
 		}
-		for (int i = 0; i < 5; i++) {
-			try {
-				java.nio.file.Files.delete(file.toPath());
-				return true;
-			} catch (final Exception e) {
-				if (DirectoryNotEmptyException.class.isInstance(e))
-					return false;
+//		for (int i = 0; i < 5; i++) {
+//			try {
+//				java.nio.file.Files.delete(file.toPath());
+//				return true;
+//			} catch (final Exception e) {
+//				if (DirectoryNotEmptyException.class.isInstance(e))
+//					return false;
 //				System.err.print(e.getMessage());
-			}
-			MasterThread.sleep(500);
-		}
-		try {
-			new FileOutputStream(file).close();
-		} catch (final Exception e) { // nothing to do
-		}
+//			}
+//			MasterThread.sleep(500);
+//		}
+//		try {
+//			new FileOutputStream(file).close();
+//		} catch (final Exception e) { // nothing to do
+//		}
 		return false;
 	}
 
@@ -359,8 +355,9 @@ public final class Path implements Comparable<Path> {
 	public final boolean delete() {
 		if (Path.delete(toFile()))
 			return true;
-		System.err.println("Failed to delete " + pathStr
-				+ " - It will be deleted after terminating");
+		if (file.exists())
+			System.err.println("Failed to delete " + pathStr
+					+ " - It will be deleted after terminating");
 		return false;
 	}
 

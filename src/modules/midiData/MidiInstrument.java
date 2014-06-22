@@ -534,7 +534,7 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 
 	/** */
 	@Override
-	public JPanel getDisplayableComponent() {
+	public final JPanel getDisplayableComponent() {
 		return panel;
 	}
 
@@ -568,6 +568,12 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 		return name;
 	}
 
+
+	@Override
+	public void delete(final DropTarget<JPanel, JPanel, JPanel> target) {
+		parts.remove(target);
+	}
+
 }
 
 class EmptyMidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel> {
@@ -586,7 +592,7 @@ class EmptyMidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel
 
 	@Override
 	public final void displayParam(final String key, final JPanel container,
-			final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
+			final JPanel menu, final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -704,6 +710,12 @@ class EmptyMidiInstrumentDropTargetContainer implements
 			return s;
 		}
 		return java.util.Collections.emptySet();
+	}
+
+
+	@Override
+	public final void delete(final DropTarget<JPanel, JPanel, JPanel> target) {
+		throw new UnsupportedOperationException();
 	}
 
 }

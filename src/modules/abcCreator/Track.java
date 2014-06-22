@@ -65,11 +65,15 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 
 	/** */
 	@Override
-	public final void addTarget(final DropTarget<JPanel, JPanel, JPanel> target) {
+	public final boolean addTarget(final DropTarget<JPanel, JPanel, JPanel> target) {
 		if (c != target.getContainer()) {
 			c = target.getContainer();
 		}
+		if (targets.size() == 4) {
+			return false;
+		}
 		targets.add(target);
+		return true;
 	}
 
 	/** */

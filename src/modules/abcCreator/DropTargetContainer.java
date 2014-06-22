@@ -20,6 +20,12 @@ public interface DropTargetContainer<C extends Container, D extends Container, T
 	void clearTargets();
 
 	/**
+	 * Deletes given target
+	 * @param target 
+	 */
+	void delete(DropTarget<C, D, T> target);
+
+	/**
 	 * Creates a new DropTarget and initializes it,
 	 * 
 	 * @param comp

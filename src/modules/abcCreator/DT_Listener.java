@@ -1,7 +1,6 @@
 package modules.abcCreator;
 
 import java.awt.Container;
-import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,17 +18,12 @@ final class DT_Listener<C extends Container, D extends Container, T extends Cont
 	}
 
 	@Override
-	public final void mouseEntered(final MouseEvent e) {
-		e.consume();
-		state.target = target;
-		mark(true);
-	}
-
-	@Override
-	public final void mouseExited(final MouseEvent e) {
-		e.consume();
-		state.target = null;
-		mark(false);
+	protected final void enter(boolean enter) {
+		if (enter)
+			state.target = target;
+		else
+			state.target = null;
+		mark(enter);
 	}
 
 	private final void mark(boolean active) {
@@ -58,6 +52,11 @@ final class DT_Listener<C extends Container, D extends Container, T extends Cont
 				}
 			}
 		}
+	}
+
+	@Override
+	protected final void trigger(boolean release, int button) {
+		// nothing to do
 	}
 
 }

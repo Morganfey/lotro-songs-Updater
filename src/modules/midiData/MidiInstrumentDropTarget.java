@@ -2,6 +2,7 @@ package modules.midiData;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -64,8 +65,10 @@ public class MidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPan
 	/** */
 	@Override
 	public final void displayParam(final String key, final JPanel container,
-			final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
+			final JPanel menu, final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
 		if (key.equals("map")) {
+			final JPanel panel = new JPanel();
+			final JPanel closePanel = new JPanel();
 			final Set<Integer> maps = ((AbcCreator) caller).getMaps();
 			final Integer map = params.get(key);
 			final int mapId;
@@ -74,7 +77,45 @@ public class MidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPan
 			} else {
 				mapId = map.intValue();
 			}
-			container.setLayout(new GridLayout(0, 2));
+			closePanel.add(new JLabel("close"));
+			closePanel.addMouseListener(new MouseListener() {
+
+				@Override
+				public final void mouseClicked(final MouseEvent e) {
+					e.consume();
+				}
+
+				@Override
+				public final void mousePressed(final MouseEvent e) {
+					e.consume();
+				}
+
+				@Override
+				public final void mouseReleased(final MouseEvent e) {
+					e.consume();
+					final Container c = container.getParent();
+					c.removeAll();
+					c.add(menu);
+					c.revalidate();
+
+				}
+
+				@Override
+				public final void mouseEntered(final MouseEvent e) {
+					closePanel.setBackground(Color.GREEN);
+					e.consume();
+				}
+
+				@Override
+				public final void mouseExited(final MouseEvent e) {
+					closePanel.setBackground(Color.WHITE);
+					e.consume();
+				}
+			});
+			panel.setLayout(new GridLayout(0, 2));
+			container.setLayout(new BorderLayout());
+			container.add(panel);
+			container.add(closePanel, BorderLayout.SOUTH);
 			class SharedObject {
 				JPanel panel;
 			}
@@ -128,7 +169,7 @@ public class MidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPan
 					}
 				});
 				mapPanel.add(new JLabel("Map " + i));
-				container.add(mapPanel);
+				panel.add(mapPanel);
 			}
 		} else {
 			container.setLayout(new BorderLayout());

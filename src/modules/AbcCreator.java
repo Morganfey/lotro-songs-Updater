@@ -65,13 +65,16 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		/**
 		 * execute and wait for a runnable jar-archive
 		 */
-		JAR_WAIT, /**
+		JAR_WAIT,
+		/**
 		 * execute a runnable jar-archive
 		 */
-		JAR, /**
+		JAR,
+		/**
 		 * execute and wait for a runnable exe
 		 */
-		EXE_WAIT, /**
+		EXE_WAIT,
+		/**
 		 * execute a runnable exe
 		 */
 		EXE;
@@ -189,7 +192,7 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	/**
 	 * The maximum id of included drum-map
 	 */
-	public static final int DRUM_MAPS_COUNT = 4;
+	public static final int DRUM_MAPS_COUNT = 6;
 	private static final PathOptionFileFilter EXEC_FILTER = new ExecutableFileFilter();
 
 	private static final PathOptionFileFilter DRUM_MAP_FILTER = new DrumMapFileFilter();
@@ -341,7 +344,7 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 
 	private final static StringOption createStyle(final OptionContainer optionContainer) {
 		return new StringOption(optionContainer, "style",
-				"The style to use for generated abc. Possible values are rocks and TSO",
+				"The style to use for generated abc. Possible values are rocks, meisterbarden and TSO",
 				"Style", Flag.NoShortFlag, "style", AbcCreator.SECTION, "style", "Rocks");
 	}
 
@@ -1014,8 +1017,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 			final int pitch = (int) midiTrack.getParam(BruteParams.PITCH, abcTrack);
 			final int volume = (int) midiTrack.getParam(BruteParams.VOLUME, abcTrack);
 			final int delay = (int) midiTrack.getParam(BruteParams.DELAY, abcTrack);
-			io.write(out, String.format("miditrack %d pitch %d volume %d",
-					midiTrack.getId(), pitch, volume));
+			io.write(out, String.format("miditrack %d pitch %d volume %d delay %d",
+					midiTrack.getId(), pitch, volume, delay));
 			final int total = midiTrack.getTargets().length;
 			if (total > 1) {
 				int part = 0;
@@ -1023,12 +1026,17 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 					part = abcPartMap.get(midiTrack);
 				}
 				abcPartMap.put(midiTrack, part + 1);
-				io.writeln(out, String.format(" prio 100 delay %d "
-						+ /* "r 0 0 " + */"s %d %d", delay, total, part));
+				io.writeln(out, String.format(" prio 100 "
+						+ "s %d %d", total, part));
 			} else {
 				io.write(out, "\r\n");
 			}
 		}
+	}
+
+	@Override
+	public final void printError(final String string) {
+		dragAndDropPlugin.printError(string);
 	}
 
 }

@@ -49,5 +49,11 @@ public interface DndPluginCaller<C extends Container, D extends Container, T ext
 	 */
 	DndPluginCallerParams[] valuesGlobal();
 
+	/**
+	 * Print an error
+	 * @param string
+	 */
+	void printError(final String string);
+
 //	DndPluginCallerParams[] valuesRemote();
 }

@@ -20,9 +20,10 @@ public interface DropTarget<C extends Container, D extends Container, T extends 
 	/**
 	 * @param key
 	 * @param container
+	 * @param menu 
 	 * @param caller
 	 */
-	void displayParam(String key, JPanel container, DndPluginCaller<C, D, T> caller);
+	void displayParam(String key, JPanel container, JPanel menu, DndPluginCaller<C, D, T> caller);
 
 	/**
 	 * @return the instance created this target.

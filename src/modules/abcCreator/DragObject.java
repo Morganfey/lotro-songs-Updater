@@ -15,8 +15,9 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	 * adds a new association with given target
 	 * 
 	 * @param target
+	 * @return <i>true</i> if the target has been added
 	 */
-	void addTarget(final DropTarget<C, D, T> target);
+	boolean addTarget(final DropTarget<C, D, T> target);
 
 	/**
 	 * deletes all associations with this object to any target

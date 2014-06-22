@@ -8,16 +8,18 @@ import javax.swing.JTextField;
 import gui.GUIInterface;
 import gui.GUIPlugin;
 
+
 /**
+ * Plugin to select a key
+ * 
  * @author Nelphindal
- *
  */
 public class SecretKeyPlugin extends GUIPlugin {
 
 	private final JTextField textField = new JTextField();
-	
+
 	@Override
-	protected final boolean display(final JPanel panel) {	
+	protected final boolean display(final JPanel panel) {
 		final JPanel panelButton = new JPanel();
 		panel.setLayout(new BorderLayout());
 		panel.add(textField);
@@ -33,10 +35,19 @@ public class SecretKeyPlugin extends GUIPlugin {
 	}
 
 
+	/**
+	 * @return the bytes for the selected key
+	 */
 	public final byte[] getKey() {
 		return decode(textField.getText());
 	}
 
+	/**
+	 * Decodes <i>text</i> a hexdump to the according byte array
+	 * 
+	 * @param text
+	 * @return decoded text for use as key
+	 */
 	public final static byte[] decode(final String text) {
 		int posChars = 0;
 		int posKey = 0;
@@ -50,6 +61,9 @@ public class SecretKeyPlugin extends GUIPlugin {
 		return key;
 	}
 
+	/**
+	 * @return the entered text
+	 */
 	public final String getValue() {
 		return textField.getText();
 	}

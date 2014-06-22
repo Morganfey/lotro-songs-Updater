@@ -510,15 +510,12 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 			final JPanel panelP0 = new JPanel();
 			final JPanel panelP1 = new JPanel();
 
+			target.displayParam(param, panelP1, panelP0, caller);
+			
 			labelP.setFont(font);
-
-			target.displayParam(param, panelP1, caller);
-
+			
 			panelP0.setBackground(Color.WHITE);
 			panelP0.addMouseListener(new MouseListener() {
-
-				private boolean showing;
-				private final Color c = Color.YELLOW.darker();
 
 				@Override
 				public final void mouseClicked(final MouseEvent e) {
@@ -527,13 +524,13 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 				@Override
 				public final void mouseEntered(final MouseEvent e) {
-					panelP0.setBackground(showing ? Color.BLUE : Color.GREEN);
+					panelP0.setBackground(Color.GREEN);
 					e.consume();
 				}
 
 				@Override
 				public void mouseExited(final MouseEvent e) {
-					panelP0.setBackground(showing ? c : Color.WHITE);
+					panelP0.setBackground(Color.WHITE);
 					e.consume();
 				}
 
@@ -544,14 +541,9 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 				@Override
 				public final void mouseReleased(final MouseEvent e) {
-					if (showing) {
-						paramPanel.remove(panelP1);
-						panelP0.setBackground(c);
-					} else {
-						paramPanel.add(panelP1);
-						panelP0.setBackground(Color.WHITE);
-					}
-					showing ^= true;
+					paramPanel.remove(panelP0);
+					paramPanel.add(panelP1);
+					panelP0.setBackground(Color.WHITE);
 					paramPanel.revalidate();
 				}
 
@@ -567,6 +559,16 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 		target.getDisplayableComponent().addMouseListener(
 				new DT_Listener<JPanel, JPanel, JPanel>(target, state));
+	}
+
+
+	/**
+	 * Prints an error
+	 * 
+	 * @param string
+	 */
+	public final void printError(final String string) {
+		state.label.setText(string);
 	}
 
 }
