@@ -228,22 +228,7 @@ public final class Path implements Comparable<Path> {
 				Path.delete(f);
 			}
 		}
-//		for (int i = 0; i < 5; i++) {
-//			try {
-//				java.nio.file.Files.delete(file.toPath());
-//				return true;
-//			} catch (final Exception e) {
-//				if (DirectoryNotEmptyException.class.isInstance(e))
-//					return false;
-//				System.err.print(e.getMessage());
-//			}
-//			MasterThread.sleep(500);
-//		}
-//		try {
-//			new FileOutputStream(file).close();
-//		} catch (final Exception e) { // nothing to do
-//		}
-		return false;
+		return file.delete();
 	}
 
 	final static Future<Path> getPathFSInit(final String... name) {

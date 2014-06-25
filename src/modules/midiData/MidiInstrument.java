@@ -6,6 +6,7 @@ import io.InputStream;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -112,23 +113,27 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 	 * 
 	 * @return an array containing each instrument.
 	 */
-	@SuppressWarnings("unchecked")
-	public final static DropTargetContainer<JPanel, JPanel, JPanel>[] createTargets() {
+	public final static ArrayList<DropTargetContainer<JPanel, JPanel, JPanel>>
+			createTargets() {
 		final Field[] instrumentFields = MidiInstrument.class.getFields();
-		final DropTargetContainer<JPanel, JPanel, JPanel>[] instruments =
-				new DropTargetContainer[instrumentFields.length + 1];
+		final ArrayList<DropTargetContainer<JPanel, JPanel, JPanel>> instruments =
+				new ArrayList<>(instrumentFields.length + 1);
+		final Class<MidiInstrument> fieldClass = MidiInstrument.class;
 		try {
 			for (int i = 0; i < instrumentFields.length; i++) {
-				instruments[i] =
-						(DropTargetContainer<JPanel, JPanel, JPanel>) instrumentFields[i]
-								.get(null);
+				final Class<?> clazz = instrumentFields[i].getType();
+				if (clazz == fieldClass) {
+					final MidiInstrument instrument =
+							fieldClass.cast(instrumentFields[i].get(null));
+					instruments.add(instrument);
+				}
+
 			}
 		} catch (final IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 			return null;
 		}
-		instruments[instrumentFields.length] =
-				new EmptyMidiInstrumentDropTargetContainer();
+		instruments.add(new EmptyMidiInstrumentDropTargetContainer());
 		return instruments;
 	}
 

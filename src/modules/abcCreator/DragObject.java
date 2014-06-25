@@ -74,7 +74,7 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	 * @param target
 	 * @return the value to given param linked to given target
 	 */
-	Object getParam(DndPluginCallerParams param, DropTarget<C, D, T> target);
+	int getParam(DndPluginCallerParams param, DropTarget<C, D, T> target);
 
 	/**
 	 * @return the container

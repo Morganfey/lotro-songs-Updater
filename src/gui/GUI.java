@@ -518,22 +518,34 @@ public class GUI implements GUIInterface {
 		final JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(0, 2));
 
+		class BoxListener implements ChangeListener {
+
+			private final String m;
+
+			private BoxListener(final String m) {
+				this.m = m;
+			}
+
+			@Override
+			public void stateChanged(final ChangeEvent e) {
+				if (!selection.add(m)) {
+					selection.remove(m);
+				}
+			}
+		}
+
 		mainFrame.add(text, BorderLayout.NORTH);
 		mainFrame.add(Button.OK.getButton(), BorderLayout.SOUTH);
 		mainFrame.add(panel);
 		for (final String m : modules) {
 			final JCheckBox box = new JCheckBox(m);
-			box.addChangeListener(new ChangeListener() {
-
-				@Override
-				public void stateChanged(final ChangeEvent e) {
-					if (!selection.add(m)) {
-						selection.remove(m);
-					}
-				}
-			});
+			box.addChangeListener(new BoxListener(m));
 			panel.add(box);
 		}
+		final JCheckBox box = new JCheckBox(main.Main.REPAIR);
+		box.setForeground(Color.RED);
+		box.addChangeListener(new BoxListener(main.Main.REPAIR));
+		panel.add(box);
 		waitForButton();
 
 		text.setBackground(Color.YELLOW);

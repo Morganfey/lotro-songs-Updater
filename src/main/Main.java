@@ -26,6 +26,8 @@ public class Main {
 	 * Section in the config file for VersionControl
 	 */
 	public static final String VC_SECTION = "[vc]";
+
+
 	/**
 	 * Key within the VersionControl section for naming the path to local
 	 * repository
@@ -54,6 +56,12 @@ public class Main {
 
 	private final static Map<String, Map<String, String>> configOld = new HashMap<>();
 	private final static Map<String, Map<String, String>> configNew = new HashMap<>();
+
+	/**
+	 * Key for indicating to run the repair routine.
+	 */
+	public static final String REPAIR = "Repair";
+
 	private static TaskPool taskPool;
 
 	/**
@@ -374,4 +382,15 @@ public class Main {
 				"Should be your ingame name. Used as part of commit messages.",
 				"Name for Commits", 'n', "name", "[main]", "name");
 	}
+
+
+	final static void repair() {
+		if (homeSetting.exists()) {
+			final boolean success = homeSetting.delete();
+			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
+					homeSetting.toString(), success ? "" : " failed");
+		}
+	}
+
+
 }

@@ -21,7 +21,8 @@ public interface DropTargetContainer<C extends Container, D extends Container, T
 
 	/**
 	 * Deletes given target
-	 * @param target 
+	 * 
+	 * @param target
 	 */
 	void delete(DropTarget<C, D, T> target);
 

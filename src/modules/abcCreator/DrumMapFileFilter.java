@@ -30,13 +30,11 @@ public class DrumMapFileFilter extends util.PathOptionFileFilter {
 		}
 		for (final String s : list) {
 			if (s.startsWith("drum") && s.endsWith(".drummap.txt")) {
-				final String mid = s.substring(4, s.length() - 12);
-				try {
-					Integer.parseInt(mid);
-					return true;
-				} catch (final Exception e) {
-					// TODO manual check for integer
+				for (int i = 4; i < s.length() - 12; i++) {
+					if (s.charAt(i) < '0' || s.charAt(i) > '9')
+						return false;
 				}
+				return true;
 			}
 		}
 		return false;
@@ -75,39 +73,12 @@ public class DrumMapFileFilter extends util.PathOptionFileFilter {
 		if (depth == 5) {
 			return true;
 		}
-		if (f.isDirectory()) {
-			final String[] list = f.list();
-			if (list == null) {
-				return false;
-			}
-			for (final String s : list) {
-				if (s.startsWith("drum") && s.endsWith(".drummap.txt")) {
-					final String mid = s.substring(5, s.length() - 12);
-					try {
-						Integer.parseInt(mid);
-						return true;
-					} catch (final Exception e) {
-						// TODO manual check for integer
-					}
-				}
-				final File dir = f.toPath().resolve(s).toFile();
-				if (dir.isDirectory()) {
-					if (accept(dir, depth + 1)) {
-						return true;
-					}
-				}
-			}
-		} else if (f.isFile()) {
-			final String s = f.getName();
-			if (s.startsWith("drum") && s.endsWith(".drummap.txt")) {
-				final String mid = s.substring(4, s.length() - 12);
-				try {
-					Integer.parseInt(mid);
+		if (check(f)) {
+			return true;
+		} else if (f.isDirectory()) {
+			for (final File fDir : f.listFiles())
+				if (accept(fDir, depth + 1))
 					return true;
-				} catch (final Exception e) {
-					// TODO manual check for integer
-				}
-			}
 		}
 		return false;
 	}

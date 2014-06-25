@@ -56,7 +56,7 @@ public class SecretKeyPlugin extends GUIPlugin {
 		while (posKey < key.length) {
 			final byte hByte = (byte) chars[posChars++];
 			final byte lByte = (byte) chars[posChars++];
-			key[posKey++] = (byte) ((hByte << 8) | lByte);
+			key[posKey++] = (byte) (hByte << 8 | lByte);
 		}
 		return key;
 	}

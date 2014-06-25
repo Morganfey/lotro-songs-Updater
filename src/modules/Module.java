@@ -28,10 +28,15 @@ public interface Module {
 	 * @param sc
 	 * @return the fully initialized Module ready to be run
 	 */
-	<T extends Module> T init(final main.StartupContainer sc);
+	Module init(final main.StartupContainer sc);
 
 	/**
 	 * Executes this module
 	 */
 	void run();
+
+	/**
+	 * Requests to repair all permanently stored data
+	 */
+	void repair();
 }

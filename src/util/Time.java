@@ -62,8 +62,8 @@ public final class Time {
 		final String timeString =
 				String.format("%02d:%02d:%02d", ++hours % 24, ++mins % 60, ++secs % 60)
 						+ " " + ++days + " " + ++month + " " + year;
-		System.out.println("calculated: " + timeString + " ("
-				+ getMonthName(String.valueOf(month)) + ")");
+//		System.out.println("calculated: " + timeString + " ("
+//				+ getMonthName(String.valueOf(month)) + ")");
 		return timeString;
 	}
 

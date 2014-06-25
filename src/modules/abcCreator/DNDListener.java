@@ -39,18 +39,20 @@ abstract class DNDListener<C extends Container, D extends Container, T extends C
 		e.consume();
 		trigger(true, e.getButton());
 	}
-	
+
 	protected abstract void trigger(boolean release, int button);
 
+	@Override
 	public final void mouseEntered(final MouseEvent e) {
 		e.consume();
 		enter(true);
 	}
-	
+
+	@Override
 	public final void mouseExited(final MouseEvent e) {
 		e.consume();
 		enter(false);
 	}
-	
+
 	protected abstract void enter(boolean enter);
 }

@@ -88,8 +88,7 @@ public class BruteParams implements DndPluginCallerParams {
 		@Override
 		public <A extends Container, B extends Container, C extends Container> Value
 				localInstance(DragObject<A, B, C> object, DropTarget<A, B, C> target) {
-			// TODO Auto-generated method stub
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -168,8 +167,6 @@ public class BruteParams implements DndPluginCallerParams {
 						((ValueInt) BruteParams.this.value).value = value;
 					else
 						object.setParam(BruteParams.this, target, value);
-					// TODO debug code
-					System.out.printf("min: %d value: %d max: %d\n", min, value, max);
 					label.setText(String.format("%s %d", value == 0 ? " "
 							: value > 0 ? "+" : "-", Math.abs(value)));
 					if (interval > 0)
@@ -216,8 +213,8 @@ public class BruteParams implements DndPluginCallerParams {
 	public static final BruteParams DYNAMIC = new BruteParams("Compress", 1.0, 1, 0.125,
 			true, false);
 	/** Speedup with floating limits */
-	public static final BruteParams SPEED = new BruteParams("Speedup", 0, 1, 1, true,
-			false);
+	public static final BruteParams SPEED = new BruteParams("Speedup", 0, -25, 100, 10,
+			true, false);
 	/** Volume with hard limits at -127 and +127 */
 	public static final BruteParams VOLUME = new BruteParams("Volume", 0, -127, 127, 16,
 			true, true);
@@ -367,6 +364,11 @@ interface Value {
 
 	void display(final JSlider slider, final JLabel label);
 
+	/**
+	 * @param object
+	 * @param target
+	 * @return the param value saved at object for given target
+	 */
 	<A extends Container, B extends Container, C extends Container> Value localInstance(
 			DragObject<A, B, C> object, DropTarget<A, B, C> target);;
 

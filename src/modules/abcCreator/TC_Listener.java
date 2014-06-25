@@ -41,10 +41,8 @@ final class TC_Listener<C extends Container, D extends Container, T extends Cont
 										: DNDListener.C_INACTIVE_TARGET);
 					}
 					for (final DragObject<C, D, T> d : t) {
-						d.getDisplayableComponent()
-								.setBackground(
-										enter ? DNDListener.C_SELECTED0
-												: DNDListener.C_INACTIVE);
+						d.getDisplayableComponent().setBackground(
+								enter ? DNDListener.C_SELECTED0 : DNDListener.C_INACTIVE);
 					}
 				}
 			}

@@ -13,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -56,7 +57,7 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 	 */
 	public AbcMapPlugin(final AbcCreator abcCreator, final TaskPool taskPool,
 			final MidiParser parser,
-			final DropTargetContainer<JPanel, JPanel, JPanel>[] targets,
+			final List<DropTargetContainer<JPanel, JPanel, JPanel>> targets,
 			final IOHandler io) {
 		super(abcCreator, taskPool, parser, targets, io);
 	}
@@ -511,9 +512,9 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 			final JPanel panelP1 = new JPanel();
 
 			target.displayParam(param, panelP1, panelP0, caller);
-			
+
 			labelP.setFont(font);
-			
+
 			panelP0.setBackground(Color.WHITE);
 			panelP0.addMouseListener(new MouseListener() {
 

@@ -6,10 +6,12 @@ import io.InputStream;
 import io.OutputStream;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -226,7 +228,7 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 
 	private final MidiParser parser;
 
-	private final DropTargetContainer<JPanel, JPanel, JPanel>[] targets;
+	private final List<DropTargetContainer<JPanel, JPanel, JPanel>> targets;
 
 	private final TaskPool taskPool;
 
@@ -241,6 +243,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	private final InitState initState;
 
 	private AbcMapPlugin dragAndDropPlugin;
+
+	private final ArrayDeque<Process> processList = new ArrayDeque<>();
 
 	/**
 	 * Constructor for building versionInfo
@@ -343,8 +347,10 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	}
 
 	private final static StringOption createStyle(final OptionContainer optionContainer) {
-		return new StringOption(optionContainer, "style",
-				"The style to use for generated abc. Possible values are rocks, meisterbarden and TSO",
+		return new StringOption(
+				optionContainer,
+				"style",
+				"The style to use for generated abc. Possible values are Rocks, Meisterbarden and TSO",
 				"Style", Flag.NoShortFlag, "style", AbcCreator.SECTION, "style", "Rocks");
 	}
 
@@ -459,9 +465,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	}
 
 	/** */
-	@SuppressWarnings("unchecked")
 	@Override
-	public final AbcCreator init(final StartupContainer sc) {
+	public final Module init(final StartupContainer sc) {
 		return new AbcCreator(this, sc);
 	}
 
@@ -500,6 +505,17 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 			io.endProgress();
 			runLoop();
 		} finally {
+			for (final Process p : processList) {
+				p.destroy();
+				final boolean interrupted = MasterThread.interrupted();
+				try {
+					p.waitFor();
+				} catch (final InterruptedException e) {
+					e.printStackTrace();
+				}
+				if (interrupted)
+					master.interrupt();
+			}
 			bruteDir.delete();
 		}
 	}
@@ -572,6 +588,7 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		final StringBuilder outErr = new StringBuilder();
 		final StringBuilder outStd = new StringBuilder();
 
+		processList.add(p);
 		final StreamPrinter pE = new StreamPrinter(es, outErr, true);
 		final StreamPrinter pS;
 		switch (type) {
@@ -634,6 +651,7 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		taskPool.addTask(pE);
 		taskPool.addTask(pS);
 		final int exit = p.waitFor();
+		processList.remove(p);
 		return exit;
 	}
 
@@ -778,8 +796,13 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				new HashMap<>();
 		boolean empty = true;
 		io.updateProgress();
-		for (int i = 0; i < targets.length - 1; i++) {
-			for (final DropTarget<JPanel, JPanel, JPanel> t : targets[i]) {
+
+		for (final Iterator<DropTargetContainer<JPanel, JPanel, JPanel>> targetIter =
+				this.targets.iterator();;) {
+			final DropTargetContainer<JPanel, JPanel, JPanel> target = targetIter.next();
+			if (!targetIter.hasNext())
+				break;
+			for (final DropTarget<JPanel, JPanel, JPanel> t : target) {
 				empty = false;
 				final StringBuilder params = new StringBuilder();
 				for (final Map.Entry<String, Integer> param : t.getParams().entrySet()) {
@@ -792,7 +815,7 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				io.writeln(out, "duration 2");
 				io.writeln(
 						out,
-						String.format("instrument %s%s", targets[i].toString(),
+						String.format("instrument %s%s", target.toString(),
 								params.toString()));
 				writeAbcTrack(out, t, abcPartMap);
 				io.writeln(out, "abctrack end");
@@ -1008,17 +1031,18 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		}
 	}
 
-
 	private final void writeAbcTrack(final OutputStream out,
 			final DropTarget<JPanel, JPanel, JPanel> abcTrack,
 			final Map<DragObject<JPanel, JPanel, JPanel>, Integer> abcPartMap) {
 
 		for (final DragObject<JPanel, JPanel, JPanel> midiTrack : abcTrack) {
-			final int pitch = (int) midiTrack.getParam(BruteParams.PITCH, abcTrack);
-			final int volume = (int) midiTrack.getParam(BruteParams.VOLUME, abcTrack);
-			final int delay = (int) midiTrack.getParam(BruteParams.DELAY, abcTrack);
-			io.write(out, String.format("miditrack %d pitch %d volume %d delay %d",
-					midiTrack.getId(), pitch, volume, delay));
+			final int pitch = midiTrack.getParam(BruteParams.PITCH, abcTrack);
+			final int volume = midiTrack.getParam(BruteParams.VOLUME, abcTrack);
+			final int delay = midiTrack.getParam(BruteParams.DELAY, abcTrack);
+			io.write(
+					out,
+					String.format("miditrack %d pitch %d volume %d delay %d",
+							midiTrack.getId(), pitch, volume, delay));
 			final int total = midiTrack.getTargets().length;
 			if (total > 1) {
 				int part = 0;
@@ -1026,8 +1050,7 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 					part = abcPartMap.get(midiTrack);
 				}
 				abcPartMap.put(midiTrack, part + 1);
-				io.writeln(out, String.format(" prio 100 "
-						+ "s %d %d", total, part));
+				io.writeln(out, String.format(" prio 100 " + "split %d %d", total, part));
 			} else {
 				io.write(out, "\r\n");
 			}
@@ -1037,6 +1060,12 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	@Override
 	public final void printError(final String string) {
 		dragAndDropPlugin.printError(string);
+	}
+
+
+	@Override
+	public final void repair() {
+		// nothing to do
 	}
 
 }

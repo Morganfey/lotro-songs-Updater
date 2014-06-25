@@ -9,7 +9,12 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 
 
-class StringBuilder {
+/**
+ * StringBuilder implementing more or less the same functionality of util.StringBuilder
+ * 
+ * @author Nelphindal
+ */
+public class StringBuilder {
 
 	private final static int PATTERN_SIZE = 16;
 	private final static Clipboard clip = Toolkit.getDefaultToolkit()
@@ -20,10 +25,17 @@ class StringBuilder {
 	private int cIdx = 0;
 	private int cIdxNext = 1;
 
-	StringBuilder() {
+	/**
+	 * 
+	 */
+	public StringBuilder() {
 	}
 
-	StringBuilder(final String value) {
+	/**
+	 * @param value
+	 *            initial value
+	 */
+	public StringBuilder(final String value) {
 		if (value != null) {
 			set(value);
 		}
@@ -77,24 +89,24 @@ class StringBuilder {
 		copy();
 	}
 
-	private final void handleControl(int keycode, int[] cursor, boolean alt) {
+	private final boolean handleControl(int keycode, int[] cursor, boolean alt) {
 		switch (keycode) {
 			case KeyEvent.VK_A:
 				cursor[1] = 0;
 				cursor[2] = length();
-				break;
+				return true;
 			case KeyEvent.VK_C:
 				if (head > tail) {
 					growAndCopy();
 				}
 				StringBuilder.clip.setContents(new StringSelection(new String(
 						content[cIdx], head + cursor[1], cursor[2] - cursor[1])), null);
-				break;
+				return true;
 			case KeyEvent.VK_Q:
 				if (alt) {
 					insert('@', cursor);
 				}
-				break;
+				return true;
 			case KeyEvent.VK_V:
 				try {
 					final String pasted =
@@ -107,7 +119,9 @@ class StringBuilder {
 				} catch (final UnsupportedFlavorException | IOException e) {
 					e.printStackTrace();
 				}
+				return true;
 		}
+		return false;
 	}
 
 	private final void insert(char c, int[] cursorArray) {
@@ -138,7 +152,7 @@ class StringBuilder {
 			appendFirst(c);
 		} else {
 			final int length = length();
-			if (length > content[cIdx].length * 3 / 4) {
+			if (length > content[cIdxNext].length * 3 / 4) {
 				grow();
 			}
 
@@ -231,6 +245,9 @@ class StringBuilder {
 			if (head > tail) {
 				copy();
 			}
+			if (content[cIdxNext].length < content[cIdx].length) {
+				content[cIdxNext] = new char[content[cIdx].length];
+			}
 			System.arraycopy(content[cIdx], head, content[cIdxNext],
 					StringBuilder.PATTERN_SIZE, cursor);
 			System.arraycopy(content[cIdx], head + cursor + 1, content[cIdxNext],
@@ -295,7 +312,12 @@ class StringBuilder {
 		return this;
 	}
 
-	final void appendLast(char c) {
+	/**
+	 * Appends c to the end.
+	 * 
+	 * @param c
+	 */
+	public final void appendLast(char c) {
 		if (tail == content[cIdx].length) {
 			if (head == 0) {
 				growAndCopy();
@@ -306,6 +328,11 @@ class StringBuilder {
 		content[cIdx][tail++] = c;
 	}
 
+	/**
+	 * Appends s to the end.
+	 * 
+	 * @param s
+	 */
 	final StringBuilder appendLast(final String s) {
 		if (isEmpty()) {
 			set(s);
@@ -330,11 +357,18 @@ class StringBuilder {
 		return this;
 	}
 
-	final char charAt(int pos) {
+	/**
+	 * @param pos
+	 * @return the character at <i>pos</i>.
+	 */
+	public final char charAt(int pos) {
 		return content[cIdx][(head + pos) % content[cIdx].length];
 	}
 
-	final void clear() {
+	/**
+	 * Clears <i>this</i> content.
+	 */
+	public final void clear() {
 		tail = head = StringBuilder.PATTERN_SIZE;
 	}
 
@@ -348,8 +382,8 @@ class StringBuilder {
 			cursor[0] = length();
 		}
 		if (e.isControlDown()) {
-			handleControl(e.getKeyCode(), cursor, e.isAltDown());
-			return;
+			if (handleControl(e.getKeyCode(), cursor, e.isAltDown()))
+				return;
 		}
 		final int c = e.getKeyCode();
 		switch (c) {
@@ -414,11 +448,17 @@ class StringBuilder {
 		insert(key, cursor);
 	}
 
-	final boolean isEmpty() {
+	/**
+	 * @return <i>true</i> if the length is 0 and {@link #toString()} would return an empty string.
+	 */
+	public final boolean isEmpty() {
 		return head == tail;
 	}
 
-	final int length() {
+	/**
+	 * @return the length of currently contained string
+	 */
+	public final int length() {
 		if (tail < head) {
 			return content[cIdx].length - head + tail;
 		}
@@ -464,5 +504,21 @@ class StringBuilder {
 
 	final void setHead(int offset) {
 		head += offset;
+	}
+
+	/**
+	 * Sets the contained string to start <i>offset</i> positions later. Unspecified behavior if offset is greater than actual length.
+	 * 
+	 * @param offset
+	 */
+	public final void substring(int offset) {
+		head = (head + offset) % content[cIdx].length;
+	}
+
+	/**
+	 * @return the contained string with lower cased characters only.
+	 */
+	public final String toLowerCase() {
+		return toString().toLowerCase();
 	}
 }

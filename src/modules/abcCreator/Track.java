@@ -24,7 +24,7 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 	private final JPanel panel = new JPanel();
 
 	private DropTargetContainer<JPanel, JPanel, JPanel> c;
-	private final DoubleMap<BruteParams, DropTarget<JPanel, JPanel, JPanel>, Object> paramMap =
+	private final DoubleMap<BruteParams, DropTarget<JPanel, JPanel, JPanel>, Integer> paramMap =
 			new DoubleMap<>();
 
 	/**
@@ -152,11 +152,11 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 	}
 
 	@Override
-	public final Object getParam(final DndPluginCallerParams param,
+	public final int getParam(final DndPluginCallerParams param,
 			final DropTarget<JPanel, JPanel, JPanel> target) {
-		final Object value = paramMap.get((BruteParams) param, target);
+		final Integer value = paramMap.get((BruteParams) param, target);
 		if (value == null)
-			return param.defaultValue();
+			return (int) param.defaultValue();
 		return value;
 	}
 

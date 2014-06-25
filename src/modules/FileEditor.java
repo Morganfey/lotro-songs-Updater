@@ -25,6 +25,7 @@ import modules.fileEditor.ChangeNumberingGUI;
 import modules.fileEditor.ChangeTitleGUI;
 import modules.fileEditor.EditorPlugin;
 import modules.fileEditor.FileEditorPlugin;
+import modules.fileEditor.NameScheme;
 import modules.fileEditor.SongChangeData;
 import modules.fileEditor.UniformSongsGUI;
 import modules.songData.SongDataContainer;
@@ -61,7 +62,7 @@ public class FileEditor implements Module {
 	private final static int VERSION = 1;
 
 	private static final String DEFAULT_SCHEME =
-			"%title %index/%total [0: (%duration)] [1: %mod]";
+			"%title %index/%total [%instrument]$1{ (%duration)}$2{ %mod}";
 
 	final StringOption SONG_SCHEME;
 
@@ -85,7 +86,7 @@ public class FileEditor implements Module {
 	private final Map<Path, SongChangeData> changes = new HashMap<>();
 
 	/**
-	 * 
+	 * Constructor for building versionInfo
 	 */
 	public FileEditor() {
 		this.io = null;
@@ -136,7 +137,7 @@ public class FileEditor implements Module {
 	final static StringOption createSongSchemeOption(final OptionContainer oc) {
 		return new StringOption(oc, "uniformScheme",
 				"Changes the scheme for the uniform-songs option. Please have look"
-						+ "in tha manual for the syntax", "Uniform song titles",
+						+ "in tha manual for the syntax", "Name scheme",
 				Flag.NoShortFlag, "song-scheme", SECTION, "scheme", DEFAULT_SCHEME);
 	}
 
@@ -169,7 +170,8 @@ public class FileEditor implements Module {
 		list.add(UNIFORM_SONGS);
 		list.add(SONG_SCHEME);
 		list.add(CHANGE_TITLE);
-		list.add(CHANGE_NUMBERING);
+		// TODO enable when implemented
+//		list.add(CHANGE_NUMBERING);
 		list.add(MOD_DATE);
 		return list;
 	}
@@ -179,10 +181,9 @@ public class FileEditor implements Module {
 		return VERSION;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public final <T extends Module> T init(final StartupContainer sc) {
-		return (T) this;
+	public final Module init(final StartupContainer sc) {
+		return this;
 	}
 
 	@Override
@@ -233,7 +234,7 @@ public class FileEditor implements Module {
 	private final void changeNumbering(final Set<Path> selection) {
 		@SuppressWarnings("unused") final TreeSet<Path> selectionFiles =
 				selectFilesOnly(selection);
-		// TODO
+		// TODO implement change of numbering
 
 	}
 
@@ -311,8 +312,9 @@ public class FileEditor implements Module {
 	}
 
 	private final void progressChanges() {
-		// TODO Auto-generated method stub
-
+		for (final SongChangeData scd : changes.values()) {
+			scd.revalidate(io);
+		}
 	}
 
 	private final void resetModDate() {
@@ -372,9 +374,25 @@ public class FileEditor implements Module {
 
 	private final void uniformSongs(final Set<Path> selection) {
 		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
+		io.startProgress("Appying name scheme to " + selectionFiles.size() + " files",
+				selectionFiles.size());
+		final NameScheme ns;
+		try {
+			ns = new NameScheme(SONG_SCHEME.value());
+		} catch (final Exception e) {
+			io.handleException(ExceptionHandle.CONTINUE, e);
+			return;
+		}
 		for (final Path file : selectionFiles) {
 			final SongChangeData scd = get(file);
-			scd.uniform();
+			scd.uniform(ns, io);
+			io.updateProgress();
 		}
+		io.endProgress();
+	}
+
+	@Override
+	public final void repair() {
+		// nothing to do
 	}
 }

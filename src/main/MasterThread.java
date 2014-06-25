@@ -44,6 +44,13 @@ public class MasterThread extends Thread {
 		private Module instance;
 		private final String name;
 
+		private ModuleInfo() {
+			// cut here
+			this.name = "Main_band";
+			// cut here
+			instance = new modules.Main();
+		}
+
 		public ModuleInfo(final Class<Module> clazz, final String name) {
 			try {
 				instance = clazz.getConstructor(sc.getClass()).newInstance(sc);
@@ -51,7 +58,6 @@ public class MasterThread extends Thread {
 					| IllegalArgumentException | InvocationTargetException
 					| NoSuchMethodException | SecurityException e) {
 				e.printStackTrace();
-
 				instance = null;
 			}
 			this.name = name;
@@ -67,6 +73,7 @@ public class MasterThread extends Thread {
 		final int getVersion() {
 			return instance == null ? -1 : instance.getVersion();
 		}
+
 	}
 
 	private final ThreadState state = new ThreadState();
@@ -101,7 +108,7 @@ public class MasterThread extends Thread {
 		MasterThread master = null;
 		if (MasterThread.class.isInstance(Thread.currentThread())) {
 			master = MasterThread.class.cast(Thread.currentThread());
-			master.state.handleEvent(Event.CLEAR_INT);
+			master.state.handleEvent(Event.LOCK_INT);
 		}
 		try {
 			Thread.sleep(millis);
@@ -109,8 +116,32 @@ public class MasterThread extends Thread {
 			e.printStackTrace();
 		} finally {
 			if (master != null)
-				master.state.handleEvent(Event.CLEAR_INT);
+				master.state.handleEvent(Event.UNLOCK_INT);
 		}
+	}
+
+	public static boolean interrupted() {
+		final boolean interrupted = Thread.interrupted();
+		if (MasterThread.class.isInstance(Thread.currentThread())) {
+			final MasterThread master = MasterThread.class.cast(Thread.currentThread());
+			master.state.handleEvent(Event.CLEAR_INT);
+		}
+		return interrupted;
+	}
+
+	/**
+	 * Returns a path for hosting temporarily files and directories. It will be deleted <i>this</i> thread has been terminated. If the
+	 * invoking thread is not an instance of MasterThread <i>null</i> is returned.
+	 * 
+	 * @return a path located in (one of the) system's temporarily directory or <i>null</i> if the invoking thread is no instance of
+	 *         MasterThread.
+	 */
+	public final static Path tmp() {
+		if (MasterThread.class.isInstance(Thread.currentThread())) {
+			final MasterThread master = MasterThread.class.cast(Thread.currentThread());
+			return master.tmp;
+		}
+		return null;
 	}
 
 	/** */
@@ -148,6 +179,17 @@ public class MasterThread extends Thread {
 	public void run() {
 		io = sc.io;
 		wd = sc.workingDirectory;
+		final ModuleInfo mainModule = new ModuleInfo();
+		if (checkModule(mainModule)) {
+			downloadModule(mainModule.name);
+			try {
+				die(repack());
+				return;
+			} catch (IOException e) {
+				io.handleException(ExceptionHandle.CONTINUE, e);
+				e.printStackTrace();
+			}
+		}
 		waitForConfigParse();
 		if (main.Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY, null) == null) {
 			main.Main.setConfigValue(
@@ -159,6 +201,10 @@ public class MasterThread extends Thread {
 		}
 		try {
 			final Set<String> moduleSelection = init();
+			if (moduleSelection.contains(Main.REPAIR)) {
+				repair();
+				return;
+			}
 			checkAvailibility(moduleSelection);
 			if (isInterrupted()) {
 				return;
@@ -192,6 +238,22 @@ public class MasterThread extends Thread {
 		}
 	}
 
+	private final void repair() {
+		taskPool.addTask(new Runnable() {
+			public final void run() {
+				main.Main.repair();
+			}
+		});
+		for (final ModuleInfo m : modulesLocal.values()) {
+			taskPool.addTask(new Runnable() {
+				public final void run() {
+					m.instance.repair();
+				}
+			});
+		}
+		taskPool.waitForTasks();
+	}
+
 	/**
 	 * checks if all selected modules are available
 	 * 
@@ -216,7 +278,6 @@ public class MasterThread extends Thread {
 			if (changedModules.isEmpty()) {
 				return;
 			}
-
 			die(repack());
 		} catch (final Exception e) {
 			io.handleException(ExceptionHandle.TERMINATE, e);
@@ -347,7 +408,9 @@ public class MasterThread extends Thread {
 	private final Set<String> init() {
 		possibleModules.add("AbcCreator");
 		possibleModules.add("FileEditor");
+		// cut here
 		possibleModules.add("VersionControl");
+		// cut here
 		possibleModules.add("SongbookUpdater");
 		try {
 			if (sc.wdIsJarArchive()) {
@@ -673,7 +736,7 @@ public class MasterThread extends Thread {
 }
 
 enum Event {
-	INT, CLEAR_INT;
+	INT, CLEAR_INT, LOCK_INT, UNLOCK_INT;
 }
 
 final class ThreadState {
@@ -682,10 +745,18 @@ final class ThreadState {
 	public final void handleEvent(final Event event) {
 		switch (event) {
 			case CLEAR_INT:
-				locked = !locked;
+				interrupted = false;
 				break;
 			case INT:
 				interrupted = true;
+				break;
+			case LOCK_INT:
+				locked = false;
+				break;
+			case UNLOCK_INT:
+				locked = true;
+				break;
+			default:
 				break;
 		}
 	}

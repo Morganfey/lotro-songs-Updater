@@ -12,11 +12,14 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.List;
 import java.util.Map;
+
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+
 import modules.midiData.MidiMap;
 import modules.midiData.MidiParser;
 import util.TaskPool;
@@ -54,9 +57,9 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 		final JLabel label = new JLabel();
 		final DragAndDropPlugin<C, D, T> plugin = DragAndDropPlugin.this;
 
-		private State(final IOHandler io, final DropTargetContainer<C, D, T>[] targets) {
+		private State(final IOHandler io, final List<DropTargetContainer<C, D, T>> targets) {
 			this.io = io;
-			emptyTarget = targets[targets.length - 1].createNewTarget();
+			emptyTarget = targets.get(targets.size() - 1).createNewTarget();
 		}
 
 	}
@@ -69,7 +72,7 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 	/**
 	 * The targets for <i>this</i> plugin
 	 */
-	protected final DropTargetContainer<C, D, T>[] targets;
+	protected final List<DropTargetContainer<C, D, T>> targets;
 
 	/**
 	 * Task pool allocated by initializing instance
@@ -102,9 +105,9 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 	 * @param targets
 	 * @param io
 	 */
-	public DragAndDropPlugin(final DndPluginCaller<C, D, T> caller,
+	protected DragAndDropPlugin(final DndPluginCaller<C, D, T> caller,
 			final TaskPool taskPool, final MidiParser parser,
-			final DropTargetContainer<C, D, T>[] targets, final IOHandler io) {
+			final List<DropTargetContainer<C, D, T>> targets, final IOHandler io) {
 		this.parser = parser;
 		this.targets = targets;
 		this.taskPool = taskPool;

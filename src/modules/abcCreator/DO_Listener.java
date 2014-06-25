@@ -106,7 +106,8 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 					if (state.targetC == object.getTargetContainer()) {
 						if (!object.addTarget(state.target)) {
 							state.targetC.delete(state.target);
-							final Container c = state.target.getDisplayableComponent().getParent();
+							final Container c =
+									state.target.getDisplayableComponent().getParent();
 							c.remove(state.target.getDisplayableComponent());
 							c.revalidate();
 							caller.printError("To large split");

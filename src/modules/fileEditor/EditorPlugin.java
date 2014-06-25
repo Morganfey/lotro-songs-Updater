@@ -7,7 +7,8 @@ import java.awt.BorderLayout;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 
 
 /**
@@ -18,14 +19,14 @@ import javax.swing.JTextArea;
 public final class EditorPlugin extends GUIPlugin {
 
 	private final String title;
-	private final String content;
+	private final JTextField content;
 
 	/**
 	 * @param content
 	 * @param title
 	 */
 	public EditorPlugin(final String content, final String title) {
-		this.content = content;
+		this.content = new JTextField(content);
 		this.title = title;
 	}
 
@@ -33,14 +34,18 @@ public final class EditorPlugin extends GUIPlugin {
 	 * @return the entered content
 	 */
 	public final String get() {
-		return content;
+		return content.getText();
 	}
 
 	@Override
 	protected final boolean display(final JPanel panel) {
 		final JPanel panelButton = new JPanel();
+		final JScrollPane scroll = new JScrollPane(content);
+
+		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+
 		panel.setLayout(new BorderLayout());
-		panel.add(new JScrollPane(new JTextArea(content)));
+		panel.add(scroll);
 		panel.add(panelButton, BorderLayout.SOUTH);
 
 		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
