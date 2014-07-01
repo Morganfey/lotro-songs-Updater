@@ -1,9 +1,13 @@
 package updater;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteBuffer;
-
 import modules.Module;
 import util.Path;
 
@@ -18,8 +22,9 @@ public class CreateBuilds {
 	 * 
 	 * @param args
 	 *            ignored
+	 * @throws IOException 
 	 */
-	public final static void main(final String[] args) {
+	public final static void main(final String[] args) throws IOException {
 		final URL url =
 				CreateBuilds.class.getClassLoader().getResource(
 						CreateBuilds.class.getCanonicalName().toString()
@@ -77,5 +82,9 @@ public class CreateBuilds {
 				}
 			}.run();
 		}
+		final InputStream in = new FileInputStream(info.resolve("Main").toFile());
+		final OutputStream out = new FileOutputStream(info.resolve("Main_band").toFile());
+		out.write(in.read());
+		out.flush();out.close();in.close();
 	}
 }

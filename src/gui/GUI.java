@@ -102,9 +102,6 @@ public class GUI implements GUIInterface {
 
 	private Button pressed;
 
-	private final java.util.concurrent.locks.ReentrantLock lock =
-			new java.util.concurrent.locks.ReentrantLock();
-
 	private final MasterThread master;
 
 	private boolean destroyed;
@@ -227,16 +224,6 @@ public class GUI implements GUIInterface {
 		} else {
 			c.setEnabled(b);
 		}
-	}
-
-	/** */
-	@Override
-	public final boolean aquireLock() {
-		if (!lock.tryLock()) {
-			return false;
-		}
-		GUI.setEnabled(mainFrame.getContentPane(), false);
-		return true;
 	}
 
 	/**
@@ -482,13 +469,6 @@ public class GUI implements GUIInterface {
 	public final void printMessage(final String title, final String message,
 			boolean toFront) {
 		printMessageFunc(title, message, toFront);
-	}
-
-	/** */
-	@Override
-	public final void releaseLock() {
-		lock.unlock();
-		GUI.setEnabled(mainFrame.getContentPane(), true);
 	}
 
 	/** */

@@ -1,5 +1,6 @@
 package modules;
 
+import gui.GUIInterface.Button;
 import io.ExceptionHandle;
 import io.IOHandler;
 
@@ -25,7 +26,9 @@ import modules.fileEditor.ChangeNumberingGUI;
 import modules.fileEditor.ChangeTitleGUI;
 import modules.fileEditor.EditorPlugin;
 import modules.fileEditor.FileEditorPlugin;
+import modules.fileEditor.InvalidNameSchemeException;
 import modules.fileEditor.NameScheme;
+import modules.fileEditor.NumberingGUI;
 import modules.fileEditor.SongChangeData;
 import modules.fileEditor.UniformSongsGUI;
 import modules.songData.SongDataContainer;
@@ -84,6 +87,8 @@ public class FileEditor implements Module {
 	private final SongDataContainer container;
 
 	private final Map<Path, SongChangeData> changes = new HashMap<>();
+
+	private NameScheme scheme;
 
 	/**
 	 * Constructor for building versionInfo
@@ -170,8 +175,7 @@ public class FileEditor implements Module {
 		list.add(UNIFORM_SONGS);
 		list.add(SONG_SCHEME);
 		list.add(CHANGE_TITLE);
-		// TODO enable when implemented
-//		list.add(CHANGE_NUMBERING);
+		list.add(CHANGE_NUMBERING);
 		list.add(MOD_DATE);
 		return list;
 	}
@@ -198,43 +202,60 @@ public class FileEditor implements Module {
 		if (master.isInterrupted()) {
 			return;
 		}
-		if (UNIFORM_SONGS.getValue()) {
-			container.fill();
-			final FileEditorPlugin plugin =
-					new UniformSongsGUI(this, container.getRoot());
-			io.handleGUIPlugin(plugin);
-			uniformSongs(plugin.getSelection());
-		}
-		if (CHANGE_TITLE.getValue()) {
-			container.fill();
-			final FileEditorPlugin plugin = new ChangeTitleGUI(this, container.getRoot());
-			io.handleGUIPlugin(plugin);
-			changeTitle(plugin.getSelection());
-		}
-		if (master.isInterrupted()) {
-			return;
-		}
-		if (CHANGE_NUMBERING.getValue()) {
-			container.fill();
-			final FileEditorPlugin plugin =
-					new ChangeNumberingGUI(this, container.getRoot());
-			io.handleGUIPlugin(plugin);
-			changeNumbering(plugin.getSelection());
-		}
-		if (master.isInterrupted()) {
-			return;
-		}
-		progressChanges();
+		try {
+			if (UNIFORM_SONGS.getValue()) {
+				container.fill();
+				final FileEditorPlugin plugin =
+						new UniformSongsGUI(this, container.getRoot());
+				io.handleGUIPlugin(plugin);
+				uniformSongs(plugin.getSelection());
+			}
+			if (CHANGE_TITLE.getValue()) {
+				container.fill();
+				final FileEditorPlugin plugin =
+						new ChangeTitleGUI(this, container.getRoot());
+				io.handleGUIPlugin(plugin);
+				changeTitle(plugin.getSelection());
+			}
+			if (master.isInterrupted()) {
+				return;
+			}
+			if (CHANGE_NUMBERING.getValue()) {
+				container.fill();
+				final FileEditorPlugin plugin =
+						new ChangeNumberingGUI(this, container.getRoot());
+				io.handleGUIPlugin(plugin);
+				changeNumbering(plugin.getSelection());
+			}
+			if (master.isInterrupted()) {
+				return;
+			}
+			for (final SongChangeData scd : changes.values()) {
+				scd.revalidate(io, getNameScheme());
+			}
 
-		if (MOD_DATE.getValue()) {
-			resetModDate();
+			if (MOD_DATE.getValue()) {
+				resetModDate();
+			}
+		} catch (final InvalidNameSchemeException e) {
+			io.handleException(ExceptionHandle.CONTINUE, e);
 		}
 	}
 
 	private final void changeNumbering(final Set<Path> selection) {
-		@SuppressWarnings("unused") final TreeSet<Path> selectionFiles =
-				selectFilesOnly(selection);
-		// TODO implement change of numbering
+		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
+		for (final Path song : selectionFiles) {
+			final SongChangeData data = get(song);
+			final NumberingGUI plugin = new NumberingGUI(data, io);
+			if (master.isInterrupted())
+				return;
+			io.handleGUIPlugin(plugin);
+			if (io.getGUI().getPressedButton() == Button.ABORT) {
+				master.interrupt();
+				return;
+			}
+			plugin.copyFieldsToMaps();
+		}
 
 	}
 
@@ -311,12 +332,6 @@ public class FileEditor implements Module {
 		return data;
 	}
 
-	private final void progressChanges() {
-		for (final SongChangeData scd : changes.values()) {
-			scd.revalidate(io);
-		}
-	}
-
 	private final void resetModDate() {
 		final Path repo =
 				container.getRoot().resolve(
@@ -372,20 +387,22 @@ public class FileEditor implements Module {
 		return selectionFiles;
 	}
 
-	private final void uniformSongs(final Set<Path> selection) {
+	private final NameScheme getNameScheme() throws InvalidNameSchemeException {
+		if (scheme == null)
+			scheme = new NameScheme(SONG_SCHEME.value());
+		return scheme;
+	}
+
+	private final void uniformSongs(final Set<Path> selection)
+			throws InvalidNameSchemeException {
 		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
 		io.startProgress("Appying name scheme to " + selectionFiles.size() + " files",
 				selectionFiles.size());
-		final NameScheme ns;
-		try {
-			ns = new NameScheme(SONG_SCHEME.value());
-		} catch (final Exception e) {
-			io.handleException(ExceptionHandle.CONTINUE, e);
-			return;
-		}
 		for (final Path file : selectionFiles) {
+			if (master.isInterrupted())
+				return;
 			final SongChangeData scd = get(file);
-			scd.uniform(ns, io);
+			scd.uniform(getNameScheme(), io);
 			io.updateProgress();
 		}
 		io.endProgress();

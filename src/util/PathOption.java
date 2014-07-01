@@ -126,9 +126,6 @@ public class PathOption extends Option {
 
 					@Override
 					public void run() {
-						if (!PathOption.this.lockGUI()) {
-							return;
-						}
 						final Path path = getValue();
 						final String value;
 						if (path == null) {
@@ -157,7 +154,6 @@ public class PathOption extends Option {
 						} finally {
 							frame.setVisible(false);
 							frame.dispose();
-							PathOption.this.unlockGUI();
 						}
 					}
 				});
@@ -226,14 +222,6 @@ public class PathOption extends Option {
 	@Override
 	public final void value(final String value) {
 		throw new UnsupportedOperationException("Use value(File) instead");
-	}
-
-	private final boolean lockGUI() {
-		return gui.aquireLock();
-	}
-
-	private final void unlockGUI() {
-		gui.releaseLock();
 	}
 
 	private void value(final File fileSelected) {

@@ -725,13 +725,8 @@ public final class VersionControl implements Module {
 		final CanonicalTreeParser treeParserLocal = new CanonicalTreeParser();
 		final CanonicalTreeParser treeParserRemote = new CanonicalTreeParser();
 
-		if (commitLocal.getCommitTime() > commitRemote.getCommitTime()) {
-			treeLocal = walk.parseTree(commitRemote.getTree().getId());
-			treeRemote = walk.parseTree(commitLocal.getTree().getId());
-		} else {
-			treeLocal = walk.parseTree(commitLocal.getTree().getId());
-			treeRemote = walk.parseTree(commitRemote.getTree().getId());
-		}
+		treeLocal = walk.parseTree(commitLocal.getTree().getId());
+		treeRemote = walk.parseTree(commitRemote.getTree().getId());
 
 		treeParserLocal.reset(reader, treeLocal.getId());
 		treeParserRemote.reset(reader, treeRemote.getId());

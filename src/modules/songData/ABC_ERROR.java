@@ -15,10 +15,9 @@ abstract class ABC_ERROR {
 	ABC_ERROR(final Path song, int line) {
 		this.song = song;
 		this.line = line;
-	}
-
-	final void createMessage() {
-		ABC_ERROR.messages.put(song, this);
+		synchronized (messages) {
+			ABC_ERROR.messages.put(song, this);
+		}
 	}
 
 	abstract String getDetail();

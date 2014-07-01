@@ -192,7 +192,10 @@ public class Main {
 	public final static void main(final String[] args) throws InterruptedException {
 		final StartupContainer sc = new StartupContainer();
 		final IOHandler io;
+		final Thread[] threads = new Thread[2];
+		Thread.enumerate(threads);
 		Main.taskPool = sc.createTaskPool();
+		threads[1].setUncaughtExceptionHandler(Main.taskPool.getMaster().getUncaughtExceptionHandler());
 		Main.createIO(sc);
 		io = sc.io;
 		if (io == null) {

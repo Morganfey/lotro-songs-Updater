@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import main.MasterThread;
 import util.FileSystem;
 import util.Path;
 
@@ -103,20 +104,25 @@ public final class Scanner implements Runnable {
 
 	private final OutputStream out;
 
+	private final MasterThread master;
+
 	/**
 	 * @param io
 	 * @param queue
+	 * @param master 
 	 * @param out
 	 * @param tree
 	 * @param songsFound
 	 */
 	public Scanner(final IOHandler io, final ArrayDeque<ModEntry> queue,
-			final OutputStream out, final DirTree tree, final Set<Path> songsFound) {
+			final MasterThread master, final OutputStream out, final DirTree tree,
+			final Set<Path> songsFound) {
 		this.queue = queue;
 		this.io = io;
 		this.tree = tree;
 		this.songsFound = songsFound;
 		this.out = out;
+		this.master = master;
 	}
 
 	private static final String clean(final String desc) {
@@ -175,7 +181,7 @@ public final class Scanner implements Runnable {
 
 			final SongData data = getVoices(song);
 			if (data == null) {
-				if (Thread.currentThread().isInterrupted()) {
+				if (master.isInterrupted()) {
 					return;
 				}
 				synchronized (songsFound) {
@@ -188,7 +194,7 @@ public final class Scanner implements Runnable {
 					io.write(out, bytes.array(), 0, bytes.position());
 				}
 				tree.put(data);
-				if (Thread.currentThread().isInterrupted()) {
+				if (master.isInterrupted()) {
 					return;
 				}
 			}
@@ -228,7 +234,7 @@ public final class Scanner implements Runnable {
 						io.handleException(ExceptionHandle.TERMINATE, e);
 					}
 					if (line == null || !line.startsWith("T:")) {
-						new NO_T(song.getKey(), lineNumber).createMessage();
+						new NO_T(song.getKey(), lineNumber);
 						error = true;
 						if (line == null) {
 							break;
@@ -248,18 +254,18 @@ public final class Scanner implements Runnable {
 						}
 						if (line.startsWith("T:")) {
 							desc.append(" ");
-							new MULTIPLE_T(lineNumber, song.getKey()).createMessage();
+							new MULTIPLE_T(lineNumber, song.getKey());
 						} else {
 							break;
 						}
 					} while (true);
 					if (desc.length() >= 65) {
-						new LONG_TITLE(song.getKey(), lineNumberOfX).createMessage();
+						new LONG_TITLE(song.getKey(), lineNumberOfX);
 					}
 					voices.put(voiceId, Scanner.clean(desc.toString()));
 					continue;
 				} else if (line.startsWith("T:")) {
-					new NO_X(song.getKey(), lineNumber).createMessage();
+					new NO_X(song.getKey(), lineNumber);
 					error = true;
 				}
 				try {

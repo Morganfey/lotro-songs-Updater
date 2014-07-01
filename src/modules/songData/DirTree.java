@@ -48,6 +48,9 @@ final class DirTree {
 			} else if (sd.getLastModification() < songdata.getLastModification()) {
 				t.files.put(path.getFileName(), songdata);
 			} else {
+				synchronized (ABC_ERROR.messages) {
+					ABC_ERROR.messages.remove(path);
+				}
 				return;
 			}
 		}

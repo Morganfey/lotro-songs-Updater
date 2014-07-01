@@ -134,8 +134,15 @@ public class NameScheme {
 
 				@Override
 				final void print(final StringBuilder sb, int track) {
-					for (final Instrument i : map.get(track))
+					boolean first = true;
+					for (final Instrument i : map.get(track)) {
+						if (!first) {
+							sb.append(", ");
+						} else {
+							first = false;
+						}
 						i.print(sb, NameScheme.this);
+					}
 				}
 			};
 
@@ -143,17 +150,7 @@ public class NameScheme {
 	private final Map<String, Variable> variables = buildVariableMap();
 	private final ArrayDeque<NameSchemeElement> elements = new ArrayDeque<>();
 	private final Map<InstrumentType, Integer> countMap = new HashMap<>();
-	private final Map<Integer, Set<Integer>> indices = new HashMap<>();
-
-	class InvalidNameSchemeException extends Exception {
-
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public final String toString() {
-			return "Invalid name scheme";
-		}
-	}
+	private final Map<Integer, String> indices = new HashMap<>();
 
 	/**
 	 * @param string
@@ -218,13 +215,8 @@ public class NameScheme {
 		}
 	}
 
-	final void printIdx(final StringBuilder sb, final Set<Integer> idcs) {
-		final Iterator<Integer> i = idcs.iterator();
-		sb.append(i.next());
-		while (i.hasNext()) {
-			sb.append(",");
-			sb.append(i.next());
-		}
+	final void printIdx(final StringBuilder sb, final String idcs) {
+		sb.append(idcs);
 	}
 
 	private final Map<String, Variable> buildVariableMap() {
@@ -271,15 +263,13 @@ public class NameScheme {
 		return sb.toString();
 	}
 
-	final void partNum(final Map<Integer, Set<Integer>> indices) {
+	final void partNum(final Map<Integer, String> indices) {
 		int seq = 1;
-		for (final Map.Entry<Integer, Set<Integer>> entry : indices.entrySet()) {
+		for (final Map.Entry<Integer, String> entry : indices.entrySet()) {
 			if (entry.getValue().isEmpty()) {
-				final Set<Integer> set = new HashSet<>();
-				set.add(seq);
-				this.indices.put(entry.getKey(), set);
+				this.indices.put(entry.getKey(), Integer.valueOf(seq).toString());
 			} else
-				this.indices.put(entry.getKey(), new HashSet<Integer>(entry.getValue()));
+				this.indices.put(entry.getKey(), entry.getValue());
 			seq++;
 		}
 

@@ -16,6 +16,7 @@ import java.util.Set;
 
 import main.ContainerElement;
 import main.Main;
+import main.MasterThread;
 import main.StartupContainer;
 import util.Path;
 import util.TaskPool;
@@ -28,6 +29,12 @@ import util.TaskPool;
  */
 public class SongDataContainer implements ContainerElement {
 
+	private static final String[] is = new String[] { "Clarinet", "Flute", "Horn",
+	"Harp", "Lute", "Theorbo", "Drums", "Bagpipes", "Pibgorn", "Cowbell",
+	"Bagpipe", "Drum", "Strings", "Bass" };
+
+	private static final Map<String, Integer> monthMap = SongDataContainer.createMap();
+
 	private final DirTree tree;
 
 	private final Set<Path> songsFound = new HashSet<>();
@@ -37,16 +44,11 @@ public class SongDataContainer implements ContainerElement {
 	private final IOHandler io;
 
 	private final TaskPool taskPool;
-
-	private boolean dirty = true;
+	private final MasterThread master;
 
 	private final boolean scanNeeded = true;
 
-	private static final String[] is = new String[] { "Clarinet", "Flute", "Horn",
-			"Harp", "Lute", "Theorbo", "Drums", "Bagpipes", "Pibgorn", "Cowbell",
-			"Bagpipe", "Drum", "Strings", "Bass" };
-
-	private static final Map<String, Integer> monthMap = SongDataContainer.createMap();
+	private boolean dirty = true;
 
 	/**
 	 * @param sc
@@ -54,6 +56,7 @@ public class SongDataContainer implements ContainerElement {
 	public SongDataContainer(final StartupContainer sc) {
 		io = sc.getIO();
 		taskPool = sc.getTaskPool();
+		master = sc.getMaster();
 		final String home =
 				Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY, null);
 		assert home != null;
@@ -426,7 +429,7 @@ public class SongDataContainer implements ContainerElement {
 	 * fills the container
 	 */
 	public final void fill() {
-		if (Thread.currentThread().isInterrupted()) {
+		if (master.isInterrupted()) {
 			return;
 		}
 		if (dirty) {
@@ -452,7 +455,7 @@ public class SongDataContainer implements ContainerElement {
 				out = io.openOut(songDataUpdatePath.toFile());
 				io.write(out, SongDataDeserializer_3.getHeader());
 				crawler = new Crawler(io, tree.getRoot(), new ArrayDeque<Path>(), queue);
-				scanner = new Scanner(io, queue, out, tree, songsFound);
+				scanner = new Scanner(io, queue, master, out, tree, songsFound);
 				taskPool.addTaskForAll(crawler, scanner);
 				in.registerProgressMonitor(io);
 				io.setProgressTitle("Reading data base of previous run");
@@ -477,7 +480,7 @@ public class SongDataContainer implements ContainerElement {
 				io.startProgress("parsing songs", songsFound.size());
 				out = io.openOut(songDataUpdatePath.toFile());
 				io.write(out, SongDataDeserializer_3.getHeader());
-				scanner = new Scanner(io, queue, out, tree, songsFound);
+				scanner = new Scanner(io, queue, master, out, tree, songsFound);
 				taskPool.addTaskForAll(scanner);
 			}
 			taskPool.waitForTasks();

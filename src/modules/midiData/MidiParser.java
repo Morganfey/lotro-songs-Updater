@@ -742,14 +742,14 @@ public abstract class MidiParser {
 	 * @param wd
 	 *            working directory for BruTE
 	 */
-	public final void midi2abc(final Path wd) {
-		final io.OutputStream gram = io.openOut(wd.resolve("out.gram").toFile());
-		final io.OutputStream mf = io.openOut(wd.resolve("out.mf").toFile());
-		// TODO make midi2abc yourself
-		io.close(gram);
-		io.close(mf);
-		throw new RuntimeException("Not yet implemented");
-	}
+//	public final void midi2abc(final Path wd) {
+//		final io.OutputStream gram = io.openOut(wd.resolve("out.gram").toFile());
+//		final io.OutputStream mf = io.openOut(wd.resolve("out.mf").toFile());
+//		// make midi2abc yourself
+//		io.close(gram);
+//		io.close(mf);
+//		throw new RuntimeException("Not yet implemented");
+//	}
 
 	/**
 	 * Parses the selected midi file.

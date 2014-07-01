@@ -54,13 +54,6 @@ public interface GUIInterface {
 	}
 
 	/**
-	 * Tries to lock interrupts.
-	 * 
-	 * @return <i>true</i> if locking the interrupts was successful
-	 */
-	boolean aquireLock();
-
-	/**
 	 * Sets this GUI invisible and frees all allocated resources. All further
 	 * invocations are undefined
 	 */
@@ -112,11 +105,6 @@ public interface GUIInterface {
 	 *            user has have to confirm the message
 	 */
 	void printMessage(String title, String message, boolean bringGUItoFront);
-
-	/**
-	 * Releases the interrupted lock, aquired by {@link #aquireLock()}.
-	 */
-	void releaseLock();
 
 	/**
 	 * Displays a no default GUI operation with given plugin.

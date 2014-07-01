@@ -84,6 +84,7 @@ public class MasterThread extends Thread {
 
 	private final StartupContainer sc;
 	private final TaskPool taskPool;
+	private final UncaughtExceptionHandler exceptionHandler;
 
 	private Event event;
 
@@ -92,7 +93,7 @@ public class MasterThread extends Thread {
 
 	private boolean suppressUnknownHost;
 
-	private Path wd;
+	private Path wd;	
 
 	/**
 	 * @param os
@@ -102,9 +103,28 @@ public class MasterThread extends Thread {
 		sc = os;
 		os.master = this;
 		this.taskPool = taskPool;
+		exceptionHandler = new UncaughtExceptionHandler() {
+
+			@Override
+			public final void uncaughtException(final Thread t, final Throwable e) {
+				if (t.getName().startsWith("AWT-EventQueue")) {
+					final String clazz = e.getStackTrace()[0].getClassName();
+					if (clazz.startsWith("javax.") || clazz.startsWith("java.")) {
+						System.err.println("suppressed exception in thread " + t);
+						// suppress exception caused by java(x) packages
+						return;
+					}
+				}
+				e.printStackTrace();
+			}
+
+
+		};
+		setUncaughtExceptionHandler(exceptionHandler);
 	}
 
 	public static void sleep(long millis) {
+
 		MasterThread master = null;
 		if (MasterThread.class.isInstance(Thread.currentThread())) {
 			master = MasterThread.class.cast(Thread.currentThread());
