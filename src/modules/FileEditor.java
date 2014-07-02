@@ -402,7 +402,7 @@ public class FileEditor implements Module {
 			if (master.isInterrupted())
 				return;
 			final SongChangeData scd = get(file);
-			scd.uniform(getNameScheme(), io);
+			scd.uniform(io, getNameScheme());
 			io.updateProgress();
 		}
 		io.endProgress();

@@ -364,8 +364,7 @@ public class IOHandler {
 	 */
 	public final void handleThrowable(final Throwable throwable) {
 		throwable.printStackTrace();
-		gui.printMessage(throwable.getLocalizedMessage(), throwable.toString()
-				.replaceAll(": ", "\n"), true);
+		gui.printErrorMessage(throwable.toString().replaceAll(": ", "\n"));
 		System.exit(3);
 	}
 

@@ -5,12 +5,13 @@ import io.IOHandler;
 import io.InputStream;
 import io.OutputStream;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -326,75 +327,36 @@ public class SongChangeData {
 	 * @param scheme
 	 * @param io
 	 */
-	public final void uniform(final NameScheme scheme, final IOHandler io) {
-		scheme.reset();
-		if (scheme.needsDuration()) {
-			final Set<String> set = new HashSet<String>(duration.values());
-			final String duration;
-			if (set.isEmpty()) {
-				duration = calculateDuration(io);
-			} else if (set.size() == 1) {
-				duration = set.iterator().next();
-			} else {
-				duration = calculateDuration(io);
-			}
-			scheme.duration(duration);
+	public final void uniform(final IOHandler io, final NameScheme scheme) {
+		final List<Integer> idcs = new ArrayList<>(instruments.keySet());
+		java.util.Collections.sort(idcs);
+		if (idxMap == null) {
+			idxMap = new HashMap<>();
+			numMap = new HashMap<>();
 		}
-
-		scheme.title(getTitle());
-
-		scheme.partNum(indices);
-		scheme.instrument(instruments);
-		if (total.size() == 1)
-			scheme.totalNum(total.iterator().next().intValue());
-
-		if (scheme.needsMod()) {
-			if (mod[0] == null || mod[0].isEmpty() || mod[1] == null || mod[1].isEmpty()) {
-				final String[] time = Time.date(file.toFile().lastModified()).split(" ");
-				final String month = Time.getShortMonthName(time[time.length - 2]);
-				final String day = time[time.length - 3];
-				mod[0] = month;
-				mod[1] = day;
+		if (indices.isEmpty())
+			for (int i = 1; i <= idcs.size(); i++) {
+				final Integer key = idcs.get(i - 1);
+				idxMap.put(key, i);
+				numMap.put(key, Integer.valueOf(i).toString());
 			}
-			scheme.mod(mod[0] + " " + mod[1]);
-		}
-		Integer key = Integer.valueOf(1);
-		final Path tmpP = MasterThread.tmp();
-		final Path tmp = tmpP.resolve(file.getFileName());
-		tmp.getParent().toFile().mkdir();
-		final OutputStream out = io.openOut(tmp.toFile());
-		final InputStream in = io.openIn(file.toFile());
-
-		while (true) {
-			String line;
-			try {
-				line = in.readLine();
-			} catch (final IOException e) {
-				io.handleException(ExceptionHandle.CONTINUE, e);
-				break;
+		else
+			for (int i = 1; i <= idcs.size(); i++) {
+				idxMap.put(idcs.get(i - 1), i);
+				final String idx = indices.get(i);
+				if (idx == null)
+					numMap.put(i, Integer.valueOf(i).toString());
+				else
+					numMap.put(i, idx);
 			}
-			if (line == null)
-				break;
-			if (line.startsWith("T:")) {
-				if (key == null) {
-					System.err.println("invalid abc scheme");
-					break;
-				}
-				io.write(out, "T: ");
-				io.writeln(out, scheme.print(key.intValue()));
-				key = null;
-			} else {
-				if (line.startsWith("X:"))
-					key = Integer.parseInt(line.substring(2).trim());
-				io.writeln(out, line);
-			}
-		}
-		io.close(out);
-		io.close(in);
-
+		total.clear();
+		total.add(idcs.size());
+		final Path tmp = writeChunks(io, scheme);
 		final String rel = file.relativize(getBase());
-		tmp.renameTo(getBase().getParent()
-				.resolve(getBase().getFileName() + "_rewritten").resolve(rel.split("/")));
+		final Path base =
+				SongChangeData.base.getParent().resolve(
+						SongChangeData.base.getFileName() + "_rewritten");
+		tmp.renameTo(base.resolve(rel));
 	}
 
 	class AbcTempoParams {
@@ -868,9 +830,6 @@ public class SongChangeData {
 				}
 			}
 		}
-//		for (final String monthE : util.Time.getMonthNames()) {
-//			// TODO implement 
-//		}
 		return title;
 	}
 
@@ -884,6 +843,14 @@ public class SongChangeData {
 	public final void revalidate(final IOHandler io, final NameScheme scheme) {
 		if (!dirty)
 			return;
+		final Path tmp = writeChunks(io, scheme);
+		if (tmp == null)
+			return;
+		dirty = false;
+		tmp.renameTo(file);
+	}
+
+	private final Path writeChunks(final IOHandler io, final NameScheme scheme) {
 		final Path tmp = MasterThread.tmp().resolve(file.getFileName());
 		final Path headerChunk = tmp.getParent().resolve(file.getFileName() + "_head");
 		final Map<Integer, Path> partsToChunk = new HashMap<>();
@@ -893,6 +860,8 @@ public class SongChangeData {
 		if (idxMap == null) {
 			idxMap = new HashMap<>();
 			numMap = new HashMap<>();
+		}
+		if (idxMap.isEmpty()) {
 			for (final Integer i : indices.keySet()) {
 				idxMap.put(i, i);
 				numMap.put(i, indices.get(i).toString());
@@ -923,7 +892,7 @@ public class SongChangeData {
 		if (titleNew != null)
 			scheme.title(titleNew);
 		if (!writeChunks(io, headerChunk, partsToChunk, scheme))
-			return;
+			return null;
 		out = io.openOut(tmp.toFile());
 		io.write(io.openIn(headerChunk.toFile()), out);
 		headerChunk.delete();
@@ -933,7 +902,7 @@ public class SongChangeData {
 			chunk.delete();
 		}
 		io.close(out);
-		tmp.renameTo(file);
+		return tmp;
 	}
 
 	private final boolean writeChunks(final IOHandler io, final Path headerChunk,

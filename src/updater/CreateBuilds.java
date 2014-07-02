@@ -22,7 +22,7 @@ public class CreateBuilds {
 	 * 
 	 * @param args
 	 *            ignored
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public final static void main(final String[] args) throws IOException {
 		final URL url =
@@ -44,7 +44,8 @@ public class CreateBuilds {
 					if (s.contains("$")) {
 						return null;
 					}
-					if (!s.startsWith("modules.") || s.endsWith("Module")) {
+					if (!s.startsWith("modules.") || s.endsWith("Module")
+							|| s.endsWith("EnableModuleListener")) {
 						return null;
 					}
 					try {
@@ -84,7 +85,10 @@ public class CreateBuilds {
 		}
 		final InputStream in = new FileInputStream(info.resolve("Main").toFile());
 		final OutputStream out = new FileOutputStream(info.resolve("Main_band").toFile());
-		out.write(in.read());
-		out.flush();out.close();in.close();
+		for (int i = 0; i < 4; i++)
+			out.write(in.read());
+		out.flush();
+		out.close();
+		in.close();
 	}
 }
