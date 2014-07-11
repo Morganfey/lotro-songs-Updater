@@ -120,16 +120,17 @@ public class NameScheme {
 
 	private final Map<Integer, Set<Instrument>> map = new HashMap<>();
 
-	private final Variable DURATION = new Variable("DURATION"), PART_NUM = new Variable(
-			"PART_NUM") {
+	private final Variable DURATION = new Variable("DURATION"),
+			PART_NUM = new Variable("PART_NUM") {
 
-		@Override
-		final void print(final StringBuilder sb, int track) {
-			NameScheme.this.printIdx(sb, indices.get(track));
-		}
+				@Override
+				final void print(final StringBuilder sb, int track) {
+					NameScheme.this.printIdx(sb, indices.get(track));
+				}
 
-	}, TOTAL_NUM = new Variable("TOTAL_NUM"), TITLE = new Variable("TITLE"),
-			MOD_DATE = new Variable("MOD_DATE"), INSTRUMENT = new Variable("INSTRUMENT") {
+			}, TOTAL_NUM = new Variable("TOTAL_NUM"), TITLE = new Variable(
+					"TITLE"), MOD_DATE = new Variable("MOD_DATE"),
+			INSTRUMENT = new Variable("INSTRUMENT") {
 
 				@Override
 				final void print(final StringBuilder sb, int track) {
@@ -197,8 +198,8 @@ public class NameScheme {
 					continue;
 			}
 			final int[] ends =
-					new int[] { string.indexOf('%', pos), string.indexOf('$', pos),
-							string.indexOf('}', pos) };
+					new int[] { string.indexOf('%', pos),
+							string.indexOf('$', pos), string.indexOf('}', pos) };
 			int end = string.length();
 			for (final int endI : ends) {
 				if (endI >= 0)
@@ -266,7 +267,8 @@ public class NameScheme {
 		int seq = 1;
 		for (final Map.Entry<Integer, String> entry : indices.entrySet()) {
 			if (entry.getValue().isEmpty()) {
-				this.indices.put(entry.getKey(), Integer.valueOf(seq).toString());
+				this.indices.put(entry.getKey(), Integer.valueOf(seq)
+						.toString());
 			} else
 				this.indices.put(entry.getKey(), entry.getValue());
 			seq++;
@@ -300,7 +302,8 @@ public class NameScheme {
 	}
 
 
-	final void printInstrumentNumbers(final StringBuilder sb, final Set<Integer> numbers) {
+	final void printInstrumentNumbers(final StringBuilder sb,
+			final Set<Integer> numbers) {
 		if (numbers.isEmpty())
 			return;
 		final Iterator<Integer> i = numbers.iterator();

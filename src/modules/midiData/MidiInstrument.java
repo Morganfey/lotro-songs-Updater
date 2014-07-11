@@ -29,20 +29,23 @@ import util.Path;
  * 
  * @author Nelphindal
  */
-public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPanel> {
+public class MidiInstrument implements
+		DropTargetContainer<JPanel, JPanel, JPanel> {
 
 	private final String name;
 	private final String name0;
 
 	private static int counter = 0;
 
-	private final Set<DropTarget<JPanel, JPanel, JPanel>> parts = new HashSet<>();
+	private final Set<DropTarget<JPanel, JPanel, JPanel>> parts =
+			new HashSet<>();
 
 	/** */
 	public static final MidiInstrument FLUTE = new MidiInstrument("flute");
 
 	/** */
-	public static final MidiInstrument CLARINET = new MidiInstrument("clarinet");
+	public static final MidiInstrument CLARINET =
+			new MidiInstrument("clarinet");
 
 	/** */
 	public static final MidiInstrument HARP = new MidiInstrument("harp");
@@ -57,10 +60,12 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 	public static final MidiInstrument THEORBO = new MidiInstrument("theorbo");
 
 	/** */
-	public static final MidiInstrument DRUMS = new MidiInstrument("drums", "map");
+	public static final MidiInstrument DRUMS = new MidiInstrument("drums",
+			"map");
 
 	/** */
-	public static final MidiInstrument BAGPIPES = new MidiInstrument("bagpipes");
+	public static final MidiInstrument BAGPIPES =
+			new MidiInstrument("bagpipes");
 
 	/** */
 	public static final MidiInstrument PIBGORN = new MidiInstrument("pibgorn");
@@ -69,7 +74,8 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 	public static final MidiInstrument COWBELL = new MidiInstrument("cowbell");
 
 	/** */
-	public static final MidiInstrument MOOR_COWBELL = new MidiInstrument("moor-cowbell");
+	public static final MidiInstrument MOOR_COWBELL = new MidiInstrument(
+			"moor-cowbell");
 
 	/*
 	 * to make createTargets() to work:
@@ -80,8 +86,8 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 	final Set<String> paramKeys = new HashSet<>();
 	private final JPanel panel = new JPanel();
 
-	private static final Map<Byte, MidiInstrument> idToInstrument = MidiInstrument
-			.buildInstrumentMap();
+	private static final Map<Byte, MidiInstrument> idToInstrument =
+			MidiInstrument.buildInstrumentMap();
 
 	/**
 	 * Creates a new instrument
@@ -235,12 +241,14 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 			io.endProgress();
 		}
 		if (newMap.size() != 128) {
-			io.printError("the given map has not exact 128 instruments to map", false);
+			io.printError("the given map has not exact 128 instruments to map",
+					false);
 		} else {
 			MidiInstrument.idToInstrument.clear();
 			MidiInstrument.idToInstrument.putAll(newMap);
 		}
-		System.out.println("replaced default map by " + MidiInstrument.idToInstrument);
+		System.out.println("replaced default map by "
+				+ MidiInstrument.idToInstrument);
 	}
 
 	private final static Map<Byte, MidiInstrument> buildInstrumentMap() {
@@ -581,7 +589,8 @@ public class MidiInstrument implements DropTargetContainer<JPanel, JPanel, JPane
 
 }
 
-class EmptyMidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel> {
+class EmptyMidiInstrumentDropTarget implements
+		DropTarget<JPanel, JPanel, JPanel> {
 	final Set<DragObject<JPanel, JPanel, JPanel>> objects = new HashSet<>();
 	private final DropTargetContainer<JPanel, JPanel, JPanel> container;
 
@@ -597,7 +606,8 @@ class EmptyMidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel
 
 	@Override
 	public final void displayParam(final String key, final JPanel container,
-			final JPanel menu, final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
+			final JPanel menu,
+			final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
 		throw new UnsupportedOperationException();
 	}
 

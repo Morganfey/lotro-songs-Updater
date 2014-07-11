@@ -8,6 +8,7 @@ import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.swing.JLabel;
@@ -26,8 +27,8 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 	private static final Font font = Font.decode("Arial bold 9");
 
 	DO_Listener(final DragObject<C, D, T> object,
-			final DragAndDropPlugin<C, D, T>.State state, final BruteParams[] params,
-			final DndPluginCaller<C, D, T> caller) {
+			final DragAndDropPlugin<C, D, T>.State state,
+			final BruteParams[] params, final DndPluginCaller<C, D, T> caller) {
 		super(state);
 		this.object = object;
 		this.caller = caller;
@@ -56,13 +57,17 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 		if (!released) {
 			mark(false);
 			state.dragging = object;
-			object.getDisplayableComponent().setBackground(DNDListener.C_DRAGGING);
+			object.getDisplayableComponent().setBackground(
+					DNDListener.C_DRAGGING);
 		} else {
-
-			state.dragging.getDisplayableComponent()
-					.setBackground(DNDListener.C_INACTIVE);
+			state.dragging.getDisplayableComponent().setBackground(
+					DNDListener.C_INACTIVE);
 			state.dragging = null;
 			synchronized (state) {
+				if (state.loadingMap) {
+					mark(false);
+					return;
+				}
 				state.upToDate = false;
 				state.label.setText("");
 			}
@@ -85,7 +90,8 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 				}
 			} else if (state.target != null) {
 				if (state.split) {
-					if (object.getTargetContainer() == state.target.getContainer()) {
+					if (object.getTargetContainer() == state.target
+							.getContainer()) {
 						if (!object.addTarget(state.target))
 							caller.printError("To large split");
 					} else {
@@ -107,7 +113,8 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 						if (!object.addTarget(state.target)) {
 							state.targetC.delete(state.target);
 							final Container c =
-									state.target.getDisplayableComponent().getParent();
+									state.target.getDisplayableComponent()
+											.getParent();
 							c.remove(state.target.getDisplayableComponent());
 							c.revalidate();
 							caller.printError("To large split");
@@ -120,10 +127,12 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 					wipeTargetsAndLink();
 				}
 				state.target = null;
-				if (object.isAlias() && state.targetC == state.emptyTarget.getContainer()) {
+				if (object.isAlias()
+						&& state.targetC == state.emptyTarget.getContainer()) {
 					object.forgetAlias();
 					state.emptyTarget.getContainer().removeAllLinks(object);
-					final Container parent = object.getDisplayableComponent().getParent();
+					final Container parent =
+							object.getDisplayableComponent().getParent();
 					parent.remove(object.getDisplayableComponent());
 					parent.revalidate();
 					mark(false);
@@ -143,7 +152,7 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 
 	private final void displayParam() {
 		panelOption.removeAll();
-		final DropTarget<C, D, T>[] targets = object.getTargets();
+		final Iterator<DropTarget<C, D, T>> targets = object.iterator();
 		param.display(panelOption, object, targets);
 		panelOption.revalidate();
 	}
@@ -193,7 +202,8 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 				});
 				panelOption.add(optionPanel);
 			}
-			object.getDisplayableComponent().add(panelOption, BorderLayout.SOUTH);
+			object.getDisplayableComponent().add(panelOption,
+					BorderLayout.SOUTH);
 			state.plugin.repack();
 		}
 
@@ -203,14 +213,19 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 		if (!active || state.dragging == null) {
 			final Set<DropTarget<?, ?, ?>> targets = new HashSet<>();
 			final Color ct0 =
-					active ? DNDListener.C_SELECTED0 : DNDListener.C_INACTIVE_TARGET;
+					active ? DNDListener.C_SELECTED0
+							: DNDListener.C_INACTIVE_TARGET;
 			final Color ct1 =
-					active ? DNDListener.C_SELECTED1 : DNDListener.C_INACTIVE_TARGET;
-			final Color ct2 = active ? Color.CYAN : DNDListener.C_INACTIVE_TARGET;
+					active ? DNDListener.C_SELECTED1
+							: DNDListener.C_INACTIVE_TARGET;
+			final Color ct2 =
+					active ? Color.CYAN : DNDListener.C_INACTIVE_TARGET;
 //			final Color co0 = active ? C_SELECTED0 : C_INACTIVE;
-			final Color co1 = active ? DNDListener.C_SELECTED1 : DNDListener.C_INACTIVE;
-			final Color co2 = active ? Color.CYAN : DNDListener.C_INACTIVE;
-			for (final DropTarget<?, ?, ?> t : object.getTargets()) {
+			final Color co1 =
+					active ? DNDListener.C_SELECTED1 : DNDListener.C_INACTIVE;
+			final Color co2 =
+					active ? DNDListener.C_CLONE : DNDListener.C_INACTIVE;
+			for (final DropTarget<?, ?, ?> t : object) {
 				if (t == state.emptyTarget) {
 					continue;
 				}
@@ -224,7 +239,8 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			}
 			object.getDisplayableComponent().setBackground(
 					active ? DNDListener.C_ACTIVE : DNDListener.C_INACTIVE);
-			object.getTargetContainer().getDisplayableComponent().setBackground(ct0);
+			object.getTargetContainer().getDisplayableComponent()
+					.setBackground(ct0);
 			for (final DropTarget<?, ?, ?> t : object.getTargetContainer()) {
 				if (t == state.emptyTarget || targets.contains(t)) {
 					continue;
@@ -238,13 +254,14 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 				}
 			}
 			if (object.isAlias()) {
-				object.getOriginal().getDisplayableComponent().setBackground(co2);
+				object.getOriginal().getDisplayableComponent()
+						.setBackground(co2);
 				if (object.getOriginal().getTargetContainer() != object
 						.getTargetContainer()) {
-					object.getOriginal().getTargetContainer().getDisplayableComponent()
-							.setBackground(ct2);
+					object.getOriginal().getTargetContainer()
+							.getDisplayableComponent().setBackground(ct2);
 				}
-				for (final DropTarget<?, ?, ?> t : object.getOriginal().getTargets()) {
+				for (final DropTarget<?, ?, ?> t : object.getOriginal()) {
 					if (t == state.emptyTarget || targets.contains(t)) {
 						continue;
 					}
@@ -260,7 +277,7 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 					alias.getTargetContainer().getDisplayableComponent()
 							.setBackground(ct2);
 				}
-				for (final DropTarget<?, ?, ?> t : alias.getTargets()) {
+				for (final DropTarget<?, ?, ?> t : alias) {
 					if (t == state.emptyTarget || targets.contains(t)) {
 						continue;
 					}
@@ -278,13 +295,15 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			}
 		}
 		object.getTargetContainer().removeAllLinks(object);
-		for (final DropTarget<?, D, ?> target : object.clearTargets()) {
+		final Iterator<DropTarget<C, D, T>> tIter = object.clearTargets();
+		while (tIter.hasNext()) {
+			final DropTarget<C, D, T> target = tIter.next();
 			if (target == state.emptyTarget) {
 				continue;
 			}
 			if (caller.unlink(object, target)) {
 				if (target != state.target) {
-					final D panel = target.getDisplayableComponent();
+					final Container panel = target.getDisplayableComponent();
 					final Container parent = panel.getParent();
 					parent.remove(panel);
 					if (parent.getComponentCount() == 0) {

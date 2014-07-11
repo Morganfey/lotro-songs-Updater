@@ -109,14 +109,14 @@ public final class Scanner implements Runnable {
 	/**
 	 * @param io
 	 * @param queue
-	 * @param master 
+	 * @param master
 	 * @param out
 	 * @param tree
 	 * @param songsFound
 	 */
 	public Scanner(final IOHandler io, final ArrayDeque<ModEntry> queue,
-			final MasterThread master, final OutputStream out, final DirTree tree,
-			final Set<Path> songsFound) {
+			final MasterThread master, final OutputStream out,
+			final DirTree tree, final Set<Path> songsFound) {
 		this.queue = queue;
 		this.io = io;
 		this.tree = tree;
@@ -204,7 +204,8 @@ public final class Scanner implements Runnable {
 
 	private final SongData getVoices(final ModEntry song) {
 		final SongData songdata = tree.get(song.getKey());
-		if (songdata == null || songdata.getLastModification() != song.getValue()) {
+		if (songdata == null
+				|| songdata.getLastModification() != song.getValue()) {
 			final Path songFile = song.getKey();
 
 			final Map<String, String> voices = new HashMap<>();
@@ -226,7 +227,8 @@ public final class Scanner implements Runnable {
 				// search for important lines
 				if (line.startsWith("X:")) {
 					final int lineNumberOfX = lineNumber;
-					final String voiceId = line.substring(line.indexOf(":") + 1).trim();
+					final String voiceId =
+							line.substring(line.indexOf(":") + 1).trim();
 					try {
 						line = songContent.readLine();
 						++lineNumber;
@@ -242,7 +244,8 @@ public final class Scanner implements Runnable {
 					}
 					final StringBuilder desc = new StringBuilder();
 					do {
-						desc.append(line.substring(line.indexOf(":") + 1).trim());
+						desc.append(line.substring(line.indexOf(":") + 1)
+								.trim());
 						try {
 							line = songContent.readLine();
 							++lineNumber;
@@ -280,8 +283,8 @@ public final class Scanner implements Runnable {
 				return null;
 			}
 			if (voices.isEmpty()) {
-				io.printError(String.format("Warning: %-50s %s",
-						song.getKey().toString(), "has no voices"), true);
+				io.printError(String.format("Warning: %-50s %s", song.getKey()
+						.toString(), "has no voices"), true);
 			}
 			final SongData sd = SongData.create(song, voices);
 			synchronized (song) {

@@ -579,8 +579,8 @@ public class GUI implements GUIInterface {
 		wait.setText(action);
 	}
 
-	private final void printMessageFunc(final String title, final String message,
-			boolean toFront) {
+	private final void printMessageFunc(final String title,
+			final String message, boolean toFront) {
 
 		synchronized (Button.class) {
 			pressed = Button.ABORT;

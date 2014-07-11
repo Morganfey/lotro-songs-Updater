@@ -11,6 +11,7 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,12 +21,14 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileFilter;
 
 import modules.AbcCreator;
 import modules.midiData.MidiInstrument;
@@ -37,10 +40,13 @@ import util.TaskPool;
 /**
  * @author Nelphindal
  */
-public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel> {
+public final class AbcMapPlugin extends
+		DragAndDropPlugin<JPanel, JPanel, JPanel> {
 
 	private final Map<MidiInstrumentDropTarget, Set<Integer>> instrumentToTrack =
 			new TreeMap<>();
+	private final Map<Integer, DragObject<JPanel, JPanel, JPanel>> trackMap =
+			new HashMap<>();
 
 	private JPanel panelLeft;
 	private JScrollPane center;
@@ -102,8 +108,9 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 	/**
 	 * @return a tree containing all currently mapped instruments.
 	 */
-	public final TreeSet<DropTarget<?, ?, ?>> targets() {
-		return new TreeSet<DropTarget<?, ?, ?>>(instrumentToTrack.keySet());
+	public final TreeSet<DropTarget<JPanel, JPanel, JPanel>> targets() {
+		return new TreeSet<DropTarget<JPanel, JPanel, JPanel>>(
+				instrumentToTrack.keySet());
 	}
 
 	/**
@@ -113,7 +120,8 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 	 * @param target
 	 * @return <i>true</i> if the target is now empty
 	 */
-	public final boolean unlink(DragObject<?, ?, ?> object, DropTarget<?, ?, ?> target) {
+	public final boolean unlink(DragObject<?, ?, ?> object,
+			DropTarget<?, ?, ?> target) {
 		final Track t = (Track) object;
 		final MidiInstrumentDropTarget i = (MidiInstrumentDropTarget) target;
 		final Set<Integer> set = instrumentToTrack.get(target);
@@ -127,9 +135,11 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 	/** */
 	@Override
-	protected final void addToCenter(final DropTarget<JPanel, JPanel, JPanel> target) {
+	protected final void addToCenter(
+			final DropTarget<JPanel, JPanel, JPanel> target) {
 		final Container c =
-				(Container) ((Container) center.getComponent(0)).getComponent(0);
+				(Container) ((Container) center.getComponent(0))
+						.getComponent(0);
 		if (empty != null) {
 			empty = null;
 			c.removeAll();
@@ -162,6 +172,7 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 		final JButton testButton = new JButton("Test");
 		final JButton globalParamsButton = new JButton("Settings");
+		final JButton loadButton = new JButton("Load");
 
 		testButton.addMouseListener(new MouseListener() {
 
@@ -188,6 +199,8 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 			@Override
 			public final void mouseReleased(final MouseEvent e) {
 				synchronized (state) {
+					if (state.loadingMap)
+						return;
 					while (state.running) {
 						try {
 							state.wait();
@@ -205,7 +218,8 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 					@Override
 					public void run() {
-						final boolean success = caller.call_back(null, null, size());
+						final boolean success =
+								caller.call_back(null, null, size());
 						synchronized (state) {
 							state.notifyAll();
 							state.upToDate = success;
@@ -279,7 +293,101 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 			protected abstract void trigger();
 		}
-		;
+
+		loadButton.addMouseListener(new MouseListener() {
+
+			@Override
+			public final void mouseClicked(final MouseEvent e) {
+				e.consume();
+			}
+
+			@Override
+			public final void mouseEntered(final MouseEvent e) {
+				e.consume();
+			}
+
+			@Override
+			public final void mouseExited(final MouseEvent e) {
+				e.consume();
+			}
+
+			@Override
+			public final void mousePressed(final MouseEvent e) {
+				e.consume();
+			}
+
+			@Override
+			public final void mouseReleased(final MouseEvent e) {
+				e.consume();
+				if (state.loadingMap)
+					return;
+				final JFileChooser fc =
+						new JFileChooser(caller.getFile().toFile());
+				fc.setFileFilter(new FileFilter() {
+
+					@Override
+					public final boolean accept(final File f) {
+						return f.isDirectory()
+								|| f.isFile() && f.getName().endsWith(".map");
+					}
+
+					@Override
+					public final String getDescription() {
+						return "MAP-files (.map)";
+					}
+				});
+
+				fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				final int sel = fc.showOpenDialog(loadButton);
+				if (sel == JFileChooser.APPROVE_OPTION) {
+					for (final DragObject<JPanel, JPanel, JPanel> o : trackMap
+							.values()) {
+						for (final DropTarget<JPanel, JPanel, JPanel> t : o
+								.getTargetContainer().removeAllLinks(o)) {
+							if (t != state.emptyTarget)
+								t.getDisplayableComponent().getParent()
+										.remove(t.getDisplayableComponent());
+						}
+						o.clearTargets();
+						for (final DragObject<JPanel, JPanel, JPanel> alias : o
+								.getAliases()) {
+							alias.forgetAlias();
+							for (final DropTarget<JPanel, JPanel, JPanel> t : alias
+									.getTargetContainer().removeAllLinks(alias)) {
+								if (t != state.emptyTarget)
+									t.getDisplayableComponent()
+											.getParent()
+											.remove(t.getDisplayableComponent());
+							}
+							panelLeft.remove(alias.getDisplayableComponent());
+							panelLeft.validate();
+						}
+						o.addTarget(state.emptyTarget);
+						state.emptyTarget.link(o);
+					}
+					emptyCenter();
+					instrumentToTrack.clear();
+					state.label.setText("Parsing loaded map ...");
+					state.loadingMap = true;
+					final File mapToLoad = fc.getSelectedFile();
+					new Thread() {
+						@Override
+						public final void run() {
+							final Map<DragObject<JPanel, JPanel, JPanel>, Set<DropTarget<JPanel, JPanel, JPanel>>> targets =
+									AbcMapPlugin.this.caller.loadMap(mapToLoad);
+							if (targets == null) {
+								state.label.setText("loading map failed");
+							}
+							synchronized (state) {
+								state.loadingMap = false;
+								state.upToDate = false;
+								state.running = false;
+							}
+						}
+					}.start();
+				}
+			}
+		});
 
 		globalParamsButton.addMouseListener(new MouseListener() {
 
@@ -361,14 +469,16 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 				.setToolTipText("Sets global settings like pitch and location of created abc for testing");
 		testButton
 				.setToolTipText("Starts the transcription. After completion the song will be played using the Abc-Player, if it exists");
-
 		splitButton
 				.setToolTipText("Will split a midi track on multiple abc-tracks when enabled");
+		loadButton
+				.setToolTipText("Loads a previously saved map - IN  DEVELOPMENT will currently clear the map and fail afterwards");
 
 		panelCenter.setLayout(new BorderLayout());
 		panelCenter.add(GUI.Button.OK.getButton());
 		panelCenter.add(splitButton, BorderLayout.EAST);
 		panelCenter.add(globalParamsButton, BorderLayout.SOUTH);
+		panelCenter.add(loadButton, BorderLayout.WEST);
 
 		panel.setLayout(new BorderLayout());
 		panel.add(panelCenter);
@@ -382,8 +492,9 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 	protected final void emptyCenter() {
 		empty = center.getParent();
 		final Container c =
-				(Container) ((Container) center.getComponent(0)).getComponent(0);
-		final JLabel label = new JLabel("- empty -");
+				(Container) ((Container) center.getComponent(0))
+						.getComponent(0);
+		final JLabel label = new JLabel("       - empty -       ");
 		label.setForeground(Color.WHITE);
 		c.add(label);
 		emptyC = c.getBackground();
@@ -401,7 +512,7 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 		final JPanel panel = new JPanel();
 		final TreeSet<DropTarget<JPanel, JPanel, JPanel>> set = new TreeSet<>();
 		for (final DragObject<JPanel, JPanel, JPanel> o : trackList.values()) {
-			for (final DropTarget<JPanel, JPanel, JPanel> t : o.getTargets()) {
+			for (final DropTarget<JPanel, JPanel, JPanel> t : o) {
 				if (t != state.emptyTarget)
 					set.add(t);
 			}
@@ -418,8 +529,9 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 	/** Creates a map, mapping the tracks. */
 	@Override
-	protected final Map<Integer, DragObject<JPanel, JPanel, JPanel>> initInitListLeft() {
-		return new HashMap<>();
+	protected final Map<Integer, DragObject<JPanel, JPanel, JPanel>>
+			initInitListLeft() {
+		return trackMap;
 	}
 
 	/**
@@ -462,12 +574,13 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 	/** */
 	@Override
-	protected final void initObject(final DragObject<JPanel, JPanel, JPanel> object) {
+	protected final void initObject(
+			final DragObject<JPanel, JPanel, JPanel> object) {
 		panelLeft.add(object.getDisplayableComponent());
 		object.getDisplayableComponent().add(new JLabel(object.getName()));
 		object.getDisplayableComponent().addMouseListener(
-				new DO_Listener<JPanel, JPanel, JPanel>(object, state, Track.getParams(),
-						caller));
+				new DO_Listener<JPanel, JPanel, JPanel>(object, state, Track
+						.getParams(), caller));
 		panelLeft.revalidate();
 	}
 
@@ -483,7 +596,8 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 			final JLabel label = new JLabel(t.getName());
 			final JPanel panel = t.getDisplayableComponent();
 			panel.removeAll(); // needed in case of not first run
-			panel.addMouseListener(new TC_Listener<JPanel, JPanel, JPanel>(t, state));
+			panel.addMouseListener(new TC_Listener<JPanel, JPanel, JPanel>(t,
+					state));
 			panel.setMinimumSize(new Dimension(120, 15));
 			panel.setPreferredSize(new Dimension(120, 33));
 			panel.add(label);
@@ -494,7 +608,8 @@ public final class AbcMapPlugin extends DragAndDropPlugin<JPanel, JPanel, JPanel
 
 	/** */
 	@Override
-	protected final void initTarget(final DropTarget<JPanel, JPanel, JPanel> target) {
+	protected final void initTarget(
+			final DropTarget<JPanel, JPanel, JPanel> target) {
 		final Font font = Font.decode("Arial bold 9");
 		final JPanel panelNew = target.getDisplayableComponent();
 

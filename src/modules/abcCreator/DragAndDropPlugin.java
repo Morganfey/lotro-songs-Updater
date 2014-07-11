@@ -49,15 +49,18 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 
 		DragObject<C, D, T> dragging;
 
-		boolean running;
-		boolean split;
-		boolean upToDate;
+		boolean running; // midi2abc.exe running
+		boolean split; // split button pushed down
+		boolean upToDate; // no changes since last run
+		boolean loadingMap; // while loading no relinking allowed
 
 		final IOHandler io;
 		final JLabel label = new JLabel();
 		final DragAndDropPlugin<C, D, T> plugin = DragAndDropPlugin.this;
 
-		private State(final IOHandler io, final List<DropTargetContainer<C, D, T>> targets) {
+
+		private State(final IOHandler io,
+				final List<DropTargetContainer<C, D, T>> targets) {
 			this.io = io;
 			emptyTarget = targets.get(targets.size() - 1).createNewTarget();
 		}
@@ -210,7 +213,8 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 		taskPool.addTask(r);
 
 		final JPanel mainPanel;
-		final Map<Integer, DragObject<C, D, T>> initListLeft = initInitListLeft();
+		final Map<Integer, DragObject<C, D, T>> initListLeft =
+				initInitListLeft();
 		state.label.setText("Drag the tracks from left to right");
 		state.running = false;
 		state.upToDate = false;
@@ -238,7 +242,6 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 	 */
 	protected abstract void emptyCenter();
 
-
 	/** */
 	@Override
 	protected final String getTitle() {
@@ -261,7 +264,8 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 	 * @param initListLeft
 	 * @return component to be shown to the left
 	 */
-	protected abstract Component initLeft(Map<Integer, DragObject<C, D, T>> initListLeft);
+	protected abstract Component initLeft(
+			Map<Integer, DragObject<C, D, T>> initListLeft);
 
 	/**
 	 * Handles everything needed to show given object

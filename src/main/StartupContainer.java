@@ -62,7 +62,8 @@ public class StartupContainer {
 				elements.put(clazzCE, ceNew);
 				return ceNew;
 			} catch (final Exception e) {
-				io.printError("Error in creating new instance of " + clazz, false);
+				io.printError("Error in creating new instance of " + clazz,
+						false);
 				master.interrupt();
 			}
 		}

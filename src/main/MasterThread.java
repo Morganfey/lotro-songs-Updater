@@ -47,7 +47,7 @@ public class MasterThread extends Thread {
 		private ModuleInfo() {
 			// cut here
 			this.name = "Main_band";
-			// cut here
+// cut here
 			instance = new modules.Main();
 		}
 
@@ -93,7 +93,7 @@ public class MasterThread extends Thread {
 
 	private boolean suppressUnknownHost;
 
-	private Path wd;	
+	private Path wd;
 
 	/**
 	 * @param os
@@ -106,11 +106,13 @@ public class MasterThread extends Thread {
 		exceptionHandler = new UncaughtExceptionHandler() {
 
 			@Override
-			public final void uncaughtException(final Thread t, final Throwable e) {
+			public final void uncaughtException(final Thread t,
+					final Throwable e) {
 				if (t.getName().startsWith("AWT-EventQueue")) {
 					final String clazz = e.getStackTrace()[0].getClassName();
 					if (clazz.startsWith("javax.") || clazz.startsWith("java.")) {
-						System.err.println("suppressed exception in thread " + t);
+						System.err.println("suppressed exception in thread "
+								+ t);
 						// suppress exception caused by java(x) packages
 						return;
 					}
@@ -143,7 +145,8 @@ public class MasterThread extends Thread {
 	public static boolean interrupted() {
 		final boolean interrupted = Thread.interrupted();
 		if (MasterThread.class.isInstance(Thread.currentThread())) {
-			final MasterThread master = MasterThread.class.cast(Thread.currentThread());
+			final MasterThread master =
+					MasterThread.class.cast(Thread.currentThread());
 			master.state.handleEvent(Event.CLEAR_INT);
 		}
 		return interrupted;
@@ -158,7 +161,8 @@ public class MasterThread extends Thread {
 	 */
 	public final static Path tmp() {
 		if (MasterThread.class.isInstance(Thread.currentThread())) {
-			final MasterThread master = MasterThread.class.cast(Thread.currentThread());
+			final MasterThread master =
+					MasterThread.class.cast(Thread.currentThread());
 			return master.tmp;
 		}
 		return null;
@@ -205,19 +209,21 @@ public class MasterThread extends Thread {
 			try {
 				die(repack());
 				return;
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				io.handleException(ExceptionHandle.CONTINUE, e);
 				e.printStackTrace();
 			}
 		}
 		waitForConfigParse();
-		if (main.Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY, null) == null) {
+		if (main.Main.getConfigValue(main.Main.GLOBAL_SECTION,
+				main.Main.PATH_KEY, null) == null) {
 			main.Main.setConfigValue(
 					main.Main.GLOBAL_SECTION,
 					main.Main.PATH_KEY,
-					FileSystem.getBase()
-							.resolve("Documents", "The Lord of The Rings Online")
-							.toString());
+					FileSystem
+							.getBase()
+							.resolve("Documents",
+									"The Lord of The Rings Online").toString());
 		}
 		try {
 			final Set<String> moduleSelection = init();
@@ -232,15 +238,17 @@ public class MasterThread extends Thread {
 			final ArrayDeque<Option> options = new ArrayDeque<>();
 			for (final String module : possibleModules) {
 				if (moduleSelection.contains(module)) {
-					options.addAll(modulesLocal.get(module).instance.getOptions());
+					options.addAll(modulesLocal.get(module).instance
+							.getOptions());
 				}
 			}
 			if (!options.isEmpty()) {
 				options.addFirst(new StringOption(sc.optionContainer, "name",
 						"Your name. Will be used to identify you."
 								+ "Several operations will use it"
-								+ " for more information, read the manual", "Name",
-						Flag.NoShortFlag, "name", Main.GLOBAL_SECTION, Main.NAME_KEY));
+								+ " for more information, read the manual",
+						"Name", Flag.NoShortFlag, "name", Main.GLOBAL_SECTION,
+						Main.NAME_KEY));
 				waitForOSInit();
 				io.getOptions(options);
 				if (!isInterrupted())
@@ -260,12 +268,14 @@ public class MasterThread extends Thread {
 
 	private final void repair() {
 		taskPool.addTask(new Runnable() {
+			@Override
 			public final void run() {
 				main.Main.repair();
 			}
 		});
 		for (final ModuleInfo m : modulesLocal.values()) {
 			taskPool.addTask(new Runnable() {
+				@Override
 				public final void run() {
 					m.instance.repair();
 				}
@@ -329,13 +339,14 @@ public class MasterThread extends Thread {
 				if (suppressUnknownHost) {
 					return false;
 				}
-				System.err.println("connection to " + e.getMessage() + " failed");
+				System.err.println("connection to " + e.getMessage()
+						+ " failed");
 				suppressUnknownHost = true;
 			} else {
 				e.printStackTrace();
 			}
-			io.printError("Failed to contact github to check if module\n" + info.name
-					+ "\n is up to date", false);
+			io.printError("Failed to contact github to check if module\n"
+					+ info.name + "\n is up to date", false);
 		}
 		return false;
 	}
@@ -499,7 +510,8 @@ public class MasterThread extends Thread {
 					JarFile jar = null;
 					try {
 						jar = new JarFile(wd.toFile());
-						final ZipEntry entry = jar.getEntry(name.replaceAll("\\.", "/"));
+						final ZipEntry entry =
+								jar.getEntry(name.replaceAll("\\.", "/"));
 						final byte[] bytes = new byte[(int) entry.getSize()];
 						final InputStream in = jar.getInputStream(entry);
 						for (int offset = 0, read; (read =

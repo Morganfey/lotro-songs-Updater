@@ -62,9 +62,11 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 		for (final String dir : dirs) {
 			final JPanel contentPanel = new JPanel();
 			final Path p = currentDir.resolve(dir);
-			final JCheckBox box = p == currentDir.getParent() ? null : new JCheckBox();
+			final JCheckBox box =
+					p == currentDir.getParent() ? null : new JCheckBox();
 			final JLabel label =
-					new JLabel(box == null ? "  ../  [" + p.getFileName() + "]" : dir);
+					new JLabel(box == null ? "  ../  [" + p.getFileName() + "]"
+							: dir);
 
 			if (box != null) {
 				if (selection.contains(p)) {
@@ -209,7 +211,8 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 		panel.add(pathLabel, BorderLayout.NORTH);
 		panel.add(panelButton, BorderLayout.SOUTH);
 		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
-		panelButton.add(GUIInterface.Button.ABORT.getButton(), BorderLayout.WEST);
+		panelButton.add(GUIInterface.Button.ABORT.getButton(),
+				BorderLayout.WEST);
 		displayDir(panelSelection, scroll);
 		return false;
 	}

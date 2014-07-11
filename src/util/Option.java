@@ -63,8 +63,8 @@ public abstract class Option {
 	protected Option(final OptionContainer optionContainer, final String name,
 			final String toolTip, final String guiDescription, char shortFlag,
 			final String longFlag, boolean argExpected) {
-		this(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag,
-				argExpected, null, null, null);
+		this(optionContainer, name, toolTip, guiDescription, shortFlag,
+				longFlag, argExpected, null, null, null);
 	}
 
 	/**
@@ -106,8 +106,8 @@ public abstract class Option {
 		this.section = section;
 		this.defaultValue = defaultValue;
 		if (optionContainer != null) {
-			optionContainer.addOption(name, toolTip, shortFlag, longFlag, argExpected,
-					this);
+			optionContainer.addOption(name, toolTip, shortFlag, longFlag,
+					argExpected, this);
 		}
 	}
 
@@ -117,7 +117,8 @@ public abstract class Option {
 	 * @param panel
 	 * @param gui
 	 */
-	public final void displayWithGUI(final JPanel panel, final gui.GUIInterface gui) {
+	public final void displayWithGUI(final JPanel panel,
+			final gui.GUIInterface gui) {
 		this.panel = panel;
 		this.gui = gui;
 		display(panel);

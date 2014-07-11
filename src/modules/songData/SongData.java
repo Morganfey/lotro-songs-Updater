@@ -27,7 +27,8 @@ public class SongData {
 		this.mod = mod;
 	}
 
-	final static SongData create(final ModEntry song, final Map<String, String> voices) {
+	final static SongData create(final ModEntry song,
+			final Map<String, String> voices) {
 		final TreeMap<Integer, String> voicesMap = new TreeMap<>();
 		for (final Map.Entry<String, String> v : voices.entrySet()) {
 			voicesMap.put(Integer.parseInt(v.getKey()), v.getValue());

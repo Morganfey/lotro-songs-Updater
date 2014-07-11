@@ -47,7 +47,8 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	 * @throws FileNotFoundException
 	 *             if given file does not exist
 	 */
-	public InputStream(final File file, final Charset cs) throws FileNotFoundException {
+	public InputStream(final File file, final Charset cs)
+			throws FileNotFoundException {
 		this.cs = cs;
 		this.file = file;
 		buffer = new byte[16000];
@@ -281,12 +282,13 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	 *             if offset or length do not fulfill the requirements
 	 */
 	@Override
-	public final int read(byte[] buffer, int offset, int length) throws IOException {
+	public final int read(byte[] buffer, int offset, int length)
+			throws IOException {
 		if (EOFreached()) {
 			return -1;
 		}
-		if (length > buffer.length || length < 0 || offset >= buffer.length || offset < 0
-				|| length > buffer.length - offset) {
+		if (length > buffer.length || length < 0 || offset >= buffer.length
+				|| offset < 0 || length > buffer.length - offset) {
 			throw new IllegalArgumentException();
 		}
 		int read = 0;
@@ -437,13 +439,14 @@ public class InputStream extends java.io.InputStream implements Closeable {
 		offset = buffered;
 		len = buffered;
 		if (stream.available() > 0) {
-			final int read = stream.read(buffer, buffered, buffer.length - buffered);
+			final int read =
+					stream.read(buffer, buffered, buffer.length - buffered);
 			len += read;
 		}
 	}
 
-	private final int fillExternalBuffer(final byte[] buffer, int offset, int length)
-			throws IOException {
+	private final int fillExternalBuffer(final byte[] buffer, int offset,
+			int length) throws IOException {
 		final int remIntBuffer = len - this.offset;
 		final int lengthRet = Math.min(length, remIntBuffer);
 		System.arraycopy(this.buffer, this.offset, buffer, offset, lengthRet);

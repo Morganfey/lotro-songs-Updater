@@ -226,7 +226,8 @@ public class SongChangeData {
 		date = util.Time.date(voices.getLastModification()).split(" ");
 		file = voices.getPath();
 		System.out.println(file);
-		for (final Map.Entry<Integer, String> titleEntry : voices.voices().entrySet()) {
+		for (final Map.Entry<Integer, String> titleEntry : voices.voices()
+				.entrySet()) {
 			instruments.put(titleEntry.getKey(), new HashSet<Instrument>());
 
 			String title = titleEntry.getValue();
@@ -239,10 +240,11 @@ public class SongChangeData {
 			if (!title.isEmpty())
 				titles.put(titleEntry.getKey(), title);
 			final Integer key = titleEntry.getKey();
-			System.out.printf("Analyzation complete: %s\n" + "title:        %s\n"
-					+ "duration:     %s\n" + "instrument:   %s\n"
-					+ "indices:      %s\n\n", titleEntry.getValue(), titles.get(key),
-					duration.get(key), instruments.get(key), indices.get(key));
+			System.out.printf("Analyzation complete: %s\n"
+					+ "title:        %s\n" + "duration:     %s\n"
+					+ "instrument:   %s\n" + "indices:      %s\n\n",
+					titleEntry.getValue(), titles.get(key), duration.get(key),
+					instruments.get(key), indices.get(key));
 
 
 		}
@@ -252,8 +254,8 @@ public class SongChangeData {
 		if (base != null)
 			return base;
 		final String baseString =
-				main.Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY,
-						null);
+				main.Main.getConfigValue(main.Main.GLOBAL_SECTION,
+						main.Main.PATH_KEY, null);
 		if (baseString == null)
 			return null;
 		return base = Path.getPath(baseString.split("/")).resolve("Music");
@@ -303,7 +305,8 @@ public class SongChangeData {
 	 * @param mapNumber
 	 */
 	final void renumber(final Map<Integer, Integer> indexMap,
-			final Map<Integer, String> numberMap, final Map<Integer, Boolean> mapOpt) {
+			final Map<Integer, String> numberMap,
+			final Map<Integer, Boolean> mapOpt) {
 		if (indexMap == null || numberMap == null) {
 			idxMap = null;
 			numMap = null;
@@ -376,7 +379,7 @@ public class SongChangeData {
 			if (base == TIME_BASE)
 				return beats / tempo;
 			else
-				return (beats / tempo) * (base / TIME_BASE);
+				return beats / tempo * (base / TIME_BASE);
 		}
 	}
 
@@ -400,15 +403,18 @@ public class SongChangeData {
 							tempo.reset();
 							break;
 						case 'Q':
-							int posQ = Math.max(2, line.indexOf('=') + 1);
-							tempo.tempo = Integer.parseInt(line.substring(posQ).trim());
+							final int posQ = Math.max(2, line.indexOf('=') + 1);
+							tempo.tempo =
+									Integer.parseInt(line.substring(posQ)
+											.trim());
 							if (posQ == 2)
 								break;
 						case 'L':
 							int n = 0;
 							int d = 0;
 							boolean readN = true;
-							for (final char c : line.substring(2).trim().toCharArray()) {
+							for (final char c : line.substring(2).trim()
+									.toCharArray()) {
 								if (c == '=')
 									break;
 								else if (c == '/')
@@ -418,7 +424,7 @@ public class SongChangeData {
 								else
 									d += c - '0';
 							}
-							tempo.base = ((double) n) / d;
+							tempo.base = (double) n / d;
 					}
 					continue;
 				}
@@ -555,7 +561,8 @@ public class SongChangeData {
 			if (end > 0) {
 				String durationS;
 				if ((durationS =
-						testDuration(title.substring(startDuration + 1, end - 1))) == null)
+						testDuration(title
+								.substring(startDuration + 1, end - 1))) == null)
 					return title;
 				duration.put(i, durationS);
 				String durationNew;
@@ -631,7 +638,8 @@ public class SongChangeData {
 			int end = title.indexOf(" ", idx + 2);
 			if (end < 0)
 				end = title.length();
-			final String indicesS = testIndices(title.substring(start + 1, end));
+			final String indicesS =
+					testIndices(title.substring(start + 1, end));
 			if (indicesS == null)
 				return title;
 			final String[] split = indicesS.split("/");
@@ -715,7 +723,8 @@ public class SongChangeData {
 				if (end + 1 < title.length())
 					titleNew += title.substring(end + 1);
 				for (final Instrument instr : is) {
-					final int start = titleNew.indexOf(instr.name().toLowerCase());
+					final int start =
+							titleNew.indexOf(instr.name().toLowerCase());
 					if (start < 0)
 						continue;
 					if (start == 0) {
@@ -761,7 +770,8 @@ public class SongChangeData {
 				} else {
 					titleNew =
 							titleNew.substring(0, start)
-									+ titleNew.substring(start + instr.name().length());
+									+ titleNew.substring(start
+											+ instr.name().length());
 					if (titleNew.startsWith(":", start))
 						titleNew =
 								titleNew.substring(0, start)
@@ -852,7 +862,8 @@ public class SongChangeData {
 
 	private final Path writeChunks(final IOHandler io, final NameScheme scheme) {
 		final Path tmp = MasterThread.tmp().resolve(file.getFileName());
-		final Path headerChunk = tmp.getParent().resolve(file.getFileName() + "_head");
+		final Path headerChunk =
+				tmp.getParent().resolve(file.getFileName() + "_head");
 		final Map<Integer, Path> partsToChunk = new HashMap<>();
 		final OutputStream out;
 
@@ -872,9 +883,12 @@ public class SongChangeData {
 		scheme.partNum(numMap);
 		scheme.totalNum(total.iterator().next());
 		if (scheme.needsMod()) {
-			if (mod[0] == null || mod[0].isEmpty() || mod[1] == null || mod[1].isEmpty()) {
-				final String[] time = Time.date(file.toFile().lastModified()).split(" ");
-				final String month = Time.getShortMonthName(time[time.length - 2]);
+			if (mod[0] == null || mod[0].isEmpty() || mod[1] == null
+					|| mod[1].isEmpty()) {
+				final String[] time =
+						Time.date(file.toFile().lastModified()).split(" ");
+				final String month =
+						Time.getShortMonthName(time[time.length - 2]);
 				final String day = time[time.length - 3];
 				mod[0] = month;
 				mod[1] = day;
@@ -905,8 +919,9 @@ public class SongChangeData {
 		return tmp;
 	}
 
-	private final boolean writeChunks(final IOHandler io, final Path headerChunk,
-			final Map<Integer, Path> partsToChunk, final NameScheme scheme) {
+	private final boolean writeChunks(final IOHandler io,
+			final Path headerChunk, final Map<Integer, Path> partsToChunk,
+			final NameScheme scheme) {
 		final InputStream in = io.openIn(file.toFile());
 		final Path tmp = headerChunk.getParent();
 		OutputStream out = io.openOut(headerChunk.toFile());
@@ -920,7 +935,8 @@ public class SongChangeData {
 					key = Integer.parseInt(line.substring(2).trim());
 					final Integer keyNew = idxMap.get(key);
 					io.close(out);
-					final Path chunk = tmp.resolve(file.getFileName() + "_" + keyNew);
+					final Path chunk =
+							tmp.resolve(file.getFileName() + "_" + keyNew);
 					partsToChunk.put(keyNew, chunk);
 					out = io.openOut(chunk.toFile());
 					if (idxMap != null) {

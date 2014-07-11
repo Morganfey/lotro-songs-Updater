@@ -6,7 +6,6 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,9 +23,10 @@ public final class Path implements Comparable<Path> {
 
 	private static int nextHash = 0;
 
-	private static final Map<String, Path> rootMap = new HashMap<>();
-	private static final Path[] roots = Path.createRoots();
-	private static final ArrayDeque<Integer> reusableHashes = new ArrayDeque<>();
+
+	private static final Map<String, Path> rootMap = buildRootMap();
+	private static final ArrayDeque<Integer> reusableHashes =
+			new ArrayDeque<>();
 
 	private final String[] dirs;
 
@@ -55,7 +55,6 @@ public final class Path implements Comparable<Path> {
 			str = parent.str + name;
 			pathStr = parent.pathStr + name;
 		} else {
-			FileSystem.getInstance();
 			str = parent.str + "/" + name;
 			pathStr = parent.pathStr + FileSystem.getFileSeparator() + name;
 		}
@@ -75,6 +74,22 @@ public final class Path implements Comparable<Path> {
 				hash = ++Path.nextHash;
 			}
 		}
+	}
+
+	private final static Map<String, Path> buildRootMap() {
+		final String[] bases = FileSystem.getBases();
+		final Map<String, Path> map = new HashMap<>();
+		for (final String p : bases) {
+			final Path root = new Path(p);
+			if (!root.exists()) {
+				continue;
+			}
+			map.put(root.str, root);
+			map.put(root.pathStr, root);
+			map.put(p, root);
+		}
+		return map;
+
 	}
 
 	/**
@@ -113,10 +128,12 @@ public final class Path implements Comparable<Path> {
 		if (name[idx].isEmpty()) {
 			name[idx] = "/";
 		} else if (name[idx].contains(FileSystem.getFileSeparator())) {
-			return Path.getPath(name[idx].split("\\" + FileSystem.getFileSeparator()))
+			return Path.getPath(
+					name[idx].split("\\" + FileSystem.getFileSeparator()))
 					.resolve(name, 1);
 		}
-		if (FileSystem.type == FileSystem.OSType.WINDOWS && name[0].startsWith("/")) {
+		if (FileSystem.type == FileSystem.OSType.WINDOWS
+				&& name[0].startsWith("/")) {
 			name[idx] = name[idx].substring(1);
 			if (name[idx].isEmpty()) {
 				++idx;
@@ -160,7 +177,8 @@ public final class Path implements Comparable<Path> {
 			switch (sb.charAt(pos)) {
 				case '!':
 					if (path == null)
-						return Path.rootMap.get(sb.toString().substring(0, pos));
+						return Path.rootMap
+								.get(sb.toString().substring(0, pos));
 					return path.resolve(sb.toString().substring(0, pos));
 				case '%':
 					switch (sb.getByte(pos + 1)) {
@@ -207,18 +225,6 @@ public final class Path implements Comparable<Path> {
 		}
 	}
 
-	private static final Path[] createRoots() {
-		final ArrayList<Path> roots = new ArrayList<>();
-		for (final String p : FileSystem.getBases()) {
-			final Path path = new Path(p);
-			if (!path.exists()) {
-				continue;
-			}
-			roots.add(path);
-			Path.rootMap.put(p, path);
-		}
-		return roots.toArray(new Path[roots.size()]);
-	}
 
 	private final static boolean delete(final File file) {
 		if (!file.exists())
@@ -231,7 +237,7 @@ public final class Path implements Comparable<Path> {
 		return file.delete();
 	}
 
-	final static Future<Path> getPathFSInit(final String... name) {
+	final static Future<Path> getPathFSInit(final String name) {
 		return new Future<Path>() {
 
 			private Path path;
@@ -242,7 +248,8 @@ public final class Path implements Comparable<Path> {
 			}
 
 			@Override
-			public final Path get() throws InterruptedException, ExecutionException {
+			public final Path get() throws InterruptedException,
+					ExecutionException {
 				if (path == null) {
 					path = Path.getPath(name);
 				}
@@ -251,7 +258,8 @@ public final class Path implements Comparable<Path> {
 
 			@Override
 			public final Path get(long timeout, TimeUnit unit)
-					throws InterruptedException, ExecutionException, TimeoutException {
+					throws InterruptedException, ExecutionException,
+					TimeoutException {
 				throw new UnsupportedOperationException();
 			}
 
@@ -265,12 +273,6 @@ public final class Path implements Comparable<Path> {
 				return path != null;
 			}
 		};
-	}
-
-	final static void invalidateFiles() {
-		for (final Path root : Path.roots) {
-			root.invalidateFilesRek();
-		}
 	}
 
 	/** */
@@ -517,10 +519,12 @@ public final class Path implements Comparable<Path> {
 			}
 			boolean ret = pathNew.exists() || pathNew.toFile().mkdir();
 			for (int i = 0; i < files.length; i++) {
-				if (!getPathFunc(files[i]).renameTo(pathNew.getPathFunc(files[i]))) {
+				if (!getPathFunc(files[i]).renameTo(
+						pathNew.getPathFunc(files[i]))) {
 					// undo
 					while (i >= 0) {
-						pathNew.getPathFunc(files[i]).renameTo(getPathFunc(files[i]));
+						pathNew.getPathFunc(files[i]).renameTo(
+								getPathFunc(files[i]));
 						--i;
 					}
 					pathNew.delete();
@@ -552,7 +556,10 @@ public final class Path implements Comparable<Path> {
 		}
 		Path p = this;
 		for (final String element : name) {
-			p = p.resolve(element.split("\\" + FileSystem.getFileSeparator()), 0);
+			p =
+					p.resolve(
+							element.split("\\" + FileSystem.getFileSeparator()),
+							0);
 		}
 		return p;
 	}
@@ -636,13 +643,6 @@ public final class Path implements Comparable<Path> {
 			}
 			return p.get();
 		}
-	}
-
-	private final void invalidateFilesRek() {
-		for (final WeakReference<Path> p : successors.values()) {
-			p.get().invalidateFilesRek();
-		}
-		file = null;
 	}
 
 	private final Path resolve(final String[] name, int offset) {

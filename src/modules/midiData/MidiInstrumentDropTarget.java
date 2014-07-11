@@ -26,10 +26,12 @@ import modules.abcCreator.DropTargetContainer;
 /**
  * @author Nelphindal
  */
-public class MidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPanel> {
+public class MidiInstrumentDropTarget implements
+		DropTarget<JPanel, JPanel, JPanel> {
 
 	private final MidiInstrument midiInstrument;
-	private final Set<DragObject<JPanel, JPanel, JPanel>> objects = new HashSet<>();
+	private final Set<DragObject<JPanel, JPanel, JPanel>> objects =
+			new HashSet<>();
 	private final JPanel panel;
 	private final int number;
 	private final Map<String, Integer> params = new HashMap<>();
@@ -65,7 +67,8 @@ public class MidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPan
 	/** */
 	@Override
 	public final void displayParam(final String key, final JPanel container,
-			final JPanel menu, final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
+			final JPanel menu,
+			final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
 		if (key.equals("map")) {
 			final JPanel panel = new JPanel();
 			final JPanel closePanel = new JPanel();
@@ -253,7 +256,8 @@ public class MidiInstrumentDropTarget implements DropTarget<JPanel, JPanel, JPan
 	 * @param object
 	 * @param empty
 	 */
-	protected final void clearTargets(final DragObject<JPanel, JPanel, JPanel> object,
+	protected final void clearTargets(
+			final DragObject<JPanel, JPanel, JPanel> object,
 			final Set<DropTarget<JPanel, JPanel, JPanel>> empty) {
 		if (objects.remove(object) && objects.isEmpty()) {
 			empty.add(this);

@@ -69,8 +69,9 @@ public class OptionContainer {
 	 *            the Option to be registered
 	 * @see Flag#registerOption(String, String, char, String, boolean)
 	 */
-	public final void addOption(final String id, final String tooltip, char shortFlag,
-			final String longFlag, boolean argExpected, final Option option) {
+	public final void addOption(final String id, final String tooltip,
+			char shortFlag, final String longFlag, boolean argExpected,
+			final Option option) {
 		flags.registerOption(id, tooltip, shortFlag, longFlag, argExpected);
 		options.put(id, option);
 	}

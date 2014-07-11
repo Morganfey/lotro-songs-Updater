@@ -167,13 +167,14 @@ public class Flag {
 		for (final String fOption : registeredFlags) {
 			outPart2 +=
 					"\n"
-							+ String.format("%s %-16s : %s",
-									idToShort.get(fOption) == Flag.NoShortFlag ? "  "
-											: "-"
-													+ (char) idToShort.get(fOption)
-															.intValue(), idToLong
-											.get(fOption) == Flag.NoLongFlag ? "" : "--"
-											+ idToLong.get(fOption), help.get(fOption));
+							+ String.format("%s %-16s : %s", idToShort
+									.get(fOption) == Flag.NoShortFlag ? "  "
+									: "-"
+											+ (char) idToShort.get(fOption)
+													.intValue(), idToLong
+									.get(fOption) == Flag.NoLongFlag ? ""
+									: "--" + idToLong.get(fOption), help
+									.get(fOption));
 		}
 		return outPart1 + outPart2 + outPart3;
 	}

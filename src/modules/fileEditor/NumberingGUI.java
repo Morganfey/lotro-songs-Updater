@@ -79,8 +79,10 @@ public class NumberingGUI extends GUIPlugin {
 				final Set<?> instruments = this.instruments.get(key);
 				final String titleString = titles.get(key);
 				title =
-						(titleString == null ? "<No title>" : titleString) + " "
-								+ (instruments == null ? "[?]" : instruments.toString());
+						(titleString == null ? "<No title>" : titleString)
+								+ " "
+								+ (instruments == null ? "[?]" : instruments
+										.toString());
 			}
 			trackPanel.setLayout(new BorderLayout());
 			idxPanel.setLayout(new GridLayout(1, 0));
@@ -92,7 +94,7 @@ public class NumberingGUI extends GUIPlugin {
 			xField.setFont(xFieldFont);
 			xField.setPreferredSize(xFieldSize);
 			final JTextField numField = new JTextField(indices.get(key));
-			idxToNum.put(key, numField);	
+			idxToNum.put(key, numField);
 			idxPanel.add(numField);
 			panel.add(trackPanel);
 			idxToField.put(key, xField);
@@ -148,8 +150,8 @@ public class NumberingGUI extends GUIPlugin {
 			try {
 				idxNew = Integer.parseInt(idcs.getValue().getText().trim());
 			} catch (final Exception e) {
-				io.printError("Error parsing index\n" + "Song will remain unchanged",
-						false);
+				io.printError("Error parsing index\n"
+						+ "Song will remain unchanged", false);
 				return null;
 			}
 			map.put(idcs.getKey(), idxNew);

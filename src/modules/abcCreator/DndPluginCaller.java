@@ -1,7 +1,14 @@
 package modules.abcCreator;
 
 import java.awt.Container;
+import java.io.File;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
+
+import javax.swing.JPanel;
+
+import util.Path;
 
 
 /**
@@ -13,6 +20,11 @@ import java.util.TreeSet;
  * @param <T>
  */
 public interface DndPluginCaller<C extends Container, D extends Container, T extends Container> {
+
+	/**
+	 * @return the file being displayed
+	 */
+	public Path getFile();
 
 	/**
 	 * @param object0
@@ -33,7 +45,7 @@ public interface DndPluginCaller<C extends Container, D extends Container, T ext
 	/**
 	 * @return a set of all allocated targets.
 	 */
-	TreeSet<DropTarget<?, ?, ?>> sortedTargets();
+	TreeSet<DropTarget<C, D, T>> sortedTargets();
 
 	/**
 	 * Unlinks object from target.
@@ -42,7 +54,7 @@ public interface DndPluginCaller<C extends Container, D extends Container, T ext
 	 * @param target
 	 * @return <i>true</i> if target is now empty and can be removed.
 	 */
-	boolean unlink(DragObject<?, ?, ?> object, DropTarget<?, ?, ?> target);
+	boolean unlink(DragObject<C, D, T> object, DropTarget<C, D, T> target);
 
 	/**
 	 * @return an array of all global DndPluginCallerParams
@@ -56,5 +68,12 @@ public interface DndPluginCaller<C extends Container, D extends Container, T ext
 	 */
 	void printError(final String string);
 
-//	DndPluginCallerParams[] valuesRemote();
+	/**
+	 * @param mapToLoad
+	 * @return the result of the parsing
+	 */
+	public
+			Map<DragObject<JPanel, JPanel, JPanel>, Set<DropTarget<JPanel, JPanel, JPanel>>>
+			loadMap(File mapToLoad);
+
 }

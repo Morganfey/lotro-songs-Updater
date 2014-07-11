@@ -8,10 +8,8 @@ import io.OutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import main.ContainerElement;
@@ -52,7 +50,8 @@ public class SongDataContainer implements ContainerElement {
 		taskPool = sc.getTaskPool();
 		master = sc.getMaster();
 		final String home =
-				Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY, null);
+				Main.getConfigValue(main.Main.GLOBAL_SECTION,
+						main.Main.PATH_KEY, null);
 		assert home != null;
 		final Path basePath = Path.getPath(home.split("/")).resolve("Music");
 		if (!basePath.exists()) {
@@ -96,7 +95,8 @@ public class SongDataContainer implements ContainerElement {
 			return;
 		}
 		if (dirty) {
-			final Path parent = tree.getRoot().getParent().resolve("PluginData");
+			final Path parent =
+					tree.getRoot().getParent().resolve("PluginData");
 			final Path zippedSongDataPath;
 			final Path songDataPath;
 			final Path songDataUpdatePath;
@@ -110,14 +110,18 @@ public class SongDataContainer implements ContainerElement {
 				io.openZipIn(zippedSongDataPath);
 				final InputStream in = io.openIn(songDataPath.toFile());
 				if (songDataPath.toFile().length() == 0) {
-					io.append(songDataPath.toFile(), songDataUpdatePath.toFile(), 0);
+					io.append(songDataPath.toFile(),
+							songDataUpdatePath.toFile(), 0);
 					in.reset();
 				} else {
-					io.append(songDataPath.toFile(), songDataUpdatePath.toFile(), 1);
+					io.append(songDataPath.toFile(),
+							songDataUpdatePath.toFile(), 1);
 				}
 				out = io.openOut(songDataUpdatePath.toFile());
 				io.write(out, SongDataDeserializer_3.getHeader());
-				crawler = new Crawler(io, tree.getRoot(), new ArrayDeque<Path>(), queue);
+				crawler =
+						new Crawler(io, tree.getRoot(), new ArrayDeque<Path>(),
+								queue);
 				scanner = new Scanner(io, queue, master, out, tree, songsFound);
 				taskPool.addTaskForAll(crawler, scanner);
 				in.registerProgressMonitor(io);
@@ -271,7 +275,9 @@ public class SongDataContainer implements ContainerElement {
 			io.writeln(outMaster, "\t\t[" + songIdx + "] =");
 			io.writeln(outMaster, "\t\t{");
 			final String name;
-			name = path.getFileName().substring(0, path.getFileName().lastIndexOf("."));
+			name =
+					path.getFileName().substring(0,
+							path.getFileName().lastIndexOf("."));
 
 			io.write(outMaster, "\t\t\t[\"Filepath\"] = \"/");
 			if (path.getParent() != tree.getRoot()) {

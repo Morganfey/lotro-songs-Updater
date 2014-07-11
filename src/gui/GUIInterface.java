@@ -42,7 +42,9 @@ public interface GUIInterface {
 		final JButton button;
 
 		Button() {
-			button = new JButton(name().charAt(0) + name().substring(1).toUpperCase());
+			button =
+					new JButton(name().charAt(0)
+							+ name().substring(1).toUpperCase());
 		}
 
 		/**

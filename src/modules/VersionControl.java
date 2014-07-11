@@ -101,8 +101,8 @@ public final class VersionControl implements Module {
 
 	private static final String AES_KEY = "aes-key";
 
-	private final StringOption USERNAME, EMAIL, BRANCH, GIT_URL_HTTPS, GIT_URL_SSH,
-			VC_DIR;
+	private final StringOption USERNAME, EMAIL, BRANCH, GIT_URL_HTTPS,
+			GIT_URL_SSH, VC_DIR;
 
 	private final MaskedStringOption PWD;
 
@@ -144,7 +144,8 @@ public final class VersionControl implements Module {
 	 * @param sc
 	 * @throws InterruptedException
 	 */
-	public VersionControl(final StartupContainer sc) throws InterruptedException {
+	public VersionControl(final StartupContainer sc)
+			throws InterruptedException {
 		final OptionContainer oc;
 		while (sc.getOptionContainer() == null) {
 			synchronized (sc) {
@@ -154,27 +155,31 @@ public final class VersionControl implements Module {
 		oc = sc.getOptionContainer();
 		io = sc.getIO();
 		GIT_URL_SSH =
-				VersionControl
-						.createStringOption(oc, "url_ssh",
-								VersionControl.DEFAULT_GIT_URL_SSH, Flag.NoShortFlag,
-								"git-url-ssh",
-								"Changes the url to use when using ssh to connect");
+				VersionControl.createStringOption(oc, "url_ssh",
+						VersionControl.DEFAULT_GIT_URL_SSH, Flag.NoShortFlag,
+						"git-url-ssh",
+						"Changes the url to use when using ssh to connect");
 		GIT_URL_HTTPS =
 				VersionControl.createStringOption(oc, "url_https",
 						VersionControl.DEFAULT_GIT_URL_HTTPS, Flag.NoShortFlag,
 						"git-url-https",
 						"Changes the url to use when using https to connect");
 		PWD =
-				VersionControl.createPwdOption(oc, "github-pwd", "Password at github",
+				VersionControl.createPwdOption(oc, "github-pwd",
+						"Password at github",
 						"Changes the password to login at github");
 		EMAIL =
-				VersionControl.createStringOption(oc, "email", null,
-						"Changes the email supplied as part of commit messages", "Email");
-		USERNAME =
 				VersionControl
-						.createStringOption(oc, "login", null,
-								"The login name at remote repository, default github",
-								"Username");
+						.createStringOption(
+								oc,
+								"email",
+								null,
+								"Changes the email supplied as part of commit messages",
+								"Email");
+		USERNAME =
+				VersionControl.createStringOption(oc, "login", null,
+						"The login name at remote repository, default github",
+						"Username");
 		BRANCH =
 				VersionControl.createStringOption(oc, "branch_repo", "master",
 						Flag.NoShortFlag, "branch",
@@ -191,8 +196,8 @@ public final class VersionControl implements Module {
 								"Commit", false);
 		DIFF =
 				VersionControl.createBooleanOption(oc, "diff", false,
-						"Displays differences after downloading changes", "Show diffs",
-						false);
+						"Displays differences after downloading changes",
+						"Show diffs", false);
 		RESET =
 				VersionControl
 						.createBooleanOption(
@@ -212,21 +217,29 @@ public final class VersionControl implements Module {
 								"Uses ssh protocol for connections. This option should be used only on Unix",
 								"SSH", true);
 		BULLETIN_BOARD =
-				VersionControl.createBooleanOption(oc, "board", Flag.NoShortFlag,
-						"board", false, "Accesses the bulletin board", "Bulletin Board",
-						true);
+				VersionControl.createBooleanOption(oc, "board",
+						Flag.NoShortFlag, "board", false,
+						"Accesses the bulletin board", "Bulletin Board", true);
 		VC_DIR =
-				VersionControl.createStringOption(oc, "repo", "Music/band",
-						Flag.NoShortFlag, "repo",
-						"Changes the location of the local repository, its relative to the path in section "
-								+ Main.GLOBAL_SECTION + " at key " + Main.PATH_KEY);
+				VersionControl
+						.createStringOption(
+								oc,
+								"repo",
+								"Music/band",
+								Flag.NoShortFlag,
+								"repo",
+								"Changes the location of the local repository, its relative to the path in section "
+										+ Main.GLOBAL_SECTION
+										+ " at key "
+										+ Main.PATH_KEY);
 		master = sc.getMaster();
 		repoRoot = board = base = null;
 	}
 
 	private VersionControl(final VersionControl vc) {
 		final String baseValue =
-				Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY, null);
+				Main.getConfigValue(main.Main.GLOBAL_SECTION,
+						main.Main.PATH_KEY, null);
 		io = vc.io;
 		BULLETIN_BOARD = vc.BULLETIN_BOARD;
 		GIT_URL_SSH = vc.GIT_URL_SSH;
@@ -243,48 +256,56 @@ public final class VersionControl implements Module {
 		master = vc.master;
 		base = Path.getPath(baseValue.split("/")).resolve("Music");
 		repoRoot =
-				base.resolve(Main.getConfigValue(Main.VC_SECTION, Main.REPO_KEY, "band"));
+				base.resolve(Main.getConfigValue(Main.VC_SECTION,
+						Main.REPO_KEY, "band"));
 		board =
-				Path.getPath(Main.getConfigValue(VersionControl.SECTION, "boardPath",
-						base.resolve("..", "PluginData", "BulletinBoard").toString())
-						.split("/"));
+				Path.getPath(Main.getConfigValue(
+						VersionControl.SECTION,
+						"boardPath",
+						base.resolve("..", "PluginData", "BulletinBoard")
+								.toString()).split("/"));
 	}
 
-	private static final BooleanOption createBooleanOption(final OptionContainer oc,
-			final String key, boolean defaultValue, final String label,
-			final String tooltip, boolean store) {
+	private static final BooleanOption createBooleanOption(
+			final OptionContainer oc, final String key, boolean defaultValue,
+			final String label, final String tooltip, boolean store) {
 		return VersionControl.createBooleanOption(oc, key, Flag.NoShortFlag,
 				Flag.NoLongFlag, defaultValue, label, tooltip, store);
 	}
 
-	private static final BooleanOption
-			createBooleanOption(final OptionContainer oc, final String key,
-					char shortFlag, final String longFlag, boolean defaultValue,
-					final String tooltip, final String label, boolean store) {
-		return new BooleanOption(oc, VersionControl.SECTION + key, tooltip, label,
-				shortFlag, longFlag, VersionControl.SECTION, store ? key : null,
+	private static final BooleanOption createBooleanOption(
+			final OptionContainer oc, final String key, char shortFlag,
+			final String longFlag, boolean defaultValue, final String tooltip,
+			final String label, boolean store) {
+		return new BooleanOption(oc, VersionControl.SECTION + key, tooltip,
+				label, shortFlag, longFlag, VersionControl.SECTION, store ? key
+						: null, defaultValue);
+	}
+
+	private static final MaskedStringOption createPwdOption(
+			final OptionContainer oc, final String key, final String tooltip,
+			final String description) {
+		return new MaskedStringOption(oc, VersionControl.SECTION + key,
+				description, tooltip, Flag.NoShortFlag, Flag.NoLongFlag,
+				VersionControl.SECTION, key);
+	}
+
+	private static final StringOption createStringOption(
+			final OptionContainer oc, final String key,
+			final String defaultValue, char shortFlag, final String longFlag,
+			final String helpText) {
+		return new StringOption(oc, VersionControl.SECTION + key, null,
+				helpText, shortFlag, longFlag, VersionControl.SECTION, key,
 				defaultValue);
 	}
 
-	private static final MaskedStringOption createPwdOption(final OptionContainer oc,
-			final String key, final String tooltip, final String description) {
-		return new MaskedStringOption(oc, VersionControl.SECTION + key, description,
-				tooltip, Flag.NoShortFlag, Flag.NoLongFlag, VersionControl.SECTION, key);
-	}
-
-	private static final StringOption createStringOption(final OptionContainer oc,
-			final String key, final String defaultValue, char shortFlag,
-			final String longFlag, final String helpText) {
-		return new StringOption(oc, VersionControl.SECTION + key, null, helpText,
-				shortFlag, longFlag, VersionControl.SECTION, key, defaultValue);
-	}
-
-	private static final StringOption createStringOption(final OptionContainer oc,
-			final String key, final String defaultValue, final String tooltip,
-			final String label) {
-		return new StringOption(oc, VersionControl.SECTION + key, tooltip, label,
-				Flag.NoShortFlag, Flag.NoLongFlag, VersionControl.SECTION, key,
-				defaultValue);
+	private static final StringOption
+			createStringOption(final OptionContainer oc, final String key,
+					final String defaultValue, final String tooltip,
+					final String label) {
+		return new StringOption(oc, VersionControl.SECTION + key, tooltip,
+				label, Flag.NoShortFlag, Flag.NoLongFlag,
+				VersionControl.SECTION, key, defaultValue);
 	}
 
 	private static final Map<RevCommit, Collection<String>> generateTimeline(
@@ -308,19 +329,22 @@ public final class VersionControl implements Module {
 		return result;
 	}
 
-	private static final Map<String, RevCommit> getChanges(final Git gitSession,
-			final Ref localHead, final Ref remoteHead) throws MissingObjectException,
-			IncorrectObjectTypeException, IOException, GitAPIException {
+	private static final Map<String, RevCommit> getChanges(
+			final Git gitSession, final Ref localHead, final Ref remoteHead)
+			throws MissingObjectException, IncorrectObjectTypeException,
+			IOException, GitAPIException {
 		final RevWalk walk = new RevWalk(gitSession.getRepository());
 		final RevCommit commitLocal = walk.parseCommit(localHead.getObjectId());
-		final RevCommit commitRemote = walk.parseCommit(remoteHead.getObjectId());
+		final RevCommit commitRemote =
+				walk.parseCommit(remoteHead.getObjectId());
 		final CanonicalTreeParser treeParserA = new CanonicalTreeParser();
 		final CanonicalTreeParser treeParserB = new CanonicalTreeParser();
-		final ObjectReader reader = gitSession.getRepository().newObjectReader();
+		final ObjectReader reader =
+				gitSession.getRepository().newObjectReader();
 		final Map<String, RevCommit> changes = new HashMap<>();
 		RevCommit cA =
-				commitRemote.getParentCount() == 0 ? null : commitRemote.getParent(0), cB =
-				commitRemote;
+				commitRemote.getParentCount() == 0 ? null : commitRemote
+						.getParent(0), cB = commitRemote;
 		if (cA != null) {
 			while (true) {
 				final RevTree treeA;
@@ -330,7 +354,8 @@ public final class VersionControl implements Module {
 				treeParserA.reset(reader, treeA.getId());
 				treeParserB.reset(reader, treeB.getId());
 				final Collection<DiffEntry> diffs =
-						gitSession.diff().setOldTree(treeParserA).setNewTree(treeParserB)
+						gitSession.diff().setOldTree(treeParserA)
+								.setNewTree(treeParserB)
 								.setShowNameAndStatusOnly(true).call();
 				for (final DiffEntry de : diffs) {
 					if (!changes.containsKey(de.getNewPath())) {
@@ -394,7 +419,8 @@ public final class VersionControl implements Module {
 			return;
 		}
 		final String name =
-				main.Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY, null);
+				main.Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY,
+						null);
 		final Git gitSession_band;
 		final Git gitSession_bboard;
 
@@ -413,11 +439,13 @@ public final class VersionControl implements Module {
 			}
 			if (!USE_SSH.getValue()) {
 				if (PWD.value() == null) {
-					io.printError("For commits a valid password is needed", false);
+					io.printError("For commits a valid password is needed",
+							false);
 					return;
 				}
 				if (USERNAME.value() == null) {
-					io.printError("For commits a valid username is needed", false);
+					io.printError("For commits a valid username is needed",
+							false);
 					return;
 				}
 			} else if (remoteURL == null) {
@@ -427,16 +455,19 @@ public final class VersionControl implements Module {
 		}
 		try {
 			if (BULLETIN_BOARD.getValue()) {
-				if (BULLETIN_BOARD.getValue() && !board.resolve(".git").exists()) {
+				if (BULLETIN_BOARD.getValue()
+						&& !board.resolve(".git").exists()) {
 					checkoutBBoard();
 				}
 				gitSession_bboard = Git.open(board.toFile());
-				final StoredConfig config = gitSession_bboard.getRepository().getConfig();
+				final StoredConfig config =
+						gitSession_bboard.getRepository().getConfig();
 				config.setString("user", null, "name", name);
 				config.setString("user", null, "email", EMAIL.value());
 				config.setString("remote", "origin", "url", remoteURL);
 				config.setString("branch", "bboard", "remote", "bboard");
-				config.setString("branch", "bboard", "merge", "+refs/heads/bboard");
+				config.setString("branch", "bboard", "merge",
+						"+refs/heads/bboard");
 				config.save();
 			} else {
 				gitSession_bboard = null;
@@ -451,10 +482,12 @@ public final class VersionControl implements Module {
 			} else
 				gitSession_band = Git.open(repoRoot.toFile());
 			if (gitSession_band != null) {
-				final StoredConfig config = gitSession_band.getRepository().getConfig();
+				final StoredConfig config =
+						gitSession_band.getRepository().getConfig();
 				config.setString("user", null, "name", name);
 				config.setString("user", null, "email", EMAIL.value());
-				config.setString("branch", branch, "merge", "refs/heads/" + branch);
+				config.setString("branch", branch, "merge", "refs/heads/"
+						+ branch);
 				config.setString("branch", branch, "remote", "origin");
 				config.setString("remote", "origin", "url", remoteURL);
 				config.save();
@@ -485,8 +518,8 @@ public final class VersionControl implements Module {
 	 * ask for changes to commit, and invokes upload if pending commit(s) are
 	 * there.
 	 */
-	private final void checkForLocalChanges(final Git gitSession) throws IOException,
-			GitAPIException {
+	private final void checkForLocalChanges(final Git gitSession)
+			throws IOException, GitAPIException {
 		final Status status = gitSession.status().call();
 //		io.log("modified: " + status.getModified().toString());
 //		io.log("untracked: " + status.getUntracked().toString());
@@ -508,17 +541,16 @@ public final class VersionControl implements Module {
 			final boolean doCommit =
 					COMMIT.getValue()
 							&& !(add.isEmpty() && rm.isEmpty()
-									&& status.getAdded().isEmpty() && status.getRemoved()
-									.isEmpty());
+									&& status.getAdded().isEmpty() && status
+									.getRemoved().isEmpty());
 
 			if (doCommit) {
 				final CommitCommand commit = gitSession.commit();
 
-				commit.setAuthor(
-						Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY, null),
-						EMAIL.value());
-				commit.setMessage("update " + commit.getAuthor().getName() + ", "
-						+ new Date(System.currentTimeMillis()));
+				commit.setAuthor(Main.getConfigValue(Main.GLOBAL_SECTION,
+						Main.NAME_KEY, null), EMAIL.value());
+				commit.setMessage("update " + commit.getAuthor().getName()
+						+ ", " + new Date(System.currentTimeMillis()));
 
 				final RevCommit commitRet = commit.call();
 
@@ -539,10 +571,12 @@ public final class VersionControl implements Module {
 
 	private final void checkoutBand() {
 		final NoYesPlugin plugin =
-				new NoYesPlugin("Local repo directory does not exist", "The directory\n"
-						+ repoRoot + "\ndoes not exist or is no git-repository.\n"
-						+ "It can take a while to create it. Continue?", io.getGUI(),
-						false);
+				new NoYesPlugin(
+						"Local repo directory does not exist",
+						"The directory\n" + repoRoot
+								+ "\ndoes not exist or is no git-repository.\n"
+								+ "It can take a while to create it. Continue?",
+						io.getGUI(), false);
 		io.handleGUIPlugin(plugin);
 		if (!plugin.get()) {
 			return;
@@ -560,8 +594,8 @@ public final class VersionControl implements Module {
 			final StoredConfig config = gitSession.getRepository().getConfig();
 			config.setString("remote", "origin", "url", DEFAULT_GIT_URL_HTTPS);
 			config.setString("branch", BRANCH.value(), "remote", BRANCH.value());
-			config.setString("branch", BRANCH.value(), "merge",
-					"+refs/heads/" + BRANCH.value());
+			config.setString("branch", BRANCH.value(), "merge", "+refs/heads/"
+					+ BRANCH.value());
 			config.save();
 
 			final ObjectId remoteHead = getRemoteHead(gitSession);
@@ -570,8 +604,8 @@ public final class VersionControl implements Module {
 			final List<DiffEntry> diffs;
 
 			// set head
-			gitSession.reset().setMode(ResetType.SOFT).setRef(remoteHead.getName())
-					.call();
+			gitSession.reset().setMode(ResetType.SOFT)
+					.setRef(remoteHead.getName()).call();
 			diffCommand.setCached(true);
 			diffCommand.setShowNameAndStatusOnly(true);
 
@@ -595,17 +629,22 @@ public final class VersionControl implements Module {
 				}
 				io.setProgressTitle("checking out " + file);
 				// unstage to make checkout working
-				gitSession.reset().setRef(remoteHead.getName()).addPath(file).call();
-				final CheckoutCommand checkout = gitSession.checkout().addPath(file);
+				gitSession.reset().setRef(remoteHead.getName()).addPath(file)
+						.call();
+				final CheckoutCommand checkout =
+						gitSession.checkout().addPath(file);
 				final boolean existing = repoRoot.resolve(file).exists();
 				if (existing) {
-					final String old = repoRoot.resolve(file).createBackup("_old");
+					final String old =
+							repoRoot.resolve(file).createBackup("_old");
 					if (old == null) {
 						io.printError("failed to checkout " + old, true);
 						io.updateProgress(1);
 						continue;
 					}
-					io.printError(String.format("%-40s renamed to %s\n", file, old), true);
+					io.printError(
+							String.format("%-40s renamed to %s\n", file, old),
+							true);
 				}
 				checkout.call();
 
@@ -635,10 +674,16 @@ public final class VersionControl implements Module {
 								.setRefSpecs(fetch_bb).call();
 				final Ref head = fetchResult.getAdvertisedRef(ref);
 
-				gitSession.getRepository().getConfig()
-						.setString("remote", "origin", "url", GIT_URL_HTTPS.value());
-				gitSession.getRepository().getConfig()
-						.setString("remote", "origin", "fetch", fetch_bb.toString());
+				gitSession
+						.getRepository()
+						.getConfig()
+						.setString("remote", "origin", "url",
+								GIT_URL_HTTPS.value());
+				gitSession
+						.getRepository()
+						.getConfig()
+						.setString("remote", "origin", "fetch",
+								fetch_bb.toString());
 				gitSession.getRepository().getConfig()
 						.setString("branch", "bboard", "remote", "origin");
 				gitSession.getRepository().getConfig()
@@ -652,7 +697,8 @@ public final class VersionControl implements Module {
 					commit = commit.getParent(0);
 					walk.parseCommit(commit);
 				}
-				gitSession.checkout().setName(commit.toObjectId().getName()).call();
+				gitSession.checkout().setName(commit.toObjectId().getName())
+						.call();
 				gitSession.branchCreate().setName("bboard").call();
 			} finally {
 				gitSession.close();
@@ -662,15 +708,18 @@ public final class VersionControl implements Module {
 		}
 	}
 
-	private final void encrypt(final String source, final String target, boolean encrypt) {
+	private final void encrypt(final String source, final String target,
+			boolean encrypt) {
 		final AESEngine engine = new AESEngine();
-		final String savedKey = Main.getConfigValue(Main.VC_SECTION, AES_KEY, null);
+		final String savedKey =
+				Main.getConfigValue(Main.VC_SECTION, AES_KEY, null);
 		final byte[] key;
 		if (savedKey == null) {
 			final SecretKeyPlugin secretKeyPlugin = new SecretKeyPlugin();
 			io.handleGUIPlugin(secretKeyPlugin);
 			key = secretKeyPlugin.getKey();
-			Main.setConfigValue(Main.VC_SECTION, AES_KEY, secretKeyPlugin.getValue());
+			Main.setConfigValue(Main.VC_SECTION, AES_KEY,
+					secretKeyPlugin.getValue());
 		} else {
 			key = SecretKeyPlugin.decode(savedKey);
 		}
@@ -717,9 +766,10 @@ public final class VersionControl implements Module {
 
 	private final String diff(final RevWalk walk, final RevCommit commitLocal,
 			final RevCommit commitRemote, final Git gitSession)
-			throws MissingObjectException, IncorrectObjectTypeException, IOException,
-			GitAPIException {
-		final ObjectReader reader = gitSession.getRepository().newObjectReader();
+			throws MissingObjectException, IncorrectObjectTypeException,
+			IOException, GitAPIException {
+		final ObjectReader reader =
+				gitSession.getRepository().newObjectReader();
 		final RevTree treeLocal;
 		final RevTree treeRemote;
 		final CanonicalTreeParser treeParserLocal = new CanonicalTreeParser();
@@ -733,9 +783,10 @@ public final class VersionControl implements Module {
 
 		final List<DiffEntry> diffs =
 				gitSession.diff().setOldTree(treeParserLocal)
-						.setNewTree(treeParserRemote).setShowNameAndStatusOnly(true)
-						.call();
-		final StringBuilder sbHead = new StringBuilder(), sbBody = new StringBuilder();
+						.setNewTree(treeParserRemote)
+						.setShowNameAndStatusOnly(true).call();
+		final StringBuilder sbHead = new StringBuilder(), sbBody =
+				new StringBuilder();
 		int adds = 0, copies = 0, dels = 0, mods = 0, renames = 0;
 		final Set<String> encodedDeleted = new HashSet<>();
 		final Set<String> encodedChanged = new HashSet<>();
@@ -849,7 +900,8 @@ public final class VersionControl implements Module {
 						.fetch()
 						.setRefSpecs(
 								new RefSpec("refs/heads/" + BRANCH.value()
-										+ ":refs/remotes/origin/" + BRANCH.value()))
+										+ ":refs/remotes/origin/"
+										+ BRANCH.value()))
 						.setProgressMonitor(getProgressMonitor()).call();
 		return fetch.getAdvertisedRef("HEAD").getObjectId();
 	}
@@ -860,9 +912,11 @@ public final class VersionControl implements Module {
 		try {
 			final String branch = gitSession.getRepository().getBranch();
 			if (!branch.equals(BRANCH.value())) {
-				io.printMessage(null, "not on working branch \"" + BRANCH.value()
-						+ "\"\nCurrent branch is \"" + branch + "\"\nCheckout branch \""
-						+ BRANCH.value() + "\" or work on branch \"" + branch + "\"",
+				io.printMessage(null,
+						"not on working branch \"" + BRANCH.value()
+								+ "\"\nCurrent branch is \"" + branch
+								+ "\"\nCheckout branch \"" + BRANCH.value()
+								+ "\" or work on branch \"" + branch + "\"",
 						true);
 				return;
 			}
@@ -886,19 +940,23 @@ public final class VersionControl implements Module {
 			setConfig(gitSession);
 
 			final FetchResult fetch =
-					gitSession.fetch().setProgressMonitor(getProgressMonitor()).call();
+					gitSession.fetch().setProgressMonitor(getProgressMonitor())
+							.call();
 			final String branch = gitSession.getRepository().getBranch();
 
-			Ref localHead = gitSession.getRepository().getRef(fetch_bb.getSource());
+			Ref localHead =
+					gitSession.getRepository().getRef(fetch_bb.getSource());
 			final Ref remoteHead = fetch.getAdvertisedRef(fetch_bb.getSource());
 			if (master.isInterrupted()) {
 				return;
 			}
 			if (!branch.equals("bboard")) {
-				final Ref localMasterHead = gitSession.getRepository().getRef("HEAD");
+				final Ref localMasterHead =
+						gitSession.getRepository().getRef("HEAD");
 				if (localMasterHead.getObjectId() == null) {
 					final RefUpdate refUpdate =
-							gitSession.getRepository().updateRef("refs/heads/master");
+							gitSession.getRepository().updateRef(
+									"refs/heads/master");
 					refUpdate.setExpectedOldObjectId(null);
 					refUpdate.setNewObjectId(remoteHead.getObjectId());
 					refUpdate.update();
@@ -906,7 +964,9 @@ public final class VersionControl implements Module {
 				gitSession.checkout().setName("bboard")
 						.setCreateBranch(localHead == null).call();
 				if (localHead == null) {
-					localHead = gitSession.getRepository().getRef(fetch_bb.getSource());
+					localHead =
+							gitSession.getRepository().getRef(
+									fetch_bb.getSource());
 				}
 			}
 			if (!localHead.getObjectId().equals(remoteHead.getObjectId())) {
@@ -946,11 +1006,12 @@ public final class VersionControl implements Module {
 		try {
 			gitSession.branchCreate().setName(tmpBranch).setForce(true).call();
 			gitSession.checkout().setName(tmpBranch).call();
-			gitSession.reset().setMode(ResetType.HARD).setRef(commitRemote.getName())
-					.call();
+			gitSession.reset().setMode(ResetType.HARD)
+					.setRef(commitRemote.getName()).call();
 			// tmp branch is equal to FETCH_HEAD now
 
-			final ObjectReader reader = gitSession.getRepository().newObjectReader();
+			final ObjectReader reader =
+					gitSession.getRepository().newObjectReader();
 			final TreeSet<RevCommit> commits =
 					new TreeSet<RevCommit>(new CommitComparator());
 			final CanonicalTreeParser treeParserNew = new CanonicalTreeParser();
@@ -988,7 +1049,8 @@ public final class VersionControl implements Module {
 							switch (e.getChangeType()) {
 								case RENAME:
 									if (merged.add(add)) {
-										gitSession.checkout().setStartPoint(commitLocal)
+										gitSession.checkout()
+												.setStartPoint(commitLocal)
 												.addPath(add).call();
 									}
 									gitSession.add().addFilepattern(add).call();
@@ -1008,7 +1070,8 @@ public final class VersionControl implements Module {
 								case COPY:
 								case MODIFY:
 									if (merged.add(add)) {
-										gitSession.checkout().setStartPoint(commitLocal)
+										gitSession.checkout()
+												.setStartPoint(commitLocal)
 												.addPath(add).call();
 									}
 									gitSession.add().addFilepattern(add).call();
@@ -1040,10 +1103,12 @@ public final class VersionControl implements Module {
 										+ (USE_SSH.getValue() ? GIT_URL_SSH
 												: GIT_URL_HTTPS).value())
 						.setCommitter(
-								Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY,
-										null), EMAIL.value()).call();
+								Main.getConfigValue(Main.GLOBAL_SECTION,
+										Main.NAME_KEY, null), EMAIL.value())
+						.call();
 			}
-			gitSession.branchCreate().setForce(true).setName(BRANCH.value()).call();
+			gitSession.branchCreate().setForce(true).setName(BRANCH.value())
+					.call();
 			gitSession.checkout().setName(BRANCH.value()).call();
 			gitSession.branchDelete().setBranchNames(tmpBranch).call();
 			io.endProgress();
@@ -1063,18 +1128,22 @@ public final class VersionControl implements Module {
 	 * @param file
 	 * @return <i>true</i> if user hit yes
 	 */
-	private final boolean processChangedFile(final String file, final UpdateType type) {
+	private final boolean processChangedFile(final String file,
+			final UpdateType type) {
 		final NoYesPlugin plugin =
-				new NoYesPlugin(type.getQuestionPart0(), type.getQuestionPart0() + "\n"
-						+ file + "\n" + type.getQuestionPart1(), io.getGUI(), true);
+				new NoYesPlugin(type.getQuestionPart0(),
+						type.getQuestionPart0() + "\n" + file + "\n"
+								+ type.getQuestionPart1(), io.getGUI(), true);
 		io.handleGUIPlugin(plugin);
 		return plugin.get();
 	}
 
-	private final void processMissing(final Set<String> rm, final Status status,
-			final Git gitSession) throws RefAlreadyExistsException, RefNotFoundException,
+	private final void processMissing(final Set<String> rm,
+			final Status status, final Git gitSession)
+			throws RefAlreadyExistsException, RefNotFoundException,
 			InvalidRefNameException, CheckoutConflictException, GitAPIException {
-		final List<String> missingList = new ArrayList<String>(status.getMissing());
+		final List<String> missingList =
+				new ArrayList<String>(status.getMissing());
 		Collections.sort(missingList, new SortingComparator(repoRoot));
 
 		io.startProgress("Missing files", missingList.size());
@@ -1094,11 +1163,14 @@ public final class VersionControl implements Module {
 					encrypt(fileMissing0, fileMissing, false);
 			} else if (COMMIT.getValue()) {
 				final String fileMissing =
-						fileMissing0.startsWith("enc/") ? fileMissing0.substring(4)
-								: fileMissing0;
+						fileMissing0.startsWith("enc/") ? fileMissing0
+								.substring(4) : fileMissing0;
 				final boolean isOwner =
-						fileMissing.startsWith(Main.getConfigValue(Main.GLOBAL_SECTION,
-								Main.NAME_KEY, null) + "/");
+						fileMissing
+								.startsWith(Main.getConfigValue(
+										Main.GLOBAL_SECTION, Main.NAME_KEY,
+										null)
+										+ "/");
 				if (isOwner) {
 					if (processChangedFile(fileMissing, UpdateType.DELETE)) {
 						// do delete it
@@ -1114,10 +1186,13 @@ public final class VersionControl implements Module {
 		io.endProgress();
 	}
 
-	private final void processNewAndChanges(final Set<String> add, final Status status,
-			final Git gitSession) throws NoFilepatternException, GitAPIException {
-		final List<String> untrackedList = new ArrayList<String>(status.getUntracked());
-		final List<String> modList = new ArrayList<String>(status.getModified());
+	private final void processNewAndChanges(final Set<String> add,
+			final Status status, final Git gitSession)
+			throws NoFilepatternException, GitAPIException {
+		final List<String> untrackedList =
+				new ArrayList<String>(status.getUntracked());
+		final List<String> modList =
+				new ArrayList<String>(status.getModified());
 		Collections.sort(untrackedList, new SortingComparator(repoRoot));
 		final Iterator<String> iterFile = untrackedList.iterator();
 		while (iterFile.hasNext()) {
@@ -1213,17 +1288,23 @@ public final class VersionControl implements Module {
 
 	private final boolean pull(final RevWalk walk, final RevCommit commitLocal,
 			final RevCommit commitRemote, final Git gitSession)
-			throws MissingObjectException, IncorrectObjectTypeException, IOException {
+			throws MissingObjectException, IncorrectObjectTypeException,
+			IOException {
 		final Comparator<RevCommit> cmp = new CommitComparator();
 		final TreeSet<RevCommit> commitLocalList = new TreeSet<>(cmp);
 		final TreeSet<RevCommit> commitRemoteList = new TreeSet<>(cmp);
 		commitLocalList.add(commitLocal);
 		commitRemoteList.add(commitRemote);
-		int min = Math.min(commitLocal.getCommitTime(), commitRemote.getCommitTime());
-		io.startProgress("Checking history of commits",
-				Math.abs(commitLocal.getCommitTime() - commitRemote.getCommitTime()));
+		int min =
+				Math.min(commitLocal.getCommitTime(),
+						commitRemote.getCommitTime());
+		io.startProgress(
+				"Checking history of commits",
+				Math.abs(commitLocal.getCommitTime()
+						- commitRemote.getCommitTime()));
 		while (true) {
-			final RevCommit commonParent = pull(walk, commitLocalList, commitRemoteList);
+			final RevCommit commonParent =
+					pull(walk, commitLocalList, commitRemoteList);
 			if (commonParent == null) {
 				if (commitLocalList.last().getCommitTime() < min
 						|| commitRemoteList.last().getCommitTime() < min) {
@@ -1236,9 +1317,8 @@ public final class VersionControl implements Module {
 					final String delta =
 							util.Time.delta(System.currentTimeMillis()
 									- TimeUnit.SECONDS.toMillis(min));
-					io.startProgress(
-							"Looking for start point of merge " + delta + " ago", max
-									- min);
+					io.startProgress("Looking for start point of merge "
+							+ delta + " ago", max - min);
 
 				}
 				continue;
@@ -1247,14 +1327,16 @@ public final class VersionControl implements Module {
 				return true;
 			}
 			io.startProgress("Start merge", -1);
-			return merge(gitSession, walk, commitLocal, commonParent, commitRemote);
+			return merge(gitSession, walk, commitLocal, commonParent,
+					commitRemote);
 		}
 	}
 
 	private final RevCommit pull(final RevWalk walk,
 			final TreeSet<RevCommit> commitLocalList,
-			final TreeSet<RevCommit> commitRemoteList) throws MissingObjectException,
-			IncorrectObjectTypeException, IOException {
+			final TreeSet<RevCommit> commitRemoteList)
+			throws MissingObjectException, IncorrectObjectTypeException,
+			IOException {
 		final RevCommit commitLocal = commitLocalList.last();
 		final RevCommit commitRemote = commitRemoteList.last();
 
@@ -1284,22 +1366,26 @@ public final class VersionControl implements Module {
 	/*
 	 * do the upload of commits
 	 */
-	private final void push(final Git gitSession) throws GitAPIException, IOException {
+	private final void push(final Git gitSession) throws GitAPIException,
+			IOException {
 		final PushCommand push = gitSession.push();
 		final RefSpec ref =
 				new RefSpec("refs/heads/"
-						+ Main.getConfigValue(VersionControl.SECTION, "branch", "master"));
+						+ Main.getConfigValue(VersionControl.SECTION, "branch",
+								"master"));
 		push.setRefSpecs(ref).setProgressMonitor(getProgressMonitor());
 		if (!USE_SSH.getValue()) {
 			final CredentialsProvider login =
-					new UsernamePasswordCredentialsProvider(USERNAME.value(), PWD.value());
+					new UsernamePasswordCredentialsProvider(USERNAME.value(),
+							PWD.value());
 			push.setCredentialsProvider(login);
 		}
 		push.call();
 		io.printMessage(null, "Push (upload) finished successfully", true);
 	}
 
-	private final void reset(final Git gitSession) throws GitAPIException, IOException {
+	private final void reset(final Git gitSession) throws GitAPIException,
+			IOException {
 		if (RESET.getValue()) {
 			final ObjectId localHead =
 					gitSession.getRepository().getRef("HEAD").getObjectId();
@@ -1330,25 +1416,28 @@ public final class VersionControl implements Module {
 			final Ref remoteHead) throws MissingObjectException,
 			IncorrectObjectTypeException, IOException, GitAPIException {
 		final Map<RevCommit, Collection<String>> timeline =
-				VersionControl.generateTimeline(VersionControl.getChanges(gitSession,
-						localHead, remoteHead));
+				VersionControl.generateTimeline(VersionControl.getChanges(
+						gitSession, localHead, remoteHead));
 		final Iterator<Entry<RevCommit, Collection<String>>> timelineIter =
 				timeline.entrySet().iterator();
 		while (timelineIter.hasNext()) {
-			final Entry<RevCommit, Collection<String>> commit = timelineIter.next();
-			gitSession.reset().setRef(commit.getKey().name()).setMode(ResetType.HARD)
-					.call();
+			final Entry<RevCommit, Collection<String>> commit =
+					timelineIter.next();
+			gitSession.reset().setRef(commit.getKey().name())
+					.setMode(ResetType.HARD).call();
 			for (final String file : commit.getValue()) {
 				if (file.endsWith("MSG")) {
-					final InputStream in = io.openIn(board.resolve(file).toFile());
-					final String message = new String(in.readFully(), FileSystem.UTF8);
+					final InputStream in =
+							io.openIn(board.resolve(file).toFile());
+					final String message =
+							new String(in.readFully(), FileSystem.UTF8);
 					final long delta =
 							System.currentTimeMillis()
 									- TimeUnit.SECONDS.toMillis(commit.getKey()
 											.getCommitTime());
 					final String time = util.Time.delta(delta);
-					io.printMessage(file.substring(0, file.length() - 4) + " wrote "
-							+ time + " ago", message, true);
+					io.printMessage(file.substring(0, file.length() - 4)
+							+ " wrote " + time + " ago", message, true);
 					io.close(in);
 				}
 			}
@@ -1358,7 +1447,8 @@ public final class VersionControl implements Module {
 	/*
 	 * download new songs
 	 */
-	private final void update(final Git gitSession) throws GitAPIException, IOException {
+	private final void update(final Git gitSession) throws GitAPIException,
+			IOException {
 		final ObjectId remoteHead;
 		try {
 			remoteHead = getRemoteHead(gitSession);
@@ -1411,7 +1501,8 @@ public final class VersionControl implements Module {
 	private final void writeOnBB(final Git gitSession) throws IOException,
 			NoFilepatternException, GitAPIException {
 		final String file =
-				Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY, null) + "/MSG";
+				Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY, null)
+						+ "/MSG";
 		final PushCommand push = gitSession.push();
 		final CommitCommand commit = gitSession.commit();
 
@@ -1424,7 +1515,8 @@ public final class VersionControl implements Module {
 			in = io.openIn(myNote.toFile());
 			content = new String(in.readFully(), FileSystem.UTF8);
 			io.close(in);
-			final EditorPlugin editor = new EditorPlugin(content, "Write your message");
+			final EditorPlugin editor =
+					new EditorPlugin(content, "Write your message");
 			io.handleGUIPlugin(editor);
 			contentNew = editor.get();
 			if (contentNew == null) {
@@ -1443,7 +1535,8 @@ public final class VersionControl implements Module {
 
 		// add and commit
 		gitSession.add().addFilepattern(file).call();
-		commit.setAuthor(Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY, null),
+		commit.setAuthor(
+				Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY, null),
 				EMAIL.value());
 		commit.setMessage("update " + commit.getAuthor().getName() + ", "
 				+ new Date(System.currentTimeMillis()));
@@ -1452,8 +1545,8 @@ public final class VersionControl implements Module {
 
 		// push
 		if (!USE_SSH.getValue()) {
-			push.setCredentialsProvider(new UsernamePasswordCredentialsProvider(USERNAME
-					.value(), PWD.value()));
+			push.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+					USERNAME.value(), PWD.value()));
 		}
 		push.call();
 	}
@@ -1462,7 +1555,8 @@ public final class VersionControl implements Module {
 	@Override
 	public final void repair() {
 		final String baseValue =
-				Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY, null);
+				Main.getConfigValue(main.Main.GLOBAL_SECTION,
+						main.Main.PATH_KEY, null);
 		if (baseValue == null) {
 			System.out
 					.println("Unable to determine base - The local repository could not been deleted");
@@ -1470,21 +1564,26 @@ public final class VersionControl implements Module {
 		}
 		final Path base = Path.getPath(baseValue.split("/")).resolve("Music");
 		final Path repoRoot =
-				base.resolve(Main.getConfigValue(Main.VC_SECTION, Main.REPO_KEY, "band"));
+				base.resolve(Main.getConfigValue(Main.VC_SECTION,
+						Main.REPO_KEY, "band"));
 		final Path board =
-				Path.getPath(Main.getConfigValue(VersionControl.SECTION, "boardPath",
-						base.resolve("..", "PluginData", "BulletinBoard").toString())
-						.split("/"));
+				Path.getPath(Main.getConfigValue(
+						VersionControl.SECTION,
+						"boardPath",
+						base.resolve("..", "PluginData", "BulletinBoard")
+								.toString()).split("/"));
 		if (board.exists()) {
 			final boolean success = board.delete();
-			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing", board.toString(),
-					success ? "" : " failed");
+			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
+					board.toString(), success ? "" : " failed");
 		}
 		if (repoRoot.exists()) {
 			final NoYesPlugin plugin =
-					new NoYesPlugin("Delete local repository?", repoRoot
-							+ "\nand all its contentns will be deleted. You can\n"
-							+ "answer with NO and delete only the data used for git",
+					new NoYesPlugin(
+							"Delete local repository?",
+							repoRoot
+									+ "\nand all its contentns will be deleted. You can\n"
+									+ "answer with NO and delete only the data used for git",
 							io.getGUI(), false);
 			synchronized (io) {
 				io.handleGUIPlugin(plugin);

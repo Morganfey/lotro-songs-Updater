@@ -48,11 +48,12 @@ public final class MaskedStringOption extends Option {
 	 *            the key identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 */
-	public MaskedStringOption(final OptionContainer optionContainer, final String name,
-			final String toolTip, final String guiDescription, char shortFlag,
-			final String longFlag, final String section, final String key) {
-		super(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag, true,
-				section, key, null);
+	public MaskedStringOption(final OptionContainer optionContainer,
+			final String name, final String toolTip,
+			final String guiDescription, char shortFlag, final String longFlag,
+			final String section, final String key) {
+		super(optionContainer, name, toolTip, guiDescription, shortFlag,
+				longFlag, true, section, key, null);
 		content = new StringBuilder(super.value());
 		sb = new StringBuilder(value());
 	}

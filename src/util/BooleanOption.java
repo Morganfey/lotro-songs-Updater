@@ -40,12 +40,13 @@ public final class BooleanOption extends Option {
 	 * @param defaultValue
 	 *            the default value for {@link main.Main#getConfigValue(String, String, String)}
 	 */
-	public BooleanOption(final OptionContainer optionContainer, final String name,
-			final String toolTip, final String guiDescription, char shortFlag,
-			final String longFlag, final String section, final String key,
-			boolean defaultValue) {
-		super(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag, false,
-				section, key, Boolean.valueOf(defaultValue).toString());
+	public BooleanOption(final OptionContainer optionContainer,
+			final String name, final String toolTip,
+			final String guiDescription, char shortFlag, final String longFlag,
+			final String section, final String key, boolean defaultValue) {
+		super(optionContainer, name, toolTip, guiDescription, shortFlag,
+				longFlag, false, section, key, Boolean.valueOf(defaultValue)
+						.toString());
 	}
 
 	/**

@@ -62,13 +62,13 @@ public class PathOption extends Option {
 	 *            util.OptionContainer#addOption(String, String, char, String,
 	 *            boolean, Option)
 	 */
-	public PathOption(final OptionContainer optionContainer, final TaskPool taskPool,
-			final String name, final String toolTip, final String guiDescription,
-			char shortFlag, final String longFlag, final PathOptionFileFilter fileFilter,
-			final int selectionMode, final String section, final String key,
-			final String defaultValue) {
-		super(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag, true,
-				section, key, defaultValue);
+	public PathOption(final OptionContainer optionContainer,
+			final TaskPool taskPool, final String name, final String toolTip,
+			final String guiDescription, char shortFlag, final String longFlag,
+			final PathOptionFileFilter fileFilter, final int selectionMode,
+			final String section, final String key, final String defaultValue) {
+		super(optionContainer, name, toolTip, guiDescription, shortFlag,
+				longFlag, true, section, key, defaultValue);
 		filter = fileFilter;
 		this.selectionMode = selectionMode;
 		this.taskPool = taskPool;
@@ -133,7 +133,8 @@ public class PathOption extends Option {
 						} else {
 							value = path.toString();
 						}
-						final JFileChooser fileChooser = new JFileChooser(value);
+						final JFileChooser fileChooser =
+								new JFileChooser(value);
 						final JFrame frame = new JFrame();
 						fileChooser.setFileFilter(filter);
 						fileChooser.setDialogTitle(getDescription());
@@ -176,8 +177,8 @@ public class PathOption extends Option {
 	public final Path getValue() {
 		final String rel = super.value();
 		final String base =
-				main.Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY,
-						null);
+				main.Main.getConfigValue(main.Main.GLOBAL_SECTION,
+						main.Main.PATH_KEY, null);
 		if (rel == null) {
 			return null;
 		}
@@ -228,8 +229,8 @@ public class PathOption extends Option {
 		final File file = filter.value(fileSelected);
 		final Path path = Path.getPath(file.toString());
 		final String base =
-				main.Main.getConfigValue(main.Main.GLOBAL_SECTION, main.Main.PATH_KEY,
-						null);
+				main.Main.getConfigValue(main.Main.GLOBAL_SECTION,
+						main.Main.PATH_KEY, null);
 		super.value(path.relativize(Path.getPath(base.split("/"))));
 	}
 }

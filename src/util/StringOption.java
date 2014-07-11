@@ -44,11 +44,12 @@ public final class StringOption extends Option {
 	 *            the key identifier for this option, to access by {@link main.Main#getConfigValue(String, String, String)} and
 	 *            {@link main.Main#setConfigValue(String, String, String)}
 	 */
-	public StringOption(final OptionContainer optionContainer, final String name,
-			final String toolTip, final String guiDescription, char shortFlag,
-			final String longFlag, final String section, final String key) {
-		this(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag,
-				section, key, null);
+	public StringOption(final OptionContainer optionContainer,
+			final String name, final String toolTip,
+			final String guiDescription, char shortFlag, final String longFlag,
+			final String section, final String key) {
+		this(optionContainer, name, toolTip, guiDescription, shortFlag,
+				longFlag, section, key, null);
 	}
 
 	/**
@@ -76,12 +77,12 @@ public final class StringOption extends Option {
 	 * @param defaultValue
 	 *            the value returned if the key does not exist in given section
 	 */
-	public StringOption(final OptionContainer optionContainer, final String name,
-			final String toolTip, final String guiDescription, char shortFlag,
-			final String longFlag, final String section, final String key,
-			final String defaultValue) {
-		super(optionContainer, name, toolTip, guiDescription, shortFlag, longFlag, true,
-				section, key, defaultValue);
+	public StringOption(final OptionContainer optionContainer,
+			final String name, final String toolTip,
+			final String guiDescription, char shortFlag, final String longFlag,
+			final String section, final String key, final String defaultValue) {
+		super(optionContainer, name, toolTip, guiDescription, shortFlag,
+				longFlag, true, section, key, defaultValue);
 	}
 
 	/** */

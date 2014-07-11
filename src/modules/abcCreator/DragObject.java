@@ -1,6 +1,7 @@
 package modules.abcCreator;
 
 import java.awt.Container;
+import java.util.Iterator;
 
 
 /**
@@ -9,7 +10,8 @@ import java.awt.Container;
  * @param <D>
  * @param <T>
  */
-public interface DragObject<C extends Container, D extends Container, T extends Container> {
+public interface DragObject<C extends Container, D extends Container, T extends Container>
+		extends Iterable<DropTarget<C, D, T>> {
 
 	/**
 	 * adds a new association with given target
@@ -24,7 +26,7 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	 * 
 	 * @return the former targets
 	 */
-	DropTarget<C, D, T>[] clearTargets();
+	Iterator<DropTarget<C, D, T>> clearTargets();
 
 	/**
 	 * @return a copy of this object
@@ -84,7 +86,8 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	/**
 	 * @return all targets associated with this object
 	 */
-	DropTarget<C, D, T>[] getTargets();
+	@Override
+	Iterator<DropTarget<C, D, T>> iterator();
 
 	/**
 	 * @return true if this instance was created by #createAlias()
@@ -99,7 +102,8 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	 * @param key
 	 * @param value
 	 */
-	void setParam(DndPluginCallerParams param, DropTarget<C, D, T> target, int value);
+	void setParam(DndPluginCallerParams param, DropTarget<C, D, T> target,
+			int value);
 
 	/**
 	 * Adds a new option described by given param and sets the value
@@ -108,5 +112,10 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	 * @param value
 	 */
 	void setParam(DndPluginCallerParams param, int value);
+
+	/**
+	 * @return the count of targets linked to <i>this</i> object
+	 */
+	int getTargets();
 
 }

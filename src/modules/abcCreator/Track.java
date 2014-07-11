@@ -3,6 +3,7 @@ package modules.abcCreator;
 import java.awt.BorderLayout;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,7 +18,8 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 	private final int idBrute;
 	private final String name;
 
-	private final Set<DropTarget<JPanel, JPanel, JPanel>> targets = new HashSet<>();
+	private final Set<DropTarget<JPanel, JPanel, JPanel>> targets =
+			new HashSet<>();
 	private final Map<DndPluginCallerParams, Integer> params = new HashMap<>();
 	private final Set<Track> aliases;
 	private final Track original;
@@ -65,7 +67,8 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 
 	/** */
 	@Override
-	public final boolean addTarget(final DropTarget<JPanel, JPanel, JPanel> target) {
+	public final boolean addTarget(
+			final DropTarget<JPanel, JPanel, JPanel> target) {
 		if (c != target.getContainer()) {
 			c = target.getContainer();
 		}
@@ -78,8 +81,9 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 
 	/** */
 	@Override
-	public DropTarget<JPanel, JPanel, JPanel>[] clearTargets() {
-		final DropTarget<JPanel, JPanel, JPanel>[] t = getTargets();
+	public Iterator<DropTarget<JPanel, JPanel, JPanel>> clearTargets() {
+		final Iterator<DropTarget<JPanel, JPanel, JPanel>> t =
+				new HashSet<>(targets).iterator();
 		targets.clear();
 		paramMap.clear();
 		return t;
@@ -162,15 +166,15 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 
 	/** */
 	@Override
-	public final DropTargetContainer<JPanel, JPanel, JPanel> getTargetContainer() {
+	public final DropTargetContainer<JPanel, JPanel, JPanel>
+			getTargetContainer() {
 		return c;
 	}
 
 	/** */
-	@SuppressWarnings("unchecked")
 	@Override
-	public final DropTarget<JPanel, JPanel, JPanel>[] getTargets() {
-		return targets.toArray(new DropTarget[targets.size()]);
+	public final Iterator<DropTarget<JPanel, JPanel, JPanel>> iterator() {
+		return targets.iterator();
 	}
 
 	/** */
@@ -198,6 +202,11 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 	@Override
 	public final String toString() {
 		return idBrute + " " + name + " " + targets;
+	}
+
+	@Override
+	public final int getTargets() {
+		return targets.size();
 	}
 
 

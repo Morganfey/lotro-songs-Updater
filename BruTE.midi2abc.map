@@ -9,7 +9,7 @@
 % 5 = flute
 % 6 = bagpipes
 % 7 = pipgorn
-% 8 = drums,
+% 8 = drums
 % 9 = cowbell
 % 10 = moor cowbell
 % any other number will map the given to unknown
@@ -22,7 +22,7 @@
 % 5. Electric Piano 1
 % 6. Electric Piano 2
 % 7. Harpsichord
-% 8. Clavichord		 
+% 8. Clavichord
 
 0,1,0,1,0,0,1,1,
 
@@ -83,7 +83,7 @@
 % 46. Pizzicato Strings
 % 47. Orchestral Harp
 % 48. Timpani
-		
+
 5,4,3,3,4,1,1,2,
 
 %% Ensemble Family
@@ -158,7 +158,6 @@
 
 5,5,5,5,5,4,5,5,
 
-
 %% Synth Effects Family
 % 97.  FX 1 (rain)
 % 98.  FX 2 (soundtrack)
@@ -183,7 +182,6 @@
 
 1,0,0,0,1,6,6,6,
 
-
 %% Percussive Family
 % 113. Tinkle Bell
 % 114. Agogo
@@ -195,7 +193,7 @@
 % 120. Reverse Cymbal
 
 0,0,0,0,2,2,2,1,
-		
+
 %% Sound Effects Family
 % 121. Guitar Fret Noise
 % 122. Breath Noise

@@ -16,6 +16,7 @@ abstract class DNDListener<C extends Container, D extends Container, T extends C
 	protected static final Color C_SELECTED0 = Color.YELLOW;
 	protected static final Color C_SELECTED1 = Color.ORANGE;
 	protected static final Color C_DROP = Color.BLUE;
+	protected static final Color C_CLONE = Color.CYAN;
 
 	protected final DragAndDropPlugin<C, D, T>.State state;
 

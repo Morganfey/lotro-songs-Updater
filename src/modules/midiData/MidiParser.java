@@ -48,8 +48,8 @@ public abstract class MidiParser {
 
 		@Override
 		public final String toString() {
-			return "End of track signaled, but header said its longer: " + trackLen
-					+ " bytes left";
+			return "End of track signaled, but header said its longer: "
+					+ trackLen + " bytes left";
 		}
 	}
 
@@ -135,7 +135,8 @@ public abstract class MidiParser {
 		}
 
 		@Override
-		final ParseState getNext(byte read) throws UnsupportedOperationException {
+		final ParseState getNext(byte read)
+				throws UnsupportedOperationException {
 			throw new UnsupportedOperationException();
 		}
 
@@ -213,8 +214,8 @@ public abstract class MidiParser {
 					channel = MidiParser.this.channel;
 				}
 				lastEvent =
-						new NoteOffEvent((byte) k, (byte) v, (byte) channel, DELTA.delta,
-								format);
+						new NoteOffEvent((byte) k, (byte) v, (byte) channel,
+								DELTA.delta, format);
 				return DELTA;
 			}
 			return null;
@@ -246,8 +247,8 @@ public abstract class MidiParser {
 				v = 0xff & read;
 				if (v == 0) {
 					lastEvent =
-							new NoteOffEvent((byte) k, (byte) v, (byte) channel,
-									DELTA.delta, format);
+							new NoteOffEvent((byte) k, (byte) v,
+									(byte) channel, DELTA.delta, format);
 				} else {
 					lastEvent =
 							new NoteOnEvent((byte) k, (byte) v, (byte) channel,
@@ -298,7 +299,8 @@ public abstract class MidiParser {
 		abstract void end() throws ParsingException;
 
 		@Override
-		final ParseState getNext(byte read) throws UnsupportedOperationException {
+		final ParseState getNext(byte read)
+				throws UnsupportedOperationException {
 			throw new UnsupportedOperationException();
 		}
 
@@ -510,13 +512,15 @@ public abstract class MidiParser {
 	/** Header of a track within a midi file, byte equivalent */
 	protected static final int TRACK_HEADER_INT = 0x4d54726b;
 
-	private final static Set<ParseState> instancesOfParseState = new HashSet<>();
+	private final static Set<ParseState> instancesOfParseState =
+			new HashSet<>();
 
 	/** The master thread, to check for interruption */
 	protected final MasterThread master;
 
 	/** A map holding the parsed data */
-	protected final Map<Integer, List<MidiEvent>> eventsEncoded = new HashMap<>();
+	protected final Map<Integer, List<MidiEvent>> eventsEncoded =
+			new HashMap<>();
 
 	/** A map holding the parsed data */
 	protected final MidiMap eventsDecoded = new MidiMap(this);
@@ -710,7 +714,8 @@ public abstract class MidiParser {
 						if (channel == -1) {
 							i = MidiInstrument.get(track.byteValue());
 						} else {
-							final Byte instrument = channelsToInstrument.get(channel);
+							final Byte instrument =
+									channelsToInstrument.get(channel);
 							if (instrument == null) {
 								i = null;
 							} else {
@@ -977,7 +982,8 @@ public abstract class MidiParser {
 	 * @throws IOException
 	 *             if an I/O-Error occurs
 	 */
-	protected abstract void createMidiMap() throws ParsingException, IOException;
+	protected abstract void createMidiMap() throws ParsingException,
+			IOException;
 
 	/**
 	 * Decodes the previously read midi-map

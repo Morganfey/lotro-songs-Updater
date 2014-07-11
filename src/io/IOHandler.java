@@ -119,7 +119,8 @@ public class IOHandler {
 			}
 
 			public GUIInterface getProxyInstance() {
-				return (GUIInterface) Proxy.newProxyInstance(getClass().getClassLoader(),
+				return (GUIInterface) Proxy.newProxyInstance(getClass()
+						.getClassLoader(),
 						new Class<?>[] { GUIInterface.class }, h);
 			}
 
@@ -338,8 +339,9 @@ public class IOHandler {
 			final Exception exception) {
 		if (!handle.suppress()) {
 			if (!closed) {
-//				exception.printStackTrace();
-				gui.printErrorMessage(exception.toString().replaceAll(": ", "\n"));
+				exception.printStackTrace();
+				gui.printErrorMessage(exception.toString().replaceAll(": ",
+						"\n"));
 			}
 			if (handle.terminate()) {
 				close();
@@ -456,7 +458,8 @@ public class IOHandler {
 			while (entries.hasMoreElements()) {
 				final ZipEntry zipEntry = entries.nextElement();
 				final OutputStream out =
-						openOut(zipFile.getParent().resolve(zipEntry.getName()).toFile());
+						openOut(zipFile.getParent().resolve(zipEntry.getName())
+								.toFile());
 				final java.io.InputStream in = zip.getInputStream(zipEntry);
 				int read;
 				while ((read = in.read(content)) > 0) {
@@ -588,7 +591,8 @@ public class IOHandler {
 	 * @param in
 	 * @param out
 	 */
-	public final void write(final java.io.InputStream in, final java.io.OutputStream out) {
+	public final void write(final java.io.InputStream in,
+			final java.io.OutputStream out) {
 		final byte[] buffer = new byte[16000];
 		try {
 			while (true) {
@@ -646,7 +650,8 @@ public class IOHandler {
 	 * @param offset
 	 * @param length
 	 */
-	public final void write(final OutputStream out, byte[] bytes, int offset, int length) {
+	public final void write(final OutputStream out, byte[] bytes, int offset,
+			int length) {
 		try {
 			out.write(bytes, offset, length);
 		} catch (final IOException e) {

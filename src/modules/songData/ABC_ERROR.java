@@ -25,7 +25,7 @@ abstract class ABC_ERROR {
 	abstract Error_Type getType();
 
 	String printMessage() {
-		return getType().toString() + " " + line + ":\n" + getDetail() + "\n" + song
-				+ "\n";
+		return getType().toString() + " " + line + ":\n" + getDetail() + "\n"
+				+ song + "\n";
 	}
 }

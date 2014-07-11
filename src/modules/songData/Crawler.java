@@ -22,7 +22,8 @@ class Crawler implements Runnable {
 			new java.util.concurrent.atomic.AtomicInteger();
 
 	public Crawler(final IOHandler io, final Path root,
-			final ArrayDeque<Path> workListForCrawler, final ArrayDeque<ModEntry> queue) {
+			final ArrayDeque<Path> workListForCrawler,
+			final ArrayDeque<ModEntry> queue) {
 		workListForCrawler.add(root);
 		wl = workListForCrawler;
 		this.io = io;
@@ -94,7 +95,8 @@ class Crawler implements Runnable {
 						wl.notifyAll();
 					}
 				}
-			} else if (path.toFile().isFile() && path.getFileName().endsWith(".abc")) {
+			} else if (path.toFile().isFile()
+					&& path.getFileName().endsWith(".abc")) {
 				hits.incrementAndGet();
 				synchronized (queue) {
 					queue.add(new ModEntry(path));

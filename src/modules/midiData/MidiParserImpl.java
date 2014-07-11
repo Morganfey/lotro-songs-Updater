@@ -5,7 +5,6 @@ import io.InputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -25,7 +24,8 @@ final class MidiParserImpl extends MidiParser {
 		private int tmp;
 
 		private TempoChangeState last;
-		private final TreeMap<Integer, TempoChangeState> tempoIntervals = new TreeMap<>();
+		private final TreeMap<Integer, TempoChangeState> tempoIntervals =
+				new TreeMap<>();
 
 		private Entry<Integer, TempoChangeState> lastChange;
 
@@ -94,13 +94,15 @@ final class MidiParserImpl extends MidiParser {
 		}
 
 		private final double getMinutes(int deltaTicks) {
-			final double quarters = (double) deltaTicks / (double) deltaTicksPerQuarter;
+			final double quarters =
+					(double) deltaTicks / (double) deltaTicksPerQuarter;
 			return quarters * microsPerQuarter / 6e7;
 		}
 	}
 
 	private final byte[] midiHeaderBufferBytes = new byte[14];
-	private final ByteBuffer midiHeaderBuffer = ByteBuffer.wrap(midiHeaderBufferBytes);
+	private final ByteBuffer midiHeaderBuffer = ByteBuffer
+			.wrap(midiHeaderBufferBytes);
 	private int nextN;
 	private boolean empty = true;
 	private final Duration d = new Duration();
@@ -123,7 +125,8 @@ final class MidiParserImpl extends MidiParser {
 	 * @throws IOException
 	 * @throws ParsingException
 	 */
-	private final void parse1(final InputStream in) throws IOException, ParsingException {
+	private final void parse1(final InputStream in) throws IOException,
+			ParsingException {
 		in.read(midiHeaderBufferBytes);
 		while (n < ntracks && !master.isInterrupted()) {
 			parseEvents(in);
@@ -164,8 +167,9 @@ final class MidiParserImpl extends MidiParser {
 				renumberMap.put(n, ++nextN);
 			} else if (empty) {
 				eventCount -= eventsEncoded.remove(n).size();
-				System.out.println("skipping empty midi track " + n + "\n next track ("
-						+ this.n + ") is numbered as track " + (nextN + 1));
+				System.out.println("skipping empty midi track " + n
+						+ "\n next track (" + this.n
+						+ ") is numbered as track " + (nextN + 1));
 				// empty tracks do not count
 			} else {
 				renumberMap.put(n, ++nextN);
@@ -205,12 +209,13 @@ final class MidiParserImpl extends MidiParser {
 	@Override
 	protected final void decodeMidiMap() {
 		io.startProgress("Decoding midi", eventCount);
-		for (final Entry<Integer, List<MidiEvent>> events : eventsEncoded.entrySet()) {
-			final int track = events.getKey();
-			if (track == 0 && events.getValue().isEmpty()) {
+		for (final Integer track : new java.util.TreeSet<Integer>(
+				eventsEncoded.keySet())) {
+			if (track.intValue() == 0) {
 				continue;
 			}
-			final ArrayDeque<MidiEvent> eventList = new ArrayDeque<>(events.getValue());
+			final ArrayDeque<MidiEvent> eventList =
+					new ArrayDeque<>(eventsEncoded.get(track));
 			int deltaAbs = 0;
 			double durationTrack = 0;
 			while (!eventList.isEmpty()) {
@@ -234,17 +239,20 @@ final class MidiParserImpl extends MidiParser {
 						for (final MidiEvent iter : eventList) {
 							durationTicks += iter.delta;
 							if (iter.getType() == EventType.NOTE_OFF) {
-								final NoteOffEvent noteOff = (NoteOffEvent) iter;
+								final NoteOffEvent noteOff =
+										(NoteOffEvent) iter;
 								if (noteOff.getKey() == noteOn.getKey()) {
 									final double end =
-											start + ts.getMinutes(durationTicks);
+											start
+													+ ts.getMinutes(durationTicks);
 									if (end > durationTrack) {
 										durationTrack = end;
 										if (end > duration) {
 											duration = end;
 										}
 									}
-									eventsDecoded.addNote(renumberMap.get(track) - 1,
+									eventsDecoded.addNote(
+											renumberMap.get(track) - 1,
 											noteOn.getKey(), start, end,
 											noteOn.getVelocity());
 									break;
@@ -257,8 +265,8 @@ final class MidiParserImpl extends MidiParser {
 						io.updateProgress(1);
 				}
 			}
-			System.out.printf("duration of track %2d -> %2d: %02d:%02d,%03d\n", track,
-					renumberMap.get(track), (int) durationTrack,
+			System.out.printf("duration of track %2d -> %2d: %02d:%02d,%03d\n",
+					track, renumberMap.get(track), (int) durationTrack,
 					(int) (durationTrack * 60 % 60),
 					(int) (durationTrack * 60 * 1000 % 1000));
 		}
@@ -277,10 +285,12 @@ final class MidiParserImpl extends MidiParser {
 		eventCount = 0;
 		midiHeaderBuffer.rewind();
 		if (midiHeaderBuffer.getInt() != MidiParser.MIDI_HEADER_INT) {
-			throw new IOException("Invalid header: unable to parse selected midi");
+			throw new IOException(
+					"Invalid header: unable to parse selected midi");
 		}
 		if (midiHeaderBuffer.getInt() != 6) {
-			throw new IOException("Invalid header: unable to parse selected midi");
+			throw new IOException(
+					"Invalid header: unable to parse selected midi");
 		}
 		final byte format_H = midiHeaderBuffer.get();
 		final byte format_L = midiHeaderBuffer.get();
@@ -292,9 +302,11 @@ final class MidiParserImpl extends MidiParser {
 		format = (0xff & format_H) << 8 | 0xff & format_L;
 		ntracks = (0xff & ntracks_H) << 8 | 0xff & ntracks_L;
 		deltaTicksPerQuarter =
-				(0xff & deltaTicksPerQuarter_H) << 8 | 0xff & deltaTicksPerQuarter_L;
+				(0xff & deltaTicksPerQuarter_H) << 8 | 0xff
+						& deltaTicksPerQuarter_L;
 		if (format != 1) {
-			throw new IOException("Invalid format: unable to parse selected midi");
+			throw new IOException(
+					"Invalid format: unable to parse selected midi");
 		} else if (format == 0) {
 			throw new RuntimeException("Format 0 not supported");
 		}

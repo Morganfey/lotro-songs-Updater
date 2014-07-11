@@ -12,7 +12,8 @@ final class TC_Listener<C extends Container, D extends Container, T extends Cont
 			final DragAndDropPlugin<C, D, T>.State state) {
 		super(state);
 		this.targetC = targetC;
-		targetC.getDisplayableComponent().setBackground(DNDListener.C_INACTIVE_TARGET);
+		targetC.getDisplayableComponent().setBackground(
+				DNDListener.C_INACTIVE_TARGET);
 	}
 
 	@Override
@@ -32,7 +33,8 @@ final class TC_Listener<C extends Container, D extends Container, T extends Cont
 					enter ? DNDListener.C_DROP : DNDListener.C_INACTIVE_TARGET);
 		} else {
 			targetC.getDisplayableComponent().setBackground(
-					enter ? DNDListener.C_ACTIVE : DNDListener.C_INACTIVE_TARGET);
+					enter ? DNDListener.C_ACTIVE
+							: DNDListener.C_INACTIVE_TARGET);
 			if (state.dragging == null) {
 				for (final DropTarget<C, D, T> t : targetC) {
 					if (t != state.emptyTarget) {
@@ -42,7 +44,8 @@ final class TC_Listener<C extends Container, D extends Container, T extends Cont
 					}
 					for (final DragObject<C, D, T> d : t) {
 						d.getDisplayableComponent().setBackground(
-								enter ? DNDListener.C_SELECTED0 : DNDListener.C_INACTIVE);
+								enter ? DNDListener.C_SELECTED0
+										: DNDListener.C_INACTIVE);
 					}
 				}
 			}

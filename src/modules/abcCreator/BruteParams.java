@@ -7,6 +7,10 @@ import java.awt.GridLayout;
 import java.lang.reflect.Field;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -48,8 +52,8 @@ public class BruteParams implements DndPluginCallerParams {
 			slider.setPaintLabels(true);
 			slider.setMajorTickSpacing(step);
 			slider.setMinorTickSpacing(ticks);
-			label.setText(String.format("%s %.2f", value == 0 ? " " : value > 0 ? "+"
-					: "-", Math.abs(value) / factor));
+			label.setText(String.format("%s %.2f", value == 0 ? " "
+					: value > 0 ? "+" : "-", Math.abs(value) / factor));
 			if (object != null)
 				object.setParam(BruteParams.this, target, value);
 
@@ -75,7 +79,8 @@ public class BruteParams implements DndPluginCallerParams {
 				@Override
 				public final void stateChanged(final ChangeEvent e) {
 					value = slider.getValue();
-					System.out.printf("min: %d value: %d max: %d\n", min, value, max);
+					System.out.printf("min: %d value: %d max: %d\n", min,
+							value, max);
 					label.setText(String.format("%s %.2f", value == 0 ? " "
 							: value > 0 ? "+" : "-", Math.abs(value) / factor));
 				}
@@ -86,8 +91,9 @@ public class BruteParams implements DndPluginCallerParams {
 		}
 
 		@Override
-		public <A extends Container, B extends Container, C extends Container> Value
-				localInstance(DragObject<A, B, C> object, DropTarget<A, B, C> target) {
+		public <A extends Container, B extends Container, C extends Container>
+				Value localInstance(DragObject<A, B, C> object,
+						DropTarget<A, B, C> target) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -148,8 +154,8 @@ public class BruteParams implements DndPluginCallerParams {
 			slider.setPaintLabels(true);
 			slider.setMajorTickSpacing(interval);
 			slider.setMinorTickSpacing(ticks);
-			label.setText(String.format("%s %d",
-					value == 0 ? " " : value > 0 ? "+" : "-", Math.abs(value)));
+			label.setText(String.format("%s %d", value == 0 ? " "
+					: value > 0 ? "+" : "-", Math.abs(value)));
 
 			class SliderListener implements ChangeListener {
 
@@ -195,8 +201,9 @@ public class BruteParams implements DndPluginCallerParams {
 		}
 
 		@Override
-		public <A extends Container, B extends Container, C extends Container> Value
-				localInstance(DragObject<A, B, C> object, DropTarget<A, B, C> target) {
+		public <A extends Container, B extends Container, C extends Container>
+				Value localInstance(DragObject<A, B, C> object,
+						DropTarget<A, B, C> target) {
 			return new ValueInt(this, object, target);
 		}
 
@@ -207,21 +214,21 @@ public class BruteParams implements DndPluginCallerParams {
 	}
 
 	/** Pitch with floating limits */
-	public static final BruteParams PITCH = new BruteParams("Pitch", 0, 24, 12, true,
-			true);
-	/** Compress with hard limits at 0.0 and 2.0 */
-	public static final BruteParams DYNAMIC = new BruteParams("Compress", 1.0, 1, 0.125,
-			true, false);
-	/** Speedup with floating limits */
-	public static final BruteParams SPEED = new BruteParams("Speedup", 0, -25, 100, 10,
-			true, false);
-	/** Volume with hard limits at -127 and +127 */
-	public static final BruteParams VOLUME = new BruteParams("Volume", 0, -127, 127, 16,
+	public static final BruteParams PITCH = new BruteParams("Pitch", 0, 24, 12,
 			true, true);
+	/** Compress with hard limits at 0.0 and 2.0 */
+	public static final BruteParams DYNAMIC = new BruteParams("Compress", 1.0,
+			1, 0.125, true, false);
+	/** Speedup with floating limits */
+	public static final BruteParams SPEED = new BruteParams("Speedup", 0, -25,
+			100, 10, true, false);
+	/** Volume with hard limits at -127 and +127 */
+	public static final BruteParams VOLUME = new BruteParams("Volume", 0, -127,
+			127, 16, true, true);
 
 	/** Delay with hard limites */
-	public static final BruteParams DELAY = new BruteParams("Delay", 0, 0, 32, 16, false,
-			true);
+	public static final BruteParams DELAY = new BruteParams("Delay", 0, 0, 32,
+			16, false, true);
 	// TODO support for fadeout in future releases
 	// FADEOUT("Fadeout", );
 	private final static BruteParams[] values = buildValues();
@@ -232,8 +239,8 @@ public class BruteParams implements DndPluginCallerParams {
 
 	private final Object defaultValue;
 
-	private BruteParams(final String s, double initValue, double step, double ticks,
-			boolean global, boolean local) {
+	private BruteParams(final String s, double initValue, double step,
+			double ticks, boolean global, boolean local) {
 		this.s = s;
 		value = new ValueFloat(initValue, step, ticks);
 		this.local = local;
@@ -250,8 +257,8 @@ public class BruteParams implements DndPluginCallerParams {
 		defaultValue = Integer.valueOf(initValue);
 	}
 
-	private BruteParams(final String s, int initValue, int min, int max, int ticks,
-			boolean global, boolean local) {
+	private BruteParams(final String s, int initValue, int min, int max,
+			int ticks, boolean global, boolean local) {
 		this.s = s;
 		value = new ValueInt(initValue, min, max, ticks);
 		this.local = local;
@@ -330,21 +337,31 @@ public class BruteParams implements DndPluginCallerParams {
 
 
 	@Override
-	public final <C extends Container, D extends Container, T extends Container> void
-			display(final JPanel panel, final DragObject<C, D, T> object,
-					final DropTarget<C, D, T>[] targets) {
+	public final
+			<C extends Container, D extends Container, T extends Container>
+			void display(final JPanel panel, final DragObject<C, D, T> object,
+					final Iterator<DropTarget<C, D, T>> targets) {
 		panel.setLayout(new GridLayout(0, 1));
-		for (int i = 0, id = 1; i < targets.length; i = id++) {
+		final Map<Integer, JPanel> mapPanel = new HashMap<>();
+		final Map<Integer, DropTarget<?, ?, ?>> mapTarget = new HashMap<>();
+		for (int i = 0, id = 1; targets.hasNext(); i = id++) {
+			final DropTarget<C, D, T> target = targets.next();
 			final JSlider slider = new JSlider();
 			final JLabel label = new JLabel();
 			final JPanel panelIdx = new JPanel();
 			panelIdx.setLayout(new BorderLayout());
-			panelIdx.add(new JLabel(s + "   " + targets[i].getName() + " " + (i + 1)
-					+ "/" + targets.length), BorderLayout.NORTH);
 			panelIdx.add(slider);
 			panelIdx.add(label, BorderLayout.SOUTH);
-			value.localInstance(object, targets[i]).display(slider, label);
+			value.localInstance(object, target).display(slider, label);
 			panel.add(panelIdx);
+			mapPanel.put(i + 1, panelIdx);
+			mapTarget.put(i + 1, target);
+		}
+		for (final Entry<Integer, JPanel> e : mapPanel.entrySet()) {
+			e.getValue().add(
+					new JLabel(s + "   " + mapTarget.get(e.getKey()).getName()
+							+ " " + e.getKey() + "/" + targets),
+					BorderLayout.NORTH);
 		}
 	}
 
@@ -369,8 +386,9 @@ interface Value {
 	 * @param target
 	 * @return the param value saved at object for given target
 	 */
-	<A extends Container, B extends Container, C extends Container> Value localInstance(
-			DragObject<A, B, C> object, DropTarget<A, B, C> target);;
+			<A extends Container, B extends Container, C extends Container>
+			Value
+			localInstance(DragObject<A, B, C> object, DropTarget<A, B, C> target);;
 
 	String value();
 }

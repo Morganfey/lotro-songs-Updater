@@ -5,6 +5,7 @@ import io.IOHandler;
 import io.InputStream;
 import io.OutputStream;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -56,7 +57,8 @@ import util.TaskPool;
 /**
  * @author Nelphindal
  */
-public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPanel> {
+public class AbcCreator implements Module,
+		DndPluginCaller<JPanel, JPanel, JPanel> {
 
 	/**
 	 * Enum indicating what type of runnable shall be called
@@ -195,9 +197,11 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	 * The maximum id of included drum-map
 	 */
 	public static final int DRUM_MAPS_COUNT = 6;
-	private static final PathOptionFileFilter EXEC_FILTER = new ExecutableFileFilter();
+	private static final PathOptionFileFilter EXEC_FILTER =
+			new ExecutableFileFilter();
 
-	private static final PathOptionFileFilter DRUM_MAP_FILTER = new DrumMapFileFilter();
+	private static final PathOptionFileFilter DRUM_MAP_FILTER =
+			new DrumMapFileFilter();
 
 	private static final PathOptionFileFilter INSTR_MAP_FILTER =
 			new InstrumentMapFileFilter();
@@ -279,9 +283,12 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				AbcCreator.createPathToAbcPlayer(sc.getOptionContainer(),
 						sc.getTaskPool());
 		INSTRUMENT_MAP =
-				AbcCreator.createInstrMap(sc.getOptionContainer(), sc.getTaskPool());
+				AbcCreator.createInstrMap(sc.getOptionContainer(),
+						sc.getTaskPool());
 		STYLE = AbcCreator.createStyle(sc.getOptionContainer());
-		DRUM_MAPS = AbcCreator.createDrumMaps(sc.getOptionContainer(), sc.getTaskPool());
+		DRUM_MAPS =
+				AbcCreator.createDrumMaps(sc.getOptionContainer(),
+						sc.getTaskPool());
 		wdDir = sc.getWorkingDir();
 		io = sc.getIO();
 		master = sc.getMaster();
@@ -309,21 +316,23 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		brutesMidi = bruteDir.resolve("mid.mid");
 		brutesMap = bruteDir.resolve("out.config");
 		brutesAbc = bruteDir.resolve("new.abc");
-		dragAndDropPlugin = new AbcMapPlugin(this, taskPool, parser, targets, io);
+		dragAndDropPlugin =
+				new AbcMapPlugin(this, taskPool, parser, targets, io);
 		initState = abc.initState;
 	}
 
-	private final static PathOption createDrumMaps(final OptionContainer optionContainer,
-			final TaskPool taskPool) {
+	private final static PathOption createDrumMaps(
+			final OptionContainer optionContainer, final TaskPool taskPool) {
 		final PathOptionFileFilter ff = AbcCreator.DRUM_MAP_FILTER;
 		return new PathOption(optionContainer, taskPool, "drumMapsDir",
 				"Select a directory containing default drum maps", "Drum Maps",
-				Flag.NoShortFlag, "drums", ff, JFileChooser.FILES_AND_DIRECTORIES,
-				AbcCreator.SECTION, AbcCreator.DRUM_MAP_KEY, null);
+				Flag.NoShortFlag, "drums", ff,
+				JFileChooser.FILES_AND_DIRECTORIES, AbcCreator.SECTION,
+				AbcCreator.DRUM_MAP_KEY, null);
 	}
 
-	private final static PathOption createInstrMap(final OptionContainer optionContainer,
-			final TaskPool taskPool) {
+	private final static PathOption createInstrMap(
+			final OptionContainer optionContainer, final TaskPool taskPool) {
 		final PathOptionFileFilter ff = AbcCreator.INSTR_MAP_FILTER;
 		return new PathOption(
 				optionContainer,
@@ -331,7 +340,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				"midi2abcMap",
 				"Select a custom map, to map midi-instruments on the isntruments used in LoTRO",
 				"Instrument Map", Flag.NoShortFlag, "mapping", ff,
-				JFileChooser.FILES_ONLY, AbcCreator.SECTION, "instrumentMap", null);
+				JFileChooser.FILES_ONLY, AbcCreator.SECTION, "instrumentMap",
+				null);
 	}
 
 	private final static PathOption createPathToAbcPlayer(
@@ -346,16 +356,19 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				AbcCreator.SECTION, "player", null);
 	}
 
-	private final static StringOption createStyle(final OptionContainer optionContainer) {
+	private final static StringOption createStyle(
+			final OptionContainer optionContainer) {
 		return new StringOption(
 				optionContainer,
 				"style",
 				"The style to use for generated abc. Possible values are Rocks, Meisterbarden and TSO",
-				"Style", Flag.NoShortFlag, "style", AbcCreator.SECTION, "style", "Rocks");
+				"Style", Flag.NoShortFlag, "style", AbcCreator.SECTION,
+				"style", "Rocks");
 	}
 
 	private final static Path getJavaPath() {
-		final Path javaBin = Path.getPath(System.getProperty("java.home")).resolve("bin");
+		final Path javaBin =
+				Path.getPath(System.getProperty("java.home")).resolve("bin");
 		final Path javaPath;
 		if (FileSystem.type == FileSystem.OSType.WINDOWS) {
 			javaPath = javaBin.resolve("java.exe");
@@ -374,7 +387,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	 * @return <i>true</i> on success
 	 */
 	@Override
-	public final boolean call_back(final Object name, final Object title, int abcTracks) {
+	public final boolean call_back(final Object name, final Object title,
+			int abcTracks) {
 		io.startProgress("Creating map", abcTracks + 1);
 		final Path map =
 				generateMap(name == null ? "<insert your name here>" : name,
@@ -491,8 +505,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 			final Path instrumentMap = INSTRUMENT_MAP.getValue();
 			final Path drumMaps = DRUM_MAPS.getValue();
 			if (instrumentMap != null) {
-				initState.startPhase(InitState.INSTRUMENT_MAP, (int) instrumentMap
-						.toFile().length());
+				initState.startPhase(InitState.INSTRUMENT_MAP,
+						(int) instrumentMap.toFile().length());
 				MidiInstrument.readMap(instrumentMap, io);
 			}
 			if (drumMaps != null) {
@@ -521,14 +535,15 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	}
 
 	@Override
-	public final TreeSet<DropTarget<?, ?, ?>> sortedTargets() {
+	public final TreeSet<DropTarget<JPanel, JPanel, JPanel>> sortedTargets() {
 		return dragAndDropPlugin.targets();
 	}
 
 	/** */
 	@Override
-	public final boolean unlink(final DragObject<?, ?, ?> object,
-			final DropTarget<?, ?, ?> target) {
+	public final boolean unlink(
+			final DragObject<JPanel, JPanel, JPanel> object,
+			final DropTarget<JPanel, JPanel, JPanel> target) {
 		return dragAndDropPlugin.unlink(object, target);
 	}
 
@@ -537,8 +552,9 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		return BruteParams.valuesGlobal();
 	}
 
-	private final int call(final Path location, final CallType type, final Path wd,
-			final String... cmd) throws IOException, InterruptedException {
+	private final int call(final Path location, final CallType type,
+			final Path wd, final String... cmd) throws IOException,
+			InterruptedException {
 		if (master.isInterrupted()) {
 			return -127;
 		}
@@ -561,7 +577,9 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				} else {
 					player = location.toString();
 				}
-				pb = new ProcessBuilder(AbcCreator.javaPath.toString(), "-jar", player);
+				pb =
+						new ProcessBuilder(AbcCreator.javaPath.toString(),
+								"-jar", player);
 				for (final String c : cmd) {
 					if (c.contains(" ")) {
 						if (FileSystem.type == FileSystem.OSType.WINDOWS) {
@@ -635,7 +653,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 					if (read == '\n') {
 						final String line = builder.toString();
 						if (line.contains("/")) {
-							final String[] s = line.replaceFirst("\r\n", "").split("/");
+							final String[] s =
+									line.replaceFirst("\r\n", "").split("/");
 							if (first) {
 								first = false;
 								io.setProgressSize(Integer.parseInt(s[1]) + 1);
@@ -655,8 +674,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 		return exit;
 	}
 
-	private final int call(final String string, final Path bruteDir) throws IOException,
-			InterruptedException {
+	private final int call(final String string, final Path bruteDir)
+			throws IOException, InterruptedException {
 		final Path exe = bruteDir.resolve(string);
 		if (!exe.toFile().canExecute()) {
 			exe.toFile().setExecutable(true);
@@ -669,7 +688,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 			throws IOException {
 		final Set<Path> filesAndDirs = new HashSet<>();
 		if (source.toFile().isDirectory()) {
-			if (destination.toFile().exists() && !destination.toFile().isDirectory()) {
+			if (destination.toFile().exists()
+					&& !destination.toFile().isDirectory()) {
 				throw new IOException("Copying directory to file");
 			} else {
 				for (final String s : source.toFile().list()) {
@@ -687,7 +707,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 								return;
 							}
 							try {
-								copyRek(source.resolve(s), destination.resolve(s));
+								copyRek(source.resolve(s),
+										destination.resolve(s));
 							} catch (final IOException e) {
 								e.printStackTrace();
 							}
@@ -709,7 +730,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	private final void copyRek(final Path source, final Path destination)
 			throws IOException {
 		if (source.toFile().isDirectory()) {
-			if (destination.toFile().exists() && !destination.toFile().isDirectory()) {
+			if (destination.toFile().exists()
+					&& !destination.toFile().isDirectory()) {
 				initState.setFailed();
 				throw new IOException("Copying directory to file");
 			} else {
@@ -730,7 +752,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 								return;
 							}
 							try {
-								copyRek(source.resolve(s), destination.resolve(s));
+								copyRek(source.resolve(s),
+										destination.resolve(s));
 							} catch (final IOException e) {
 								e.printStackTrace();
 							}
@@ -799,13 +822,15 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 
 		for (final Iterator<DropTargetContainer<JPanel, JPanel, JPanel>> targetIter =
 				this.targets.iterator();;) {
-			final DropTargetContainer<JPanel, JPanel, JPanel> target = targetIter.next();
+			final DropTargetContainer<JPanel, JPanel, JPanel> target =
+					targetIter.next();
 			if (!targetIter.hasNext())
 				break;
 			for (final DropTarget<JPanel, JPanel, JPanel> t : target) {
 				empty = false;
 				final StringBuilder params = new StringBuilder();
-				for (final Map.Entry<String, Integer> param : t.getParams().entrySet()) {
+				for (final Map.Entry<String, Integer> param : t.getParams()
+						.entrySet()) {
 					params.append(" ");
 					params.append(t.printParam(param));
 				}
@@ -813,10 +838,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				io.writeln(out, "abctrack begin");
 				io.writeln(out, "polyphony 6 top");
 				io.writeln(out, "duration 2");
-				io.writeln(
-						out,
-						String.format("instrument %s%s", target.toString(),
-								params.toString()));
+				io.writeln(out, String.format("instrument %s%s",
+						target.toString(), params.toString()));
 				writeAbcTrack(out, t, abcPartMap);
 				io.writeln(out, "abctrack end");
 				io.updateProgress();
@@ -850,7 +873,8 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				return false;
 			}
 			initState.startPhase(InitState.COPY);
-			initState.setSize(InitState.COPY, copy(bruteDir, this.bruteDir).size());
+			initState.setSize(InitState.COPY, copy(bruteDir, this.bruteDir)
+					.size());
 		} else {
 			final JarFile jarFile;
 			jarFile = new JarFile(wdDir.toFile());
@@ -908,9 +932,9 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 			return;
 		}
 		final StringOption TITLE =
-				new StringOption(null, null, "Title displayed in the abc", "Title",
-						Flag.NoShortFlag, Flag.NoLongFlag, AbcCreator.SECTION, "title",
-						null);
+				new StringOption(null, null, "Title displayed in the abc",
+						"Title", Flag.NoShortFlag, Flag.NoLongFlag,
+						AbcCreator.SECTION, "title", null);
 		while (true) {
 			if (master.isInterrupted()) {
 				return;
@@ -923,8 +947,9 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 							"Which midi do you want to transcribe to abc?",
 							midi == null ? Path.getPath(
 									Main.getConfigValue(Main.GLOBAL_SECTION,
-											Main.PATH_KEY, null).split("/")).toFile()
-									: midi.getParent().toFile(), AbcCreator.midiFilter);
+											Main.PATH_KEY, null).split("/"))
+									.toFile() : midi.getParent().toFile(),
+							AbcCreator.midiFilter);
 			if (midi == null) {
 				break;
 			}
@@ -984,18 +1009,20 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 				return;
 			}
 			final String name =
-					Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY, null);
+					Main.getConfigValue(Main.GLOBAL_SECTION, Main.NAME_KEY,
+							null);
 			if (name == null) {
 				return;
 			}
 			if (call_back(name, TITLE.value(), dragAndDropPlugin.size())) {
-				io.printMessage(null, "transcribed\n" + midi + "\nto\n" + abc, true);
+				io.printMessage(null, "transcribed\n" + midi + "\nto\n" + abc,
+						true);
 			}
 		}
 	}
 
-	private final void unpack(final JarFile jarFile, final ZipEntry... jarEntries)
-			throws IOException {
+	private final void unpack(final JarFile jarFile,
+			final ZipEntry... jarEntries) throws IOException {
 		for (final ZipEntry jarEntry : jarEntries) {
 			if (master.isInterrupted()) {
 				return;
@@ -1006,7 +1033,9 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 			if (jarEntries.length == 1) {
 				file = bruteDir.resolve(jarEntry.getName()).toFile();
 			} else {
-				file = bruteDir.resolve(jarEntry.getName().substring(6)).toFile();
+				file =
+						bruteDir.resolve(jarEntry.getName().substring(6))
+								.toFile();
 			}
 			if (!file.getParentFile().exists()) {
 				if (!file.getParentFile().mkdirs()) {
@@ -1039,18 +1068,18 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 			final int pitch = midiTrack.getParam(BruteParams.PITCH, abcTrack);
 			final int volume = midiTrack.getParam(BruteParams.VOLUME, abcTrack);
 			final int delay = midiTrack.getParam(BruteParams.DELAY, abcTrack);
-			io.write(
-					out,
-					String.format("miditrack %d pitch %d volume %d delay %d",
-							midiTrack.getId(), pitch, volume, delay));
-			final int total = midiTrack.getTargets().length;
+			io.write(out, String.format(
+					"miditrack %d pitch %d volume %d delay %d",
+					midiTrack.getId(), pitch, volume, delay));
+			final int total = midiTrack.getTargets();
 			if (total > 1) {
 				int part = 0;
 				if (abcPartMap.containsKey(midiTrack)) {
 					part = abcPartMap.get(midiTrack);
 				}
 				abcPartMap.put(midiTrack, part + 1);
-				io.writeln(out, String.format(" prio 100 " + "split %d %d", total, part));
+				io.writeln(out, String.format(" prio 100 " + "split %d %d",
+						total, part));
 			} else {
 				io.write(out, "\r\n");
 			}
@@ -1066,6 +1095,31 @@ public class AbcCreator implements Module, DndPluginCaller<JPanel, JPanel, JPane
 	@Override
 	public final void repair() {
 		// nothing to do
+	}
+
+
+	@Override
+	public final Path getFile() {
+		return abc;
+	}
+
+	@Override
+	public final
+			Map<DragObject<JPanel, JPanel, JPanel>, Set<DropTarget<JPanel, JPanel, JPanel>>>
+			loadMap(final File mapToLoad) {
+		final InputStream in = io.openIn(mapToLoad);
+		try {
+			while (true) {
+				final String line = in.readLine();
+				if (line == null)
+					break;
+			}
+		} catch (final IOException e) {
+			System.err.println(e);
+		} finally {
+			io.close(in);
+		}
+		return null;
 	}
 
 }

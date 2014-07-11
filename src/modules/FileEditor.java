@@ -114,23 +114,29 @@ public class FileEditor implements Module {
 		master = sc.getMaster();
 		container = sc.getContainerElement(SongDataContainer.class);
 		MOD_DATE = FileEditor.createModDateOption(sc.getOptionContainer());
-		CHANGE_TITLE = FileEditor.createChangeTitleOption(sc.getOptionContainer());
+		CHANGE_TITLE =
+				FileEditor.createChangeTitleOption(sc.getOptionContainer());
 		CHANGE_NUMBERING =
 				FileEditor.createChangeNumberingOption(sc.getOptionContainer());
-		UNIFORM_SONGS = FileEditor.createUniformSongsOption(sc.getOptionContainer());
-		SONG_SCHEME = FileEditor.createSongSchemeOption(sc.getOptionContainer());
+		UNIFORM_SONGS =
+				FileEditor.createUniformSongsOption(sc.getOptionContainer());
+		SONG_SCHEME =
+				FileEditor.createSongSchemeOption(sc.getOptionContainer());
 	}
 
-	final static BooleanOption createChangeNumberingOption(final OptionContainer oc) {
+	final static BooleanOption createChangeNumberingOption(
+			final OptionContainer oc) {
 		return new BooleanOption(oc, "changeNumbering",
-				"Changes the numbering of one or more songs.", "Change song numbering",
-				'n', "change-numbering", SECTION, null, false);
+				"Changes the numbering of one or more songs.",
+				"Change song numbering", 'n', "change-numbering", SECTION,
+				null, false);
 	}
 
-	final static BooleanOption createChangeTitleOption(final OptionContainer oc) {
+	final static BooleanOption
+			createChangeTitleOption(final OptionContainer oc) {
 		return new BooleanOption(oc, "changeTitle",
-				"Changes the title of one or more songs.", "Change song title", 't',
-				"change-title", SECTION, null, false);
+				"Changes the title of one or more songs.", "Change song title",
+				't', "change-title", SECTION, null, false);
 	}
 
 	final static BooleanOption createModDateOption(final OptionContainer oc) {
@@ -143,14 +149,16 @@ public class FileEditor implements Module {
 		return new StringOption(oc, "uniformScheme",
 				"Changes the scheme for the uniform-songs option. Please have look"
 						+ "in tha manual for the syntax", "Name scheme",
-				Flag.NoShortFlag, "song-scheme", SECTION, "scheme", DEFAULT_SCHEME);
+				Flag.NoShortFlag, "song-scheme", SECTION, "scheme",
+				DEFAULT_SCHEME);
 	}
 
-	final static BooleanOption createUniformSongsOption(final OptionContainer oc) {
+	final static BooleanOption
+			createUniformSongsOption(final OptionContainer oc) {
 		return new BooleanOption(oc, "uniform",
 				"Changes the titles of songs, matching a name scheme.",
-				"Uniform song titles", Flag.NoShortFlag, "uniform-songs", SECTION, null,
-				false);
+				"Uniform song titles", Flag.NoShortFlag, "uniform-songs",
+				SECTION, null, false);
 	}
 
 	/**
@@ -273,7 +281,8 @@ public class FileEditor implements Module {
 
 	private final void diff(final Git session, final RevWalk walk,
 			final RevCommit commitNew, final ObjectReader reader)
-			throws MissingObjectException, IncorrectObjectTypeException, IOException {
+			throws MissingObjectException, IncorrectObjectTypeException,
+			IOException {
 		int i = 0;
 		if (commitNew.getParentCount() == 0) {
 
@@ -284,8 +293,8 @@ public class FileEditor implements Module {
 			try {
 				final List<DiffEntry> diffs =
 						session.diff().setOldTree(new EmptyTreeIterator())
-								.setNewTree(treeParserNew).setShowNameAndStatusOnly(true)
-								.call();
+								.setNewTree(treeParserNew)
+								.setShowNameAndStatusOnly(true).call();
 				final Iterator<DiffEntry> diffsIterator = diffs.iterator();
 				while (diffsIterator.hasNext()) {
 					changed.put(diffsIterator.next().getNewPath(), time);
@@ -310,7 +319,8 @@ public class FileEditor implements Module {
 								session.diff().setOldTree(treeParserOld)
 										.setNewTree(treeParserNew)
 										.setShowNameAndStatusOnly(true).call();
-						final Iterator<DiffEntry> diffsIterator = diffs.iterator();
+						final Iterator<DiffEntry> diffsIterator =
+								diffs.iterator();
 						while (diffsIterator.hasNext()) {
 							changed.put(diffsIterator.next().getNewPath(), time);
 						}
@@ -327,7 +337,8 @@ public class FileEditor implements Module {
 		final SongChangeData change = changes.get(file);
 		if (change != null)
 			return change;
-		final SongChangeData data = new SongChangeData(container.getVoices(file));
+		final SongChangeData data =
+				new SongChangeData(container.getVoices(file));
 		changes.put(file, data);
 		return data;
 	}
@@ -335,7 +346,8 @@ public class FileEditor implements Module {
 	private final void resetModDate() {
 		final Path repo =
 				container.getRoot().resolve(
-						Main.getConfigValue(Main.VC_SECTION, Main.REPO_KEY, "band"));
+						Main.getConfigValue(Main.VC_SECTION, Main.REPO_KEY,
+								"band"));
 		try {
 			final Git session = Git.open(repo.toFile());
 			try {
@@ -344,7 +356,8 @@ public class FileEditor implements Module {
 				final RevWalk walk = new RevWalk(session.getRepository());
 
 				final RevCommit commit = walk.parseCommit(head);
-				final ObjectReader reader = session.getRepository().newObjectReader();
+				final ObjectReader reader =
+						session.getRepository().newObjectReader();
 
 				diff(session, walk, commit, reader);
 				reader.release();
@@ -352,11 +365,13 @@ public class FileEditor implements Module {
 				for (final Map.Entry<String, Integer> mod : changed.entrySet()) {
 					final File f = repo.resolve(mod.getKey()).toFile();
 					if (f.exists()) {
-						f.setLastModified(TimeUnit.SECONDS.toMillis(mod.getValue()));
+						f.setLastModified(TimeUnit.SECONDS.toMillis(mod
+								.getValue()));
 					}
 				}
 
-				io.printMessage(null, "update of modification time completed", true);
+				io.printMessage(null, "update of modification time completed",
+						true);
 			} finally {
 				session.close();
 			}
@@ -396,8 +411,8 @@ public class FileEditor implements Module {
 	private final void uniformSongs(final Set<Path> selection)
 			throws InvalidNameSchemeException {
 		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
-		io.startProgress("Appying name scheme to " + selectionFiles.size() + " files",
-				selectionFiles.size());
+		io.startProgress("Appying name scheme to " + selectionFiles.size()
+				+ " files", selectionFiles.size());
 		for (final Path file : selectionFiles) {
 			if (master.isInterrupted())
 				return;
