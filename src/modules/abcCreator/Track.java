@@ -171,10 +171,9 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 		return c;
 	}
 
-	/** */
 	@Override
-	public final Iterator<DropTarget<JPanel, JPanel, JPanel>> iterator() {
-		return targets.iterator();
+	public final int getTargets() {
+		return targets.size();
 	}
 
 	/** */
@@ -183,12 +182,18 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 		return aliases == null;
 	}
 
+	/** */
+	@Override
+	public final Iterator<DropTarget<JPanel, JPanel, JPanel>> iterator() {
+		return targets.iterator();
+	}
+
+
 	@Override
 	public final void setParam(final DndPluginCallerParams param,
 			final DropTarget<JPanel, JPanel, JPanel> target, int value) {
 		paramMap.put((BruteParams) param, target, value);
 	}
-
 
 	@Override
 	public final void setParam(final DndPluginCallerParams param, int value) {
@@ -202,11 +207,6 @@ class Track implements Comparable<Track>, DragObject<JPanel, JPanel, JPanel> {
 	@Override
 	public final String toString() {
 		return idBrute + " " + name + " " + targets;
-	}
-
-	@Override
-	public final int getTargets() {
-		return targets.size();
 	}
 
 

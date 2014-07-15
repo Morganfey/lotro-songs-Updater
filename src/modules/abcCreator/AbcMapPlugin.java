@@ -12,6 +12,7 @@ import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -89,12 +90,37 @@ public final class AbcMapPlugin extends
 				final Set<Integer> setNew = new HashSet<>();
 				instrumentToTrack.put(i, setNew);
 				setNew.add(track.getId());
+				initTarget(target);
 			} else {
 				set.add(track.getId());
 			}
 		}
 		object.addTarget(target);
 		target.link(object);
+	}
+
+	/**
+	 * Prints an error
+	 * 
+	 * @param string
+	 */
+	public final void printError(final String string) {
+		state.label.setText(string);
+	}
+
+	/**
+	 * Cleans internal structures to display another abc-file.
+	 */
+	public final void reset() {
+		taskPool.addTask(new Runnable() {
+			final public void run() {
+				for (final DropTargetContainer<?, ?, ?> target : targets) {
+					target.clearTargets();
+				}
+			}
+		});
+		trackMap.clear();
+		instrumentToTrack.clear();
 	}
 
 	/**
@@ -322,13 +348,13 @@ public final class AbcMapPlugin extends
 				if (state.loadingMap)
 					return;
 				final JFileChooser fc =
-						new JFileChooser(caller.getFile().toFile());
+						new JFileChooser(caller.getFile().getParent().toFile());
 				fc.setFileFilter(new FileFilter() {
 
 					@Override
 					public final boolean accept(final File f) {
-						return f.isDirectory()
-								|| f.isFile() && f.getName().endsWith(".map");
+						return f.isDirectory() || f.isFile()
+								&& f.getName().endsWith(".map");
 					}
 
 					@Override
@@ -370,21 +396,153 @@ public final class AbcMapPlugin extends
 					state.label.setText("Parsing loaded map ...");
 					state.loadingMap = true;
 					final File mapToLoad = fc.getSelectedFile();
-					new Thread() {
-						@Override
-						public final void run() {
-							final Map<DragObject<JPanel, JPanel, JPanel>, Set<DropTarget<JPanel, JPanel, JPanel>>> targets =
-									AbcMapPlugin.this.caller.loadMap(mapToLoad);
-							if (targets == null) {
-								state.label.setText("loading map failed");
+
+					final Map<String, Track> idToTrackMap = new HashMap<>();
+					synchronized (idToTrackMap) {
+						final Thread t = new Thread() {
+
+							@Override
+							public final void run() {
+
+								final List<DropTarget<JPanel, JPanel, JPanel>> targets =
+										new ArrayList<>();
+								final Map<Track, DropTargetContainer<JPanel, JPanel, JPanel>> cloneDeciderMap =
+										new HashMap<>();
+								final Map<Track, Map<DropTargetContainer<JPanel, JPanel, JPanel>, Track>> cloneMap =
+										new HashMap<>();
+
+								class LoadedMapEntry implements
+										DndPluginCaller.LoadedMapEntry {
+
+									private boolean error;
+									private DropTarget<JPanel, JPanel, JPanel> target;
+
+									@Override
+									public final void addEntry(
+											final String string) {
+										final String[] s = string.split(" ");
+										final Track t;
+										synchronized (idToTrackMap) {
+											t = idToTrackMap.get(s[0]);
+										}
+										final DropTargetContainer<JPanel, JPanel, JPanel> m =
+												cloneDeciderMap.get(t);
+										final Track o;
+										if (m == null) {
+											cloneDeciderMap.put(t,
+													target.getContainer());
+											t.getTargetContainer()
+													.removeAllLinks(t);
+											t.clearTargets();
+//											initTarget(target);
+											o = t;
+										} else if (m != target.getContainer()) {
+											final Map<DropTargetContainer<JPanel, JPanel, JPanel>, Track> cloneEntry =
+													cloneMap.get(t);
+											if (cloneEntry == null) {
+												cloneMap.put(
+														t,
+														new HashMap<DropTargetContainer<JPanel, JPanel, JPanel>, Track>());
+											}
+											final Track tClone =
+													cloneMap.get(t).get(m);
+											if (tClone == null) {
+												final Track clone = t.clone();
+												cloneMap.get(t).put(m, clone);
+												panelLeft.add(clone
+														.getDisplayableComponent());
+												panelLeft.validate();
+												initObject(clone);
+//												initTarget(target);
+											}
+											o = cloneMap.get(t).get(m);
+										} else {
+											o = t;
+										}
+										link(o, target);
+										for (int i = 1; i < s.length;) {
+											if (s[i].equals("split")) {
+												i += 3;
+											} else {
+												try {
+													o.setParam(
+															BruteParams
+																	.valueOf(s[i]),
+															target,
+															Integer.parseInt(s[i + 1]));
+													i += 2;
+												} catch (final Exception e) {
+													error = true;
+												}
+											}
+										}
+									}
+
+									@Override
+									public final void addPart(
+											final String string) {
+										final String[] s = string.split(" ");
+										MidiInstrument m =
+												MidiInstrument.valueOf(s[0]);
+										target = m.createNewTarget();
+										targets.add(target);
+										if (s.length == 2)
+											try {
+												target.setParam("map",
+														Integer.parseInt(s[1]));
+											} catch (final Exception e) {
+												error = true;
+											}
+									}
+
+									@Override
+									public final void error() {
+										error = true;
+									}
+								}
+
+								final LoadedMapEntry loader =
+										new LoadedMapEntry();
+
+								AbcMapPlugin.this.caller.loadMap(mapToLoad,
+										loader);
+								if (loader.error) {
+									state.label.setText("Loading map failed");
+								} else {
+									state.loadingMap = false;
+									state.label
+											.setText("Parsing completed - Updating GUI ...");
+									for (final DropTarget<JPanel, JPanel, JPanel> t : targets) {
+										t.getDisplayableComponent();
+										addToCenter(t);
+									}
+									state.label.setText("Loading map completed");
+								}
+								synchronized (state) {
+									state.upToDate = false;
+									state.running = false;
+									state.notifyAll();
+								}
 							}
-							synchronized (state) {
-								state.loadingMap = false;
-								state.upToDate = false;
-								state.running = false;
+						};
+						t.start();
+						int toFind = trackMap.size();
+						for (int i = 1; toFind-- > 0; i++) {
+							final Track track = (Track) trackMap.get(i);
+							if (track != null) {
+								idToTrackMap.put(String.valueOf(i + 1), track);
+								continue;
+							}
+							for (int j = i + 1;; j++) {
+								final Track trackJ = (Track) trackMap.remove(j);
+								if (trackJ != null) {
+									idToTrackMap.put(String.valueOf(i + 1),
+											trackJ);
+									break;
+								}
 							}
 						}
-					}.start();
+					}
 				}
 			}
 		});
@@ -490,12 +648,15 @@ public final class AbcMapPlugin extends
 	/** */
 	@Override
 	protected final void emptyCenter() {
+		if (empty != null)
+			return;
 		empty = center.getParent();
 		final Container c =
 				(Container) ((Container) center.getComponent(0))
 						.getComponent(0);
 		final JLabel label = new JLabel("       - empty -       ");
 		label.setForeground(Color.WHITE);
+
 		c.add(label);
 		emptyC = c.getBackground();
 		c.setBackground(Color.RED);
@@ -583,6 +744,7 @@ public final class AbcMapPlugin extends
 						.getParams(), caller));
 		panelLeft.revalidate();
 	}
+
 
 	/**
 	 * Creates the panel for the instrument-categories.
@@ -675,16 +837,6 @@ public final class AbcMapPlugin extends
 
 		target.getDisplayableComponent().addMouseListener(
 				new DT_Listener<JPanel, JPanel, JPanel>(target, state));
-	}
-
-
-	/**
-	 * Prints an error
-	 * 
-	 * @param string
-	 */
-	public final void printError(final String string) {
-		state.label.setText(string);
 	}
 
 }

@@ -7,93 +7,6 @@ import java.util.Map;
 import java.util.Set;
 
 
-class Variable extends NameSchemeElement {
-
-	private final String s;
-	private String value;
-
-	Variable(final String s) {
-		super(null);
-		this.s = s;
-	}
-
-	class VariableDep extends NameSchemeElement {
-
-		VariableDep(int[] idcs) {
-			super(idcs);
-		}
-
-		@Override
-		public final String toString() {
-			return Variable.this.s;
-		}
-
-		@Override
-		public final boolean equals(final Object o) {
-			return Variable.this.equals(o);
-		}
-
-
-		@Override
-		final void print(final StringBuilder sb) {
-			Variable.this.print(sb);
-		}
-	}
-
-	@Override
-	public final String toString() {
-		return s;
-	}
-
-	final NameSchemeElement dep(final int[] idcs) {
-		return new VariableDep(idcs);
-	}
-
-	@Override
-	public final boolean equals(final Object o) {
-		if (VariableDep.class.isInstance(o)) {
-			return VariableDep.class.cast(o).equals(this);
-		}
-		return this == o;
-	}
-
-	@Override
-	final void print(final StringBuilder sb) {
-		sb.append(value);
-	}
-
-	final void clear() {
-		value = null;
-	}
-
-	final void value(final String value) {
-		this.value = value;
-	}
-}
-
-abstract class NameSchemeElement {
-
-	final int[] idcs;
-
-	NameSchemeElement(int[] idcs) {
-		this.idcs = idcs;
-	}
-
-	abstract void print(StringBuilder sb);
-
-	void print(final StringBuilder sb, int track) {
-		if (idcs == null || idcs.length == 0)
-			print(sb);
-		else
-			for (final int i : idcs) {
-				if (i == track) {
-					print(sb);
-					return;
-				}
-			}
-	}
-}
-
 /**
  * @author Nelphindal
  */
@@ -215,8 +128,13 @@ public class NameScheme {
 		}
 	}
 
-	final void printIdx(final StringBuilder sb, final String idcs) {
-		sb.append(idcs);
+	@Override
+	public final String toString() {
+		final StringBuilder sb = new StringBuilder();
+		for (final NameSchemeElement e : elements) {
+			sb.append(e.toString());
+		}
+		return sb.toString();
 	}
 
 	private final Map<String, Variable> buildVariableMap() {
@@ -230,50 +148,8 @@ public class NameScheme {
 		return map;
 	}
 
-	final boolean needsDuration() {
-		return elements.contains(DURATION);
-	}
-
 	final void duration(final String duration) {
 		DURATION.value(duration);
-	}
-
-	final void reset() {
-		DURATION.clear();
-		TITLE.clear();
-		MOD_DATE.clear();
-		TOTAL_NUM.value("0");
-		PART_NUM.clear();
-		map.clear();
-		countMap.clear();
-		indices.clear();
-	}
-
-
-	final void title(final String title) {
-		TITLE.value(title);
-	}
-
-	@Override
-	public final String toString() {
-		final StringBuilder sb = new StringBuilder();
-		for (final NameSchemeElement e : elements) {
-			sb.append(e.toString());
-		}
-		return sb.toString();
-	}
-
-	final void partNum(final Map<Integer, String> indices) {
-		int seq = 1;
-		for (final Map.Entry<Integer, String> entry : indices.entrySet()) {
-			if (entry.getValue().isEmpty()) {
-				this.indices.put(entry.getKey(), Integer.valueOf(seq)
-						.toString());
-			} else
-				this.indices.put(entry.getKey(), entry.getValue());
-			seq++;
-		}
-
 	}
 
 	final void instrument(final Map<Integer, Set<Instrument>> instruments) {
@@ -297,8 +173,44 @@ public class NameScheme {
 		MOD_DATE.value(mod);
 	}
 
+
+	final boolean needsDuration() {
+		return elements.contains(DURATION);
+	}
+
 	final boolean needsMod() {
 		return elements.contains(MOD_DATE);
+	}
+
+	final void partNum(final Map<Integer, String> indices) {
+		int seq = 1;
+		for (final Map.Entry<Integer, String> entry : indices.entrySet()) {
+			if (entry.getValue().isEmpty()) {
+				this.indices.put(entry.getKey(), Integer.valueOf(seq)
+						.toString());
+			} else
+				this.indices.put(entry.getKey(), entry.getValue());
+			seq++;
+		}
+
+	}
+
+	final String print(int track) {
+		final StringBuilder sb = new StringBuilder();
+		for (final NameSchemeElement e : elements) {
+			e.print(sb, track);
+		}
+		return sb.toString();
+	}
+
+	final void printIdx(final StringBuilder sb, final String idcs) {
+		sb.append(idcs);
+	}
+
+	final StringBuilder printInstrumentName(final InstrumentType type) {
+		final StringBuilder name = new StringBuilder(type.name().toLowerCase());
+		name.setCharAt(0, name.substring(0, 1).toUpperCase().charAt(0));
+		return name;
 	}
 
 
@@ -315,21 +227,109 @@ public class NameScheme {
 		}
 	}
 
-	final StringBuilder printInstrumentName(final InstrumentType type) {
-		final StringBuilder name = new StringBuilder(type.name().toLowerCase());
-		name.setCharAt(0, name.substring(0, 1).toUpperCase().charAt(0));
-		return name;
+	final void reset() {
+		DURATION.clear();
+		TITLE.clear();
+		MOD_DATE.clear();
+		TOTAL_NUM.value("0");
+		PART_NUM.clear();
+		map.clear();
+		countMap.clear();
+		indices.clear();
 	}
 
-	final String print(int track) {
-		final StringBuilder sb = new StringBuilder();
-		for (final NameSchemeElement e : elements) {
-			e.print(sb, track);
-		}
-		return sb.toString();
+	final void title(final String title) {
+		TITLE.value(title);
 	}
 
 	final void totalNum(int total) {
 		TOTAL_NUM.value(String.valueOf(total));
+	}
+}
+
+abstract class NameSchemeElement {
+
+	final int[] idcs;
+
+	NameSchemeElement(int[] idcs) {
+		this.idcs = idcs;
+	}
+
+	abstract void print(StringBuilder sb);
+
+	void print(final StringBuilder sb, int track) {
+		if (idcs == null || idcs.length == 0)
+			print(sb);
+		else
+			for (final int i : idcs) {
+				if (i == track) {
+					print(sb);
+					return;
+				}
+			}
+	}
+}
+
+class Variable extends NameSchemeElement {
+
+	class VariableDep extends NameSchemeElement {
+
+		VariableDep(int[] idcs) {
+			super(idcs);
+		}
+
+		@Override
+		public final boolean equals(final Object o) {
+			return Variable.this.equals(o);
+		}
+
+		@Override
+		public final String toString() {
+			return Variable.this.s;
+		}
+
+
+		@Override
+		final void print(final StringBuilder sb) {
+			Variable.this.print(sb);
+		}
+	}
+	private final String s;
+
+	private String value;
+
+	Variable(final String s) {
+		super(null);
+		this.s = s;
+	}
+
+	@Override
+	public final boolean equals(final Object o) {
+		if (VariableDep.class.isInstance(o)) {
+			return VariableDep.class.cast(o).equals(this);
+		}
+		return this == o;
+	}
+
+	@Override
+	public final String toString() {
+		return s;
+	}
+
+	final void clear() {
+		value = null;
+	}
+
+	final NameSchemeElement dep(final int[] idcs) {
+		return new VariableDep(idcs);
+	}
+
+	@Override
+	final void print(final StringBuilder sb) {
+		sb.append(value);
+	}
+
+	final void value(final String value) {
+		this.value = value;
 	}
 }

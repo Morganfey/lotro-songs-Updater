@@ -218,16 +218,18 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 		state.label.setText("Drag the tracks from left to right");
 		state.running = false;
 		state.upToDate = false;
-		panelLeft.removeAll();
-		panelCenter.removeAll();
-
+		state.target = null; state.targetC = null; state.dragging = null; state.object = null;
+		
+		assert panelCenter.getComponentCount() == 0 && panelLeft.getComponentCount() == 0;
+		initListLeft.clear();
+		taskPool.waitForTasks();
+		
 		mainPanel = new JPanel();
 		mainPanel.setLayout(new GridLayout(1, 3));
 		mainPanel.add(initLeft(initListLeft));
 		mainPanel.add(initCenter(initListLeft));
 		mainPanel.add(initRight());
-
-		panel.removeAll();
+		
 		panel.setLayout(new BorderLayout());
 		panel.add(state.label, BorderLayout.NORTH);
 		panel.add(mainPanel);

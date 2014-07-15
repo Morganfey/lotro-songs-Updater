@@ -37,13 +37,13 @@ public class Main implements Module {
 	}
 
 	@Override
-	public final void run() {
+	public final void repair() {
 		throw new UnsupportedOperationException();
 	}
 
 
 	@Override
-	public final void repair() {
+	public final void run() {
 		throw new UnsupportedOperationException();
 	}
 

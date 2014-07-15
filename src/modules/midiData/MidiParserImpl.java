@@ -154,7 +154,10 @@ final class MidiParserImpl extends MidiParser {
 					eventsEncoded.get(track).add(event);
 				}
 			} else {
-				empty = false;
+				if (event.getType() != EventType.TEMPO
+						&& event.getType() != EventType.TIME) {
+					empty = false;
+				}
 				++eventCount;
 				eventsEncoded.get(track).add(event);
 			}

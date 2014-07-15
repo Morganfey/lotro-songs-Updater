@@ -22,89 +22,6 @@ import main.MasterThread;
 import modules.songData.SongData;
 
 
-enum InstrumentType {
-	BAGPIPES("bagpipe"),
-	CLARINET("clarinets"),
-	COWBELL("cowbells", "bells"),
-	DRUMS("drum"),
-	FLUTE("flutes"),
-	HARP("harps"),
-	HORN("horns"),
-	LUTE("lutes"),
-	MOOR_COWBELL,
-	THEORBO,
-	PIBGORN;
-
-	private final String[] keys;
-	private static final Map<String, InstrumentType> map = buildMap();
-
-	private InstrumentType(final String... keys) {
-		this.keys = keys;
-	}
-
-	private final static Map<String, InstrumentType> buildMap() {
-		final Map<String, InstrumentType> map = new HashMap<>();
-		try {
-			for (final Field f : InstrumentType.class.getFields()) {
-				final InstrumentType t = (InstrumentType) f.get(null);
-				for (final String key : t.keys)
-					map.put(key, t);
-				map.put(f.getName().toLowerCase(), t);
-			}
-		} catch (final Exception e) {
-			return null;
-		}
-		return map;
-	}
-
-	public final static InstrumentType get(final String string) {
-		return map.get(string);
-	}
-}
-
-class Instrument {
-
-	private final InstrumentType type;
-	private final Set<Integer> numbers;
-
-	public Instrument(final InstrumentType type, final Set<Integer> numbers) {
-		this.type = type;
-		if (numbers.isEmpty())
-			this.numbers = new HashSet<>();
-		else
-			this.numbers = new HashSet<>(numbers);
-	}
-
-	@Override
-	public final String toString() {
-		final StringBuilder sb = new StringBuilder(type.name().toLowerCase());
-		sb.setCharAt(0, (char) (sb.charAt(0) + 'A' - 'a'));
-		for (final Integer number : numbers) {
-			sb.append(" ");
-			sb.append(number);
-		}
-		return sb.toString();
-	}
-
-	public final void print(final StringBuilder sb, final NameScheme ns) {
-		sb.append(ns.printInstrumentName(type));
-		ns.printInstrumentNumbers(sb, numbers);
-	}
-
-	public final String name() {
-		return type.name();
-	}
-
-	final InstrumentType type() {
-		return type;
-	}
-
-	boolean uniqueIdx() {
-		return numbers.size() < 2;
-	}
-}
-
-
 /**
  * Container holding all extracted and edited data of a song
  * 
@@ -112,16 +29,37 @@ class Instrument {
  */
 public class SongChangeData {
 
+	class AbcTempoParams {
+		int tempo = DEFAULT_TEMPO;
+		double beats = 0;
+		double base = 0;
+
+		final void reset() {
+			tempo = DEFAULT_TEMPO;
+			base = DEFAULT_BASE;
+			beats = 0;
+		}
+
+		final double toLength() {
+			if (beats == 0)
+				return 0.0;
+			if (base == TIME_BASE)
+				return beats / tempo;
+			else
+				return beats / tempo * (base / TIME_BASE);
+		}
+	}
 	private static final int DEFAULT_TEMPO = 120;
 	private static final double DEFAULT_BASE = 0.125;
+
 	private static final double TIME_BASE = 0.25;
 
 	private static Path base;
-
 	private final Map<Integer, String> titles = new HashMap<>();
 	private final Map<Integer, Set<Instrument>> instruments = new HashMap<>();
 	private final Map<Integer, String> indices = new HashMap<>();
 	private final Map<Integer, String> duration = new HashMap<>();
+
 	private final Set<Integer> total = new HashSet<>();
 
 	private final String[] mod = new String[2];
@@ -131,11 +69,112 @@ public class SongChangeData {
 	private final Path file;
 
 	private String titleNew;
-
 	private Map<Integer, Integer> idxMap;
+
 	private Map<Integer, String> numMap;
 
 	private boolean dirty;
+
+	/**
+	 * @param voices
+	 */
+	public SongChangeData(final SongData voices) {
+		date = util.Time.date(voices.getLastModification()).split(" ");
+		file = voices.getPath();
+		System.out.println(file);
+		for (final Map.Entry<Integer, String> titleEntry : voices.voices()
+				.entrySet()) {
+			instruments.put(titleEntry.getKey(), new HashSet<Instrument>());
+
+			String title = titleEntry.getValue();
+
+			title = extractInstrument(titleEntry.getKey(), title);
+			title = extractDuration(titleEntry.getKey(), title);
+			title = extractIndices(titleEntry.getKey(), title);
+			title = extractModification(title);
+			title = title.trim();
+			if (!title.isEmpty())
+				titles.put(titleEntry.getKey(), title);
+			final Integer key = titleEntry.getKey();
+			System.out.printf("Analyzation complete: %s\n"
+					+ "title:        %s\n" + "duration:     %s\n"
+					+ "instrument:   %s\n" + "indices:      %s\n\n",
+					titleEntry.getValue(), titles.get(key), duration.get(key),
+					instruments.get(key), indices.get(key));
+
+
+		}
+	}
+
+	private static Path getBase() {
+		if (base != null)
+			return base;
+		final String baseString =
+				main.Main.getConfigValue(main.Main.GLOBAL_SECTION,
+						main.Main.PATH_KEY, null);
+		if (baseString == null)
+			return null;
+		return base = Path.getPath(baseString.split("/")).resolve("Music");
+	}
+
+	private static final String testDuration(final String durationS) {
+		String[] split = durationS.split(":");
+		if (split.length != 2) {
+			split = durationS.split("\\.");
+			if (split.length != 2)
+				return null;
+		}
+		for (final String s : split) {
+			if (s.length() > 2)
+				return null;
+			final char[] cA = s.toCharArray();
+			boolean start = true, end = true;
+			for (final char c : cA) {
+				if (c == ' ') {
+					if (!start)
+						end = false;
+					continue;
+				}
+				if (!end)
+					return null;
+				if (c < '0' || c > '9')
+					return null;
+				start = false;
+
+			}
+		}
+		return split[0].trim() + ":" + split[1].trim();
+	}
+
+	private static final String testIndices(final String indicesS) {
+		final String[] split = indicesS.split("/");
+		if (split.length != 2)
+			return null;
+		for (final String s : split[0].split(",")) {
+			if (s.length() > 2)
+				return null;
+			final char[] cA = s.toCharArray();
+			boolean start = true, end = true;
+			for (final char c : cA) {
+				if (c == ' ') {
+					if (!start)
+						end = false;
+					continue;
+				}
+				if (!end)
+					return null;
+				if (c < '0' || c > '9')
+					return null;
+				start = false;
+			}
+		}
+		final char[] cA = split[1].toCharArray();
+		for (final char c : cA) {
+			if (c < '0' || c > '9')
+				return null;
+		}
+		return indicesS;
+	}
 
 	final static Set<Instrument> parse(final String string) {
 		final Set<Instrument> ret = new HashSet<>();
@@ -220,48 +259,6 @@ public class SongChangeData {
 	}
 
 	/**
-	 * @param voices
-	 */
-	public SongChangeData(final SongData voices) {
-		date = util.Time.date(voices.getLastModification()).split(" ");
-		file = voices.getPath();
-		System.out.println(file);
-		for (final Map.Entry<Integer, String> titleEntry : voices.voices()
-				.entrySet()) {
-			instruments.put(titleEntry.getKey(), new HashSet<Instrument>());
-
-			String title = titleEntry.getValue();
-
-			title = extractInstrument(titleEntry.getKey(), title);
-			title = extractDuration(titleEntry.getKey(), title);
-			title = extractIndices(titleEntry.getKey(), title);
-			title = extractModification(title);
-			title = title.trim();
-			if (!title.isEmpty())
-				titles.put(titleEntry.getKey(), title);
-			final Integer key = titleEntry.getKey();
-			System.out.printf("Analyzation complete: %s\n"
-					+ "title:        %s\n" + "duration:     %s\n"
-					+ "instrument:   %s\n" + "indices:      %s\n\n",
-					titleEntry.getValue(), titles.get(key), duration.get(key),
-					instruments.get(key), indices.get(key));
-
-
-		}
-	}
-
-	private static Path getBase() {
-		if (base != null)
-			return base;
-		final String baseString =
-				main.Main.getConfigValue(main.Main.GLOBAL_SECTION,
-						main.Main.PATH_KEY, null);
-		if (baseString == null)
-			return null;
-		return base = Path.getPath(baseString.split("/")).resolve("Music");
-	}
-
-	/**
 	 * @return the title of the song
 	 */
 	public final String getTitle() {
@@ -284,6 +281,22 @@ public class SongChangeData {
 	}
 
 	/**
+	 * Applies the changes being made.
+	 * 
+	 * @param io
+	 * @param scheme
+	 */
+	public final void revalidate(final IOHandler io, final NameScheme scheme) {
+		if (!dirty)
+			return;
+		final Path tmp = writeChunks(io, scheme);
+		if (tmp == null)
+			return;
+		dirty = false;
+		tmp.renameTo(file);
+	}
+
+	/**
 	 * Sets the title component of T: line of underlying song
 	 * 
 	 * @param string
@@ -295,33 +308,6 @@ public class SongChangeData {
 				dirty = true;
 		}
 		titleNew = string;
-	}
-
-	/**
-	 * Sets the map to change the X: lines of underlying song
-	 * 
-	 * @param mapOpt
-	 * @param map
-	 * @param mapNumber
-	 */
-	final void renumber(final Map<Integer, Integer> indexMap,
-			final Map<Integer, String> numberMap,
-			final Map<Integer, Boolean> mapOpt) {
-		if (indexMap == null || numberMap == null) {
-			idxMap = null;
-			numMap = null;
-			return;
-		}
-		idxMap = indexMap;
-		numMap = numberMap;
-		total.clear();
-		int total = 0;
-		for (final Boolean b : mapOpt.values()) {
-			if (!b)
-				++total;
-		}
-		this.total.add(total);
-		dirty = true;
 	}
 
 	/**
@@ -359,29 +345,9 @@ public class SongChangeData {
 		final Path base =
 				SongChangeData.base.getParent().resolve(
 						SongChangeData.base.getFileName() + "_rewritten");
-		tmp.renameTo(base.resolve(rel));
+		tmp.renameTo(base.resolve(rel.split("/")));
 	}
 
-	class AbcTempoParams {
-		int tempo = DEFAULT_TEMPO;
-		double beats = 0;
-		double base = 0;
-
-		final void reset() {
-			tempo = DEFAULT_TEMPO;
-			base = DEFAULT_BASE;
-			beats = 0;
-		}
-
-		final double toLength() {
-			if (beats == 0)
-				return 0.0;
-			if (base == TIME_BASE)
-				return beats / tempo;
-			else
-				return beats / tempo * (base / TIME_BASE);
-		}
-	}
 
 	private final String calculateDuration(final IOHandler io) {
 		final InputStream in = io.openIn(file.toFile());
@@ -599,36 +565,6 @@ public class SongChangeData {
 
 	}
 
-
-	private static final String testDuration(final String durationS) {
-		String[] split = durationS.split(":");
-		if (split.length != 2) {
-			split = durationS.split("\\.");
-			if (split.length != 2)
-				return null;
-		}
-		for (final String s : split) {
-			if (s.length() > 2)
-				return null;
-			final char[] cA = s.toCharArray();
-			boolean start = true, end = true;
-			for (final char c : cA) {
-				if (c == ' ') {
-					if (!start)
-						end = false;
-					continue;
-				}
-				if (!end)
-					return null;
-				if (c < '0' || c > '9')
-					return null;
-				start = false;
-
-			}
-		}
-		return split[0].trim() + ":" + split[1].trim();
-	}
-
 	private final String extractIndices(final Integer key, final String title) {
 		int idx = title.indexOf("/");
 		if (idx > 0) {
@@ -675,36 +611,6 @@ public class SongChangeData {
 			return titleNew;
 		}
 		return title;
-	}
-
-	private static final String testIndices(final String indicesS) {
-		final String[] split = indicesS.split("/");
-		if (split.length != 2)
-			return null;
-		for (final String s : split[0].split(",")) {
-			if (s.length() > 2)
-				return null;
-			final char[] cA = s.toCharArray();
-			boolean start = true, end = true;
-			for (final char c : cA) {
-				if (c == ' ') {
-					if (!start)
-						end = false;
-					continue;
-				}
-				if (!end)
-					return null;
-				if (c < '0' || c > '9')
-					return null;
-				start = false;
-			}
-		}
-		final char[] cA = split[1].toCharArray();
-		for (final char c : cA) {
-			if (c < '0' || c > '9')
-				return null;
-		}
-		return indicesS;
 	}
 
 	private final String extractInstrument(final Integer i, final String title) {
@@ -844,22 +750,6 @@ public class SongChangeData {
 	}
 
 
-	/**
-	 * Applies the changes being made.
-	 * 
-	 * @param io
-	 * @param scheme
-	 */
-	public final void revalidate(final IOHandler io, final NameScheme scheme) {
-		if (!dirty)
-			return;
-		final Path tmp = writeChunks(io, scheme);
-		if (tmp == null)
-			return;
-		dirty = false;
-		tmp.renameTo(file);
-	}
-
 	private final Path writeChunks(final IOHandler io, final NameScheme scheme) {
 		final Path tmp = MasterThread.tmp().resolve(file.getFileName());
 		final Path headerChunk =
@@ -963,24 +853,134 @@ public class SongChangeData {
 		return true;
 	}
 
+	final Path file() {
+		return file;
+	}
+
 
 	final Map<Integer, String> getIndices() {
 		return indices;
 	}
-
-	final Map<Integer, String> getTitles() {
-		return titles;
-	}
-
 
 	final Map<Integer, Set<Instrument>> getInstruments() {
 		return instruments;
 	}
 
 
-	final Path file() {
-		return file;
+	final Map<Integer, String> getTitles() {
+		return titles;
 	}
 
 
+	/**
+	 * Sets the map to change the X: lines of underlying song
+	 * 
+	 * @param mapOpt
+	 * @param map
+	 * @param mapNumber
+	 */
+	final void renumber(final Map<Integer, Integer> indexMap,
+			final Map<Integer, String> numberMap,
+			final Map<Integer, Boolean> mapOpt) {
+		if (indexMap == null || numberMap == null) {
+			idxMap = null;
+			numMap = null;
+			return;
+		}
+		idxMap = indexMap;
+		numMap = numberMap;
+		total.clear();
+		int total = 0;
+		for (final Boolean b : mapOpt.values()) {
+			if (!b)
+				++total;
+		}
+		this.total.add(total);
+		dirty = true;
+	}
+
+
+}
+
+class Instrument {
+
+	private final InstrumentType type;
+	private final Set<Integer> numbers;
+
+	public Instrument(final InstrumentType type, final Set<Integer> numbers) {
+		this.type = type;
+		if (numbers.isEmpty())
+			this.numbers = new HashSet<>();
+		else
+			this.numbers = new HashSet<>(numbers);
+	}
+
+	public final String name() {
+		return type.name();
+	}
+
+	public final void print(final StringBuilder sb, final NameScheme ns) {
+		sb.append(ns.printInstrumentName(type));
+		ns.printInstrumentNumbers(sb, numbers);
+	}
+
+	@Override
+	public final String toString() {
+		final StringBuilder sb = new StringBuilder(type.name().toLowerCase());
+		sb.setCharAt(0, (char) (sb.charAt(0) + 'A' - 'a'));
+		for (final Integer number : numbers) {
+			sb.append(" ");
+			sb.append(number);
+		}
+		return sb.toString();
+	}
+
+	final InstrumentType type() {
+		return type;
+	}
+
+	boolean uniqueIdx() {
+		return numbers.size() < 2;
+	}
+}
+
+
+enum InstrumentType {
+	BAGPIPES("bagpipe"),
+	CLARINET("clarinets"),
+	COWBELL("cowbells", "bells"),
+	DRUMS("drum"),
+	FLUTE("flutes"),
+	HARP("harps"),
+	HORN("horns"),
+	LUTE("lutes"),
+	MOOR_COWBELL,
+	THEORBO,
+	PIBGORN;
+
+	private final String[] keys;
+	private static final Map<String, InstrumentType> map = buildMap();
+
+	private InstrumentType(final String... keys) {
+		this.keys = keys;
+	}
+
+	public final static InstrumentType get(final String string) {
+		return map.get(string);
+	}
+
+	private final static Map<String, InstrumentType> buildMap() {
+		final Map<String, InstrumentType> map = new HashMap<>();
+		try {
+			for (final Field f : InstrumentType.class.getFields()) {
+				final InstrumentType t = (InstrumentType) f.get(null);
+				for (final String key : t.keys)
+					map.put(key, t);
+				map.put(f.getName().toLowerCase(), t);
+			}
+		} catch (final Exception e) {
+			return null;
+		}
+		return map;
+	}
 }

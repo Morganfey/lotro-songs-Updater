@@ -44,13 +44,6 @@ public class MasterThread extends Thread {
 		private Module instance;
 		private final String name;
 
-		private ModuleInfo() {
-			// cut here
-			this.name = "Main_band";
-// cut here
-			instance = new modules.Main();
-		}
-
 		public ModuleInfo(final Class<Module> clazz, final String name) {
 			try {
 				instance = clazz.getConstructor(sc.getClass()).newInstance(sc);
@@ -62,6 +55,13 @@ public class MasterThread extends Thread {
 			}
 			this.name = name;
 
+		}
+
+		private ModuleInfo() {
+			// cut here
+			this.name = "Main_band";
+			// cut here
+			instance = new modules.Main();
 		}
 
 		public Module clear() {
@@ -125,6 +125,16 @@ public class MasterThread extends Thread {
 		setUncaughtExceptionHandler(exceptionHandler);
 	}
 
+	public static boolean interrupted() {
+		final boolean interrupted = Thread.interrupted();
+		if (MasterThread.class.isInstance(Thread.currentThread())) {
+			final MasterThread master =
+					MasterThread.class.cast(Thread.currentThread());
+			master.state.handleEvent(Event.CLEAR_INT);
+		}
+		return interrupted;
+	}
+
 	public static void sleep(long millis) {
 
 		MasterThread master = null;
@@ -140,16 +150,6 @@ public class MasterThread extends Thread {
 			if (master != null)
 				master.state.handleEvent(Event.UNLOCK_INT);
 		}
-	}
-
-	public static boolean interrupted() {
-		final boolean interrupted = Thread.interrupted();
-		if (MasterThread.class.isInstance(Thread.currentThread())) {
-			final MasterThread master =
-					MasterThread.class.cast(Thread.currentThread());
-			master.state.handleEvent(Event.CLEAR_INT);
-		}
-		return interrupted;
 	}
 
 	/**
@@ -264,24 +264,6 @@ public class MasterThread extends Thread {
 		} finally {
 			die(null);
 		}
-	}
-
-	private final void repair() {
-		taskPool.addTask(new Runnable() {
-			@Override
-			public final void run() {
-				main.Main.repair();
-			}
-		});
-		for (final ModuleInfo m : modulesLocal.values()) {
-			taskPool.addTask(new Runnable() {
-				@Override
-				public final void run() {
-					m.instance.repair();
-				}
-			});
-		}
-		taskPool.waitForTasks();
 	}
 
 	/**
@@ -651,6 +633,24 @@ public class MasterThread extends Thread {
 			}
 			return wd;
 		}
+	}
+	
+	private final void repair() {
+		taskPool.addTask(new Runnable() {
+			@Override
+			public final void run() {
+				main.Main.repair();
+			}
+		});
+		for (final ModuleInfo m : modulesLocal.values()) {
+			taskPool.addTask(new Runnable() {
+				@Override
+				public final void run() {
+					m.instance.repair();
+				}
+			});
+		}
+		taskPool.waitForTasks();
 	}
 
 	private final void runModule(final String module) {

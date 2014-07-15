@@ -50,6 +50,52 @@ public class NumberingGUI extends GUIPlugin {
 		this.io = io;
 	}
 
+	/**
+	 * After returning from {@link IOHandler#handleGUIPlugin(GUIPlugin)} this method should be called to transfer the entered data to the
+	 * container(s).
+	 */
+	public final void copyFieldsToMaps() {
+		final Map<Integer, Integer> mapIdx = buildRenumberIdxMap();
+		final Map<Integer, String> mapNumber = buildRenumberNumMap();
+		final Map<Integer, Boolean> mapOpt = buildOptMap();
+		scd.renumber(mapIdx, mapNumber, mapOpt);
+	}
+
+	private Map<Integer, Boolean> buildOptMap() {
+		final Map<Integer, Boolean> map = new HashMap<>();
+		for (final Entry<Integer, JCheckBox> opts : idxToOpt.entrySet()) {
+			map.put(opts.getKey(), opts.getValue().isSelected());
+		}
+		return map;
+	}
+
+	private Map<Integer, Integer> buildRenumberIdxMap() {
+		final Map<Integer, Integer> map = new HashMap<>();
+		for (final Map.Entry<Integer, JTextField> idcs : idxToField.entrySet()) {
+			final Integer idxNew;
+			try {
+				idxNew = Integer.parseInt(idcs.getValue().getText().trim());
+			} catch (final Exception e) {
+				io.printError("Error parsing index\n"
+						+ "Song will remain unchanged", false);
+				return null;
+			}
+			map.put(idcs.getKey(), idxNew);
+		}
+		return map;
+	}
+
+	private final Map<Integer, String> buildRenumberNumMap() {
+		final Map<Integer, String> map = new HashMap<>();
+		for (final Entry<Integer, JTextField> idcs : idxToNum.entrySet()) {
+			String value = idcs.getValue().getText().replaceAll("\t", " ");
+			while (value.contains("  "))
+				value = value.replaceAll("  ", " ");
+			map.put(idcs.getKey(), value);
+		}
+		return map;
+	}
+
 	@Override
 	protected final boolean display(final JPanel panel) {
 		panel.setLayout(new GridLayout(0, 1));
@@ -111,52 +157,6 @@ public class NumberingGUI extends GUIPlugin {
 	@Override
 	protected final String getTitle() {
 		return "Change Numbering - " + scd.file().getFileName();
-	}
-
-	/**
-	 * After returning from {@link IOHandler#handleGUIPlugin(GUIPlugin)} this method should be called to transfer the entered data to the
-	 * container(s).
-	 */
-	public final void copyFieldsToMaps() {
-		final Map<Integer, Integer> mapIdx = buildRenumberIdxMap();
-		final Map<Integer, String> mapNumber = buildRenumberNumMap();
-		final Map<Integer, Boolean> mapOpt = buildOptMap();
-		scd.renumber(mapIdx, mapNumber, mapOpt);
-	}
-
-	private Map<Integer, Boolean> buildOptMap() {
-		final Map<Integer, Boolean> map = new HashMap<>();
-		for (final Entry<Integer, JCheckBox> opts : idxToOpt.entrySet()) {
-			map.put(opts.getKey(), opts.getValue().isSelected());
-		}
-		return map;
-	}
-
-	private final Map<Integer, String> buildRenumberNumMap() {
-		final Map<Integer, String> map = new HashMap<>();
-		for (final Entry<Integer, JTextField> idcs : idxToNum.entrySet()) {
-			String value = idcs.getValue().getText().replaceAll("\t", " ");
-			while (value.contains("  "))
-				value = value.replaceAll("  ", " ");
-			map.put(idcs.getKey(), value);
-		}
-		return map;
-	}
-
-	private Map<Integer, Integer> buildRenumberIdxMap() {
-		final Map<Integer, Integer> map = new HashMap<>();
-		for (final Map.Entry<Integer, JTextField> idcs : idxToField.entrySet()) {
-			final Integer idxNew;
-			try {
-				idxNew = Integer.parseInt(idcs.getValue().getText().trim());
-			} catch (final Exception e) {
-				io.printError("Error parsing index\n"
-						+ "Song will remain unchanged", false);
-				return null;
-			}
-			map.put(idcs.getKey(), idxNew);
-		}
-		return map;
 	}
 
 }

@@ -76,22 +76,6 @@ public final class Path implements Comparable<Path> {
 		}
 	}
 
-	private final static Map<String, Path> buildRootMap() {
-		final String[] bases = FileSystem.getBases();
-		final Map<String, Path> map = new HashMap<>();
-		for (final String p : bases) {
-			final Path root = new Path(p);
-			if (!root.exists()) {
-				continue;
-			}
-			map.put(root.str, root);
-			map.put(root.pathStr, root);
-			map.put(p, root);
-		}
-		return map;
-
-	}
-
 	/**
 	 * creates a new base for absolute paths
 	 * 
@@ -223,6 +207,22 @@ public final class Path implements Comparable<Path> {
 			}
 
 		}
+	}
+
+	private final static Map<String, Path> buildRootMap() {
+		final String[] bases = FileSystem.getBases();
+		final Map<String, Path> map = new HashMap<>();
+		for (final String p : bases) {
+			final Path root = new Path(p);
+			if (!root.exists()) {
+				continue;
+			}
+			map.put(root.str, root);
+			map.put(root.pathStr, root);
+			map.put(p, root);
+		}
+		return map;
+
 	}
 
 

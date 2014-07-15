@@ -2,11 +2,7 @@ package modules.abcCreator;
 
 import java.awt.Container;
 import java.io.File;
-import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
-
-import javax.swing.JPanel;
 
 import util.Path;
 
@@ -22,9 +18,40 @@ import util.Path;
 public interface DndPluginCaller<C extends Container, D extends Container, T extends Container> {
 
 	/**
+	 * Helper interface for {@link DndPluginCaller#loadMap(File, LoadedMapEntry)}
+	 * @author Nelphindal
+	 *
+	 */
+	interface LoadedMapEntry {
+		
+		/**
+		 * Creates a new entry within a part
+		 * @param string
+		 */
+		void addEntry(final String string);
+
+		/**
+		 * Creates a new part
+		 * @param string
+		 */
+		void addPart(final String string);
+
+		void error();
+
+	}
+
+	/**
 	 * @return the file being displayed
 	 */
 	public Path getFile();
+
+	/**
+	 * Puts all parsed data into given container
+	 * 
+	 * @param mapToLoad
+	 * @param container
+	 */
+	public void loadMap(File mapToLoad, LoadedMapEntry container);
 
 	/**
 	 * @param object0
@@ -41,6 +68,13 @@ public interface DndPluginCaller<C extends Container, D extends Container, T ext
 	 * @param target
 	 */
 	void link(DragObject<C, D, T> object, DropTarget<C, D, T> target);
+
+	/**
+	 * Print an error
+	 * 
+	 * @param string
+	 */
+	void printError(final String string);
 
 	/**
 	 * @return a set of all allocated targets.
@@ -60,20 +94,5 @@ public interface DndPluginCaller<C extends Container, D extends Container, T ext
 	 * @return an array of all global DndPluginCallerParams
 	 */
 	DndPluginCallerParams[] valuesGlobal();
-
-	/**
-	 * Print an error
-	 * 
-	 * @param string
-	 */
-	void printError(final String string);
-
-	/**
-	 * @param mapToLoad
-	 * @return the result of the parsing
-	 */
-	public
-			Map<DragObject<JPanel, JPanel, JPanel>, Set<DropTarget<JPanel, JPanel, JPanel>>>
-			loadMap(File mapToLoad);
 
 }

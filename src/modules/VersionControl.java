@@ -410,6 +410,50 @@ public final class VersionControl implements Module {
 		return new VersionControl(this);
 	}
 
+	@Override
+	public final void repair() {
+		final String baseValue =
+				Main.getConfigValue(main.Main.GLOBAL_SECTION,
+						main.Main.PATH_KEY, null);
+		if (baseValue == null) {
+			System.out
+					.println("Unable to determine base - The local repository could not been deleted");
+			return;
+		}
+		final Path base = Path.getPath(baseValue.split("/")).resolve("Music");
+		final Path repoRoot =
+				base.resolve(Main.getConfigValue(Main.VC_SECTION,
+						Main.REPO_KEY, "band"));
+		final Path board =
+				Path.getPath(Main.getConfigValue(
+						VersionControl.SECTION,
+						"boardPath",
+						base.resolve("..", "PluginData", "BulletinBoard")
+								.toString()).split("/"));
+		if (board.exists()) {
+			final boolean success = board.delete();
+			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
+					board.toString(), success ? "" : " failed");
+		}
+		if (repoRoot.exists()) {
+			final NoYesPlugin plugin =
+					new NoYesPlugin(
+							"Delete local repository?",
+							repoRoot
+									+ "\nand all its contentns will be deleted. You can\n"
+									+ "answer with NO and delete only the data used for git",
+							io.getGUI(), false);
+			synchronized (io) {
+				io.handleGUIPlugin(plugin);
+			}
+			if (plugin.get()) {
+				final boolean success = repoRoot.delete();
+				System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
+						repoRoot.toString(), success ? "" : " failed");
+			}
+		}
+	}
+
 	/**
 	 * Runs the bulletin board and the synchronizer for the local repository.
 	 */
@@ -708,62 +752,6 @@ public final class VersionControl implements Module {
 		}
 	}
 
-	private final void encrypt(final String source, final String target,
-			boolean encrypt) {
-		final AESEngine engine = new AESEngine();
-		final String savedKey =
-				Main.getConfigValue(Main.VC_SECTION, AES_KEY, null);
-		final byte[] key;
-		if (savedKey == null) {
-			final SecretKeyPlugin secretKeyPlugin = new SecretKeyPlugin();
-			io.handleGUIPlugin(secretKeyPlugin);
-			key = secretKeyPlugin.getKey();
-			Main.setConfigValue(Main.VC_SECTION, AES_KEY,
-					secretKeyPlugin.getValue());
-		} else {
-			key = SecretKeyPlugin.decode(savedKey);
-		}
-		final KeyParameter keyParam;
-		try {
-			keyParam = new KeyParameter(key);
-		} catch (final Exception e) {
-			// TODO test invalid key
-			io.printError("Invalid key", false);
-			Main.setConfigValue(Main.VC_SECTION, AES_KEY, null);
-			Main.flushConfig();
-			return;
-		}
-		if (savedKey == null)
-			Main.flushConfig();
-		final Path input = repoRoot.resolve(source.split("/"));
-		final Path output = repoRoot.resolve(target.split("/"));
-		output.getParent().toFile().mkdirs();
-		final byte[] bufferIn = new byte[engine.getBlockSize()];
-		final byte[] bufferOut = new byte[engine.getBlockSize()];
-		final InputStream streamIn = io.openIn(input.toFile());
-		final OutputStream streamOut = io.openOut(output.toFile());
-		engine.init(encrypt, keyParam);
-		try {
-			while (true) {
-				final int read;
-				if ((read = streamIn.read(bufferIn)) < 0)
-					break;
-				if (read < bufferIn.length && encrypt) {
-					for (int i = read; i < bufferIn.length; i++)
-						bufferIn[i] = ' ';
-				}
-				engine.processBlock(bufferIn, 0, bufferOut, 0);
-				io.write(streamOut, bufferOut);
-			}
-		} catch (final IOException e) {
-			e.printStackTrace();
-			return;
-		} finally {
-			io.close(streamIn);
-			io.close(streamOut);
-		}
-	}
-
 	private final String diff(final RevWalk walk, final RevCommit commitLocal,
 			final RevCommit commitRemote, final Git gitSession)
 			throws MissingObjectException, IncorrectObjectTypeException,
@@ -859,6 +847,62 @@ public final class VersionControl implements Module {
 		}
 		return sbHead.append(sbBody.toString()).toString();
 
+	}
+
+	private final void encrypt(final String source, final String target,
+			boolean encrypt) {
+		final AESEngine engine = new AESEngine();
+		final String savedKey =
+				Main.getConfigValue(Main.VC_SECTION, AES_KEY, null);
+		final byte[] key;
+		if (savedKey == null) {
+			final SecretKeyPlugin secretKeyPlugin = new SecretKeyPlugin();
+			io.handleGUIPlugin(secretKeyPlugin);
+			key = secretKeyPlugin.getKey();
+			Main.setConfigValue(Main.VC_SECTION, AES_KEY,
+					secretKeyPlugin.getValue());
+		} else {
+			key = SecretKeyPlugin.decode(savedKey);
+		}
+		final KeyParameter keyParam;
+		try {
+			keyParam = new KeyParameter(key);
+		} catch (final Exception e) {
+			// TODO test invalid key
+			io.printError("Invalid key", false);
+			Main.setConfigValue(Main.VC_SECTION, AES_KEY, null);
+			Main.flushConfig();
+			return;
+		}
+		if (savedKey == null)
+			Main.flushConfig();
+		final Path input = repoRoot.resolve(source.split("/"));
+		final Path output = repoRoot.resolve(target.split("/"));
+		output.getParent().toFile().mkdirs();
+		final byte[] bufferIn = new byte[engine.getBlockSize()];
+		final byte[] bufferOut = new byte[engine.getBlockSize()];
+		final InputStream streamIn = io.openIn(input.toFile());
+		final OutputStream streamOut = io.openOut(output.toFile());
+		engine.init(encrypt, keyParam);
+		try {
+			while (true) {
+				final int read;
+				if ((read = streamIn.read(bufferIn)) < 0)
+					break;
+				if (read < bufferIn.length && encrypt) {
+					for (int i = read; i < bufferIn.length; i++)
+						bufferIn[i] = ' ';
+				}
+				engine.processBlock(bufferIn, 0, bufferOut, 0);
+				io.write(streamOut, bufferOut);
+			}
+		} catch (final IOException e) {
+			e.printStackTrace();
+			return;
+		} finally {
+			io.close(streamIn);
+			io.close(streamOut);
+		}
 	}
 
 	private final ProgressMonitor getProgressMonitor() {
@@ -1498,6 +1542,7 @@ public final class VersionControl implements Module {
 		}
 	}
 
+
 	private final void writeOnBB(final Git gitSession) throws IOException,
 			NoFilepatternException, GitAPIException {
 		final String file =
@@ -1549,50 +1594,5 @@ public final class VersionControl implements Module {
 					USERNAME.value(), PWD.value()));
 		}
 		push.call();
-	}
-
-
-	@Override
-	public final void repair() {
-		final String baseValue =
-				Main.getConfigValue(main.Main.GLOBAL_SECTION,
-						main.Main.PATH_KEY, null);
-		if (baseValue == null) {
-			System.out
-					.println("Unable to determine base - The local repository could not been deleted");
-			return;
-		}
-		final Path base = Path.getPath(baseValue.split("/")).resolve("Music");
-		final Path repoRoot =
-				base.resolve(Main.getConfigValue(Main.VC_SECTION,
-						Main.REPO_KEY, "band"));
-		final Path board =
-				Path.getPath(Main.getConfigValue(
-						VersionControl.SECTION,
-						"boardPath",
-						base.resolve("..", "PluginData", "BulletinBoard")
-								.toString()).split("/"));
-		if (board.exists()) {
-			final boolean success = board.delete();
-			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
-					board.toString(), success ? "" : " failed");
-		}
-		if (repoRoot.exists()) {
-			final NoYesPlugin plugin =
-					new NoYesPlugin(
-							"Delete local repository?",
-							repoRoot
-									+ "\nand all its contentns will be deleted. You can\n"
-									+ "answer with NO and delete only the data used for git",
-							io.getGUI(), false);
-			synchronized (io) {
-				io.handleGUIPlugin(plugin);
-			}
-			if (plugin.get()) {
-				final boolean success = repoRoot.delete();
-				System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
-						repoRoot.toString(), success ? "" : " failed");
-			}
-		}
 	}
 }

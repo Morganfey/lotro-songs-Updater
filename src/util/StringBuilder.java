@@ -43,6 +43,187 @@ public class StringBuilder {
 		}
 	}
 
+	/**
+	 * * Appends a char to the front. Succeeding calls of appendFirst('o'), appendFirst('o') and appendFirst('f')
+	 * on a empty instance of StringBuilder will result in "foo".
+	 * 
+	 * @param c
+	 *            char to append
+	 */
+	public final void appendFirst(char c) {
+		if (head == 0) {
+			if (tail == content[cIdx].length) {
+				growAndCopy();
+			} else {
+				head = content[cIdx].length;
+			}
+		}
+		content[cIdx][--head] = c;
+	}
+
+	/**
+	 * Appends a string to the front. Succeeding calls of appendFirst("foo") and appendFirst("bar")
+	 * on a empty instance of StringBuilder will result in "barfoo".
+	 * 
+	 * @param s
+	 *            String to append
+	 * @return <i>this<i>
+	 */
+	public final StringBuilder appendFirst(final String s) {
+		if (isEmpty()) {
+			set(s);
+			return this;
+		}
+		final char[] array = s.toCharArray();
+		if (head > tail) {
+			growAndCopy();
+			// TODO more efficient implementation?
+		}
+		if (tail + array.length >= content[cIdx].length) {
+			final int length = length();
+			grow();
+			System.arraycopy(content[cIdx], head, content[cIdxNext],
+					StringBuilder.PATTERN_SIZE + s.length(), length);
+			switchBuffer();
+			head = StringBuilder.PATTERN_SIZE;
+			tail = length;
+		}
+		System.arraycopy(array, 0, content[cIdx], PATTERN_SIZE, array.length);
+		tail += array.length;
+		return this;
+	}
+
+	/**
+	 * Appends c to the end.
+	 * 
+	 * @param c
+	 */
+	public final void appendLast(char c) {
+		if (tail == content[cIdx].length) {
+			if (head == 0) {
+				growAndCopy();
+			} else {
+				tail = 0;
+			}
+		}
+		content[cIdx][tail++] = c;
+	}
+
+	/**
+	 * Appends s to the end.
+	 * 
+	 * @param s
+	 * @return <i>this</i>
+	 */
+	public final StringBuilder appendLast(final String s) {
+		if (isEmpty()) {
+			set(s);
+			return this;
+		}
+		final char[] array = s.toCharArray();
+		if (head > tail) {
+			growAndCopy();
+			// TODO more efficient implementation?
+		}
+		if (tail + array.length >= content[cIdx].length) {
+			final int length = length();
+			grow();
+			System.arraycopy(content[cIdx], head, content[cIdxNext],
+					StringBuilder.PATTERN_SIZE, length);
+			switchBuffer();
+			head = StringBuilder.PATTERN_SIZE;
+			tail = length;
+		}
+		System.arraycopy(array, 0, content[cIdx], tail, array.length);
+		tail += array.length;
+		return this;
+	}
+
+	/**
+	 * @param pos
+	 * @return the character at <i>pos</i>.
+	 */
+	public final char charAt(int pos) {
+		return content[cIdx][(head + pos) % content[cIdx].length];
+	}
+
+	/**
+	 * Clears <i>this</i> content.
+	 */
+	public final void clear() {
+		tail = head = StringBuilder.PATTERN_SIZE;
+	}
+
+	/**
+	 * @return <i>true</i> if the length is 0 and {@link #toString()} would return an empty string.
+	 */
+	public final boolean isEmpty() {
+		return head == tail;
+	}
+
+	/**
+	 * @return the length of currently contained string
+	 */
+	public final int length() {
+		if (tail < head) {
+			return content[cIdx].length - head + tail;
+		}
+		return tail - head;
+	}
+
+	/**
+	 * Removes the last char and returns it.
+	 * 
+	 * @return the removed char or -1 if <i>this</i> has been empty
+	 */
+	public final int removeLast() {
+		if (tail == head) {
+			return -1;
+		}
+		final char c = content[cIdx][tail];
+		if (--tail == 0) {
+			copy();
+		}
+		return c;
+	}
+
+	/**
+	 * Sets the content to <i>s</i>. It has equal effect like the calls clear() and append{First, Last}(s).
+	 * 
+	 * @param s
+	 */
+	public final void set(final String s) {
+		if (s == null || s.isEmpty()) {
+			clear();
+			return;
+		}
+		if (content[cIdx].length < s.length() + StringBuilder.PATTERN_SIZE * 2) {
+			content[cIdx] =
+					new char[s.length() + StringBuilder.PATTERN_SIZE * 4
+							- s.length() % (StringBuilder.PATTERN_SIZE * 2)];
+		}
+		System.arraycopy(s.toCharArray(), 0, content[cIdx],
+				StringBuilder.PATTERN_SIZE, s.length());
+		head = StringBuilder.PATTERN_SIZE;
+		tail = head + s.length();
+	}
+
+	/**
+	 * Sets the contained string to start <i>offset</i> positions later. Unspecified behavior if offset is greater than actual length.
+	 * 
+	 * @param offset
+	 */
+	public final void substring(int offset) {
+		head = (head + offset) % content[cIdx].length;
+	}
+
+	/**
+	 * @return the contained string with lower cased characters only.
+	 */
+	public final String toLowerCase() {
+		return toString().toLowerCase();
+	}
+
 	@Override
 	public String toString() {
 		if (head == tail) {
@@ -286,121 +467,11 @@ public class StringBuilder {
 		cIdxNext = cIdxNext + 1 & 0x1;
 	}
 
-	/**
-	 * * Appends a char to the front. Succeeding calls of appendFirst('o'), appendFirst('o') and appendFirst('f')
-	 * on a empty instance of StringBuilder will result in "foo".
-	 * 
-	 * @param c
-	 *            char to append
-	 */
-	public final void appendFirst(char c) {
-		if (head == 0) {
-			if (tail == content[cIdx].length) {
-				growAndCopy();
-			} else {
-				head = content[cIdx].length;
-			}
-		}
-		content[cIdx][--head] = c;
-	}
-
-	/**
-	 * Appends a string to the front. Succeeding calls of appendFirst("foo") and appendFirst("bar")
-	 * on a empty instance of StringBuilder will result in "barfoo".
-	 * 
-	 * @param s
-	 *            String to append
-	 * @return <i>this<i>
-	 */
-	public final StringBuilder appendFirst(final String s) {
-		if (isEmpty()) {
-			set(s);
-			return this;
-		}
-		final char[] array = s.toCharArray();
-		if (head > tail) {
-			growAndCopy();
-			// TODO more efficient implementation?
-		}
-		if (tail + array.length >= content[cIdx].length) {
-			final int length = length();
-			grow();
-			System.arraycopy(content[cIdx], head, content[cIdxNext],
-					StringBuilder.PATTERN_SIZE + s.length(), length);
-			switchBuffer();
-			head = StringBuilder.PATTERN_SIZE;
-			tail = length;
-		}
-		System.arraycopy(array, 0, content[cIdx], PATTERN_SIZE, array.length);
-		tail += array.length;
-		return this;
-	}
-
-	/**
-	 * Appends c to the end.
-	 * 
-	 * @param c
-	 */
-	public final void appendLast(char c) {
-		if (tail == content[cIdx].length) {
-			if (head == 0) {
-				growAndCopy();
-			} else {
-				tail = 0;
-			}
-		}
-		content[cIdx][tail++] = c;
-	}
-
-	/**
-	 * Appends s to the end.
-	 * 
-	 * @param s
-	 * @return <i>this</i>
-	 */
-	public final StringBuilder appendLast(final String s) {
-		if (isEmpty()) {
-			set(s);
-			return this;
-		}
-		final char[] array = s.toCharArray();
-		if (head > tail) {
-			growAndCopy();
-			// TODO more efficient implementation?
-		}
-		if (tail + array.length >= content[cIdx].length) {
-			final int length = length();
-			grow();
-			System.arraycopy(content[cIdx], head, content[cIdxNext],
-					StringBuilder.PATTERN_SIZE, length);
-			switchBuffer();
-			head = StringBuilder.PATTERN_SIZE;
-			tail = length;
-		}
-		System.arraycopy(array, 0, content[cIdx], tail, array.length);
-		tail += array.length;
-		return this;
-	}
-
-	/**
-	 * @param pos
-	 * @return the character at <i>pos</i>.
-	 */
-	public final char charAt(int pos) {
-		return content[cIdx][(head + pos) % content[cIdx].length];
-	}
-
-	/**
-	 * Clears <i>this</i> content.
-	 */
-	public final void clear() {
-		tail = head = StringBuilder.PATTERN_SIZE;
-	}
-
 	final byte getByte(int pos) {
 		return (byte) (charAt(pos) - '0' << 4 | charAt(pos + 1) - '0');
 
 	}
+
 
 	final void handleEvent(final KeyEvent e, int[] cursor) {
 		if (cursor[0] > length()) {
@@ -473,39 +544,6 @@ public class StringBuilder {
 		insert(key, cursor);
 	}
 
-	/**
-	 * @return <i>true</i> if the length is 0 and {@link #toString()} would return an empty string.
-	 */
-	public final boolean isEmpty() {
-		return head == tail;
-	}
-
-	/**
-	 * @return the length of currently contained string
-	 */
-	public final int length() {
-		if (tail < head) {
-			return content[cIdx].length - head + tail;
-		}
-		return tail - head;
-	}
-
-	/**
-	 * Removes the last char and returns it.
-	 * 
-	 * @return the removed char or -1 if <i>this</i> has been empty
-	 */
-	public final int removeLast() {
-		if (tail == head) {
-			return -1;
-		}
-		final char c = content[cIdx][tail];
-		if (--tail == 0) {
-			copy();
-		}
-		return c;
-	}
-
 	final void replace(int pos, int len, final String string) {
 		if (len != string.length()) {
 			this.insert(string, new int[] { pos, pos, pos + len });
@@ -515,45 +553,7 @@ public class StringBuilder {
 		}
 	}
 
-	/**
-	 * Sets the content to <i>s</i>. It has equal effect like the calls clear() and append{First, Last}(s).
-	 * 
-	 * @param s
-	 */
-	public final void set(final String s) {
-		if (s == null || s.isEmpty()) {
-			clear();
-			return;
-		}
-		if (content[cIdx].length < s.length() + StringBuilder.PATTERN_SIZE * 2) {
-			content[cIdx] =
-					new char[s.length() + StringBuilder.PATTERN_SIZE * 4
-							- s.length() % (StringBuilder.PATTERN_SIZE * 2)];
-		}
-		System.arraycopy(s.toCharArray(), 0, content[cIdx],
-				StringBuilder.PATTERN_SIZE, s.length());
-		head = StringBuilder.PATTERN_SIZE;
-		tail = head + s.length();
-	}
-
-
 	final void setHead(int offset) {
 		head += offset;
-	}
-
-	/**
-	 * Sets the contained string to start <i>offset</i> positions later. Unspecified behavior if offset is greater than actual length.
-	 * 
-	 * @param offset
-	 */
-	public final void substring(int offset) {
-		head = (head + offset) % content[cIdx].length;
-	}
-
-	/**
-	 * @return the contained string with lower cased characters only.
-	 */
-	public final String toLowerCase() {
-		return toString().toLowerCase();
 	}
 }

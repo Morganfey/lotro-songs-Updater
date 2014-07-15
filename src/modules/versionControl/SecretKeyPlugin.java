@@ -18,31 +18,6 @@ public class SecretKeyPlugin extends GUIPlugin {
 
 	private final JTextField textField = new JTextField();
 
-	@Override
-	protected final boolean display(final JPanel panel) {
-		final JPanel panelButton = new JPanel();
-		panel.setLayout(new BorderLayout());
-		panel.add(textField);
-		panel.add(panelButton, BorderLayout.SOUTH);
-		panelButton.add(GUIInterface.Button.ABORT.getButton(),
-				BorderLayout.EAST);
-		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
-		return false;
-	}
-
-	@Override
-	protected final String getTitle() {
-		return "Enter the key for song encryption";
-	}
-
-
-	/**
-	 * @return the bytes for the selected key
-	 */
-	public final byte[] getKey() {
-		return decode(textField.getText());
-	}
-
 	/**
 	 * Decodes <i>text</i> a hexdump to the according byte array
 	 * 
@@ -63,10 +38,35 @@ public class SecretKeyPlugin extends GUIPlugin {
 	}
 
 	/**
+	 * @return the bytes for the selected key
+	 */
+	public final byte[] getKey() {
+		return decode(textField.getText());
+	}
+
+
+	/**
 	 * @return the entered text
 	 */
 	public final String getValue() {
 		return textField.getText();
+	}
+
+	@Override
+	protected final boolean display(final JPanel panel) {
+		final JPanel panelButton = new JPanel();
+		panel.setLayout(new BorderLayout());
+		panel.add(textField);
+		panel.add(panelButton, BorderLayout.SOUTH);
+		panelButton.add(GUIInterface.Button.ABORT.getButton(),
+				BorderLayout.EAST);
+		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
+		return false;
+	}
+
+	@Override
+	protected final String getTitle() {
+		return "Enter the key for song encryption";
 	}
 
 }

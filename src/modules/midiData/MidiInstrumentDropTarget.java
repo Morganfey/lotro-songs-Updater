@@ -89,6 +89,18 @@ public class MidiInstrumentDropTarget implements
 				}
 
 				@Override
+				public final void mouseEntered(final MouseEvent e) {
+					closePanel.setBackground(Color.GREEN);
+					e.consume();
+				}
+
+				@Override
+				public final void mouseExited(final MouseEvent e) {
+					closePanel.setBackground(Color.WHITE);
+					e.consume();
+				}
+
+				@Override
 				public final void mousePressed(final MouseEvent e) {
 					e.consume();
 				}
@@ -101,18 +113,6 @@ public class MidiInstrumentDropTarget implements
 					c.add(menu);
 					c.revalidate();
 
-				}
-
-				@Override
-				public final void mouseEntered(final MouseEvent e) {
-					closePanel.setBackground(Color.GREEN);
-					e.consume();
-				}
-
-				@Override
-				public final void mouseExited(final MouseEvent e) {
-					closePanel.setBackground(Color.WHITE);
-					e.consume();
 				}
 			});
 			panel.setLayout(new GridLayout(0, 2));

@@ -18,15 +18,6 @@ final class DT_Listener<C extends Container, D extends Container, T extends Cont
 				DNDListener.C_INACTIVE_TARGET);
 	}
 
-	@Override
-	protected final void enter(boolean enter) {
-		if (enter)
-			state.target = target;
-		else
-			state.target = null;
-		mark(enter);
-	}
-
 	private final void mark(boolean active) {
 		final Set<DragObject<?, ?, ?>> objects = new HashSet<>();
 		for (final DragObject<?, ?, ?> o : target) {
@@ -77,6 +68,15 @@ final class DT_Listener<C extends Container, D extends Container, T extends Cont
 				o.getTargetContainer().getDisplayableComponent()
 						.setBackground(active ? C_CLONE : C_INACTIVE_TARGET);
 		}
+	}
+
+	@Override
+	protected final void enter(boolean enter) {
+		if (enter)
+			state.target = target;
+		else
+			state.target = null;
+		mark(enter);
 	}
 
 	@Override

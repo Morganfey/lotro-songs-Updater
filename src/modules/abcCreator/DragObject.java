@@ -84,15 +84,20 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	DropTargetContainer<C, D, T> getTargetContainer();
 
 	/**
-	 * @return all targets associated with this object
+	 * @return the count of targets linked to <i>this</i> object
 	 */
-	@Override
-	Iterator<DropTarget<C, D, T>> iterator();
+	int getTargets();
 
 	/**
 	 * @return true if this instance was created by #createAlias()
 	 */
 	boolean isAlias();
+
+	/**
+	 * @return all targets associated with this object
+	 */
+	@Override
+	Iterator<DropTarget<C, D, T>> iterator();
 
 	/**
 	 * Adds a new option described by given pair of param and target
@@ -112,10 +117,5 @@ public interface DragObject<C extends Container, D extends Container, T extends 
 	 * @param value
 	 */
 	void setParam(DndPluginCallerParams param, int value);
-
-	/**
-	 * @return the count of targets linked to <i>this</i> object
-	 */
-	int getTargets();
 
 }

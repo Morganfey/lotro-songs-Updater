@@ -40,6 +40,9 @@ public class MidiInstrument implements
 	private final Set<DropTarget<JPanel, JPanel, JPanel>> parts =
 			new HashSet<>();
 
+	private final static Map<String, MidiInstrument> nameToInstrumentMap =
+			new HashMap<>();
+
 	/** */
 	public static final MidiInstrument FLUTE = new MidiInstrument("flute");
 
@@ -60,12 +63,11 @@ public class MidiInstrument implements
 	public static final MidiInstrument THEORBO = new MidiInstrument("theorbo");
 
 	/** */
-	public static final MidiInstrument DRUMS = new MidiInstrument("drums",
-			"map");
+	public static final MidiInstrument DRUMS =
+			new MidiInstrument("drum", "map");
 
 	/** */
-	public static final MidiInstrument BAGPIPES =
-			new MidiInstrument("bagpipes");
+	public static final MidiInstrument BAGPIPES = new MidiInstrument("bagpipe");
 
 	/** */
 	public static final MidiInstrument PIBGORN = new MidiInstrument("pibgorn");
@@ -111,9 +113,10 @@ public class MidiInstrument implements
 		for (final String p : params) {
 			paramKeys.add(p);
 		}
-
+		nameToInstrumentMap.put(name, this);
+		nameToInstrumentMap.put(name + "s", this);
 	}
-
+	
 	/**
 	 * Returns an array containing each instrument.
 	 * 
@@ -249,6 +252,15 @@ public class MidiInstrument implements
 		}
 		System.out.println("replaced default map by "
 				+ MidiInstrument.idToInstrument);
+	}
+
+	/**
+	 * 
+	 * @param s name of an instrument in lower case characters
+	 * @return the equivalent instrument
+	 */
+	public final static MidiInstrument valueOf(final String s) {
+		return nameToInstrumentMap.get(s);
 	}
 
 	private final static Map<Byte, MidiInstrument> buildInstrumentMap() {
@@ -533,6 +545,10 @@ public class MidiInstrument implements
 	/** */
 	@Override
 	public final void clearTargets() {
+		for (final DropTarget<?, ?, ?> part : parts) {
+			part.getDisplayableComponent().getParent()
+					.remove(part.getDisplayableComponent());
+		}
 		parts.clear();
 	}
 
@@ -543,6 +559,11 @@ public class MidiInstrument implements
 				new MidiInstrumentDropTarget(this, ++MidiInstrument.counter);
 		parts.add(t);
 		return t;
+	}
+
+	@Override
+	public void delete(final DropTarget<JPanel, JPanel, JPanel> target) {
+		parts.remove(target);
 	}
 
 	/** */
@@ -575,16 +596,11 @@ public class MidiInstrument implements
 		return empty;
 	}
 
+
 	/** */
 	@Override
 	public final String toString() {
 		return name;
-	}
-
-
-	@Override
-	public void delete(final DropTarget<JPanel, JPanel, JPanel> target) {
-		parts.remove(target);
 	}
 
 }
@@ -678,6 +694,11 @@ class EmptyMidiInstrumentDropTargetContainer implements
 	}
 
 	@Override
+	public final void delete(final DropTarget<JPanel, JPanel, JPanel> target) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final JPanel getDisplayableComponent() {
 		return panel;
 	}
@@ -715,6 +736,7 @@ class EmptyMidiInstrumentDropTargetContainer implements
 		};
 	}
 
+
 	@Override
 	public Set<DropTarget<JPanel, JPanel, JPanel>> removeAllLinks(
 			final DragObject<JPanel, JPanel, JPanel> object) {
@@ -725,12 +747,6 @@ class EmptyMidiInstrumentDropTargetContainer implements
 			return s;
 		}
 		return java.util.Collections.emptySet();
-	}
-
-
-	@Override
-	public final void delete(final DropTarget<JPanel, JPanel, JPanel> target) {
-		throw new UnsupportedOperationException();
 	}
 
 }

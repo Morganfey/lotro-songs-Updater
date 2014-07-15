@@ -438,6 +438,11 @@ public class AbcCreator implements Module,
 		return true;
 	}
 
+	@Override
+	public final Path getFile() {
+		return abc;
+	}
+
 	/**
 	 * @return a set of useable drum-maps
 	 */
@@ -489,6 +494,127 @@ public class AbcCreator implements Module,
 	public final void link(final DragObject<JPanel, JPanel, JPanel> object,
 			final DropTarget<JPanel, JPanel, JPanel> target) {
 		dragAndDropPlugin.link(object, target);
+	}
+
+	@Override
+	public final void loadMap(final File mapToLoad,
+			final DndPluginCaller.LoadedMapEntry c) {
+		final InputStream in = io.openIn(mapToLoad);
+		in.registerProgressMonitor(io);
+		class ParseState {
+			private int state;
+			final boolean comment() {
+				return state < 0;
+			}
+
+			final void parseLine(final String line) {
+				switch (state) {
+					case 0x7000_0000:
+						return;
+					case 0:
+						if (line.startsWith("Speedup: ")) {
+							// TODO implement setting of global speed-up
+						} else if (line.startsWith("Pitch: ")) {
+							// TODO implement setting of global pitch
+						} else if (line.startsWith("Style: ")) {
+							// TODO implement setting of style
+						} else if (line.startsWith("Volume: ")) {
+							// TODO implement setting of global volume
+						} else if (line.startsWith("Compress: ")) {
+							// TODO implement setting of global volume
+						} else if (line.startsWith("abctrack begin")) {
+							++state;
+//						} else if (line.startsWith("fadeout length")) {
+							// TODO add support when needed
+						} else {
+							return;
+						}
+						break;
+					case 1:
+						if (line.startsWith("duration ")) {
+							// TODO support of duration
+							break;
+						} else if (line.startsWith("polyphony ")) {
+							// TODO support of polyphony
+							break;
+						} else {
+							if (line.startsWith("instrument ")) {
+								state = 2;
+								parseLine(line);
+							}
+							return;
+						}
+					case 2:
+						if (!line.startsWith("instrument ")) {
+							state = 0x7000_0000;
+							return;
+						}
+						final String s0 = line.substring(11).trim();
+
+						c.addPart(s0);
+
+						state = 3;
+						break;
+					case 3:
+						if (line.startsWith("miditrack")) {
+							c.addEntry(line.substring(10));
+						} else if (line.startsWith("abctrack end"))
+							state = 7;
+						else
+							return;
+						break;
+					case 7:
+						if (line.startsWith("abctrack begin")) {
+							state = 1;
+						} else
+							return;
+						break;
+				}
+				System.out.println(". " + line);
+			}
+
+			final void toggleComment() {
+				state = ~state;
+			}
+		}
+
+		ParseState state = new ParseState();
+		System.out.println("loading map " + mapToLoad);
+		try {
+			while (true) {
+				final String line = in.readLine();
+				if (line == null)
+					break;
+				if (line.startsWith("%"))
+					continue;
+				if (line.trim().equals("*")) {
+					state.toggleComment();
+				}
+				if (state.comment())
+					continue;
+				state.parseLine(line);
+			}
+		} catch (final IOException e) {
+			c.error();
+			System.err.println(e);
+		} catch (final Exception e) {
+			c.error();
+			e.printStackTrace();
+		} finally {
+			io.endProgress();
+			io.close(in);
+		}
+		System.out.println("... completed");
+	}
+
+	@Override
+	public final void printError(final String string) {
+		dragAndDropPlugin.printError(string);
+	}
+
+	@Override
+	public final void repair() {
+		// nothing to do
 	}
 
 	/**
@@ -927,6 +1053,7 @@ public class AbcCreator implements Module,
 		taskPool.waitForTasks();
 	}
 
+
 	private final void runLoop() {
 		if (bruteDir == null) {
 			return;
@@ -938,9 +1065,6 @@ public class AbcCreator implements Module,
 		while (true) {
 			if (master.isInterrupted()) {
 				return;
-			}
-			for (final DropTargetContainer<?, ?, ?> target : targets) {
-				target.clearTargets();
 			}
 			midi =
 					io.selectFile(
@@ -1018,8 +1142,10 @@ public class AbcCreator implements Module,
 				io.printMessage(null, "transcribed\n" + midi + "\nto\n" + abc,
 						true);
 			}
+			dragAndDropPlugin.reset();
 		}
 	}
+
 
 	private final void unpack(final JarFile jarFile,
 			final ZipEntry... jarEntries) throws IOException {
@@ -1086,40 +1212,5 @@ public class AbcCreator implements Module,
 		}
 	}
 
-	@Override
-	public final void printError(final String string) {
-		dragAndDropPlugin.printError(string);
-	}
-
-
-	@Override
-	public final void repair() {
-		// nothing to do
-	}
-
-
-	@Override
-	public final Path getFile() {
-		return abc;
-	}
-
-	@Override
-	public final
-			Map<DragObject<JPanel, JPanel, JPanel>, Set<DropTarget<JPanel, JPanel, JPanel>>>
-			loadMap(final File mapToLoad) {
-		final InputStream in = io.openIn(mapToLoad);
-		try {
-			while (true) {
-				final String line = in.readLine();
-				if (line == null)
-					break;
-			}
-		} catch (final IOException e) {
-			System.err.println(e);
-		} finally {
-			io.close(in);
-		}
-		return null;
-	}
 
 }

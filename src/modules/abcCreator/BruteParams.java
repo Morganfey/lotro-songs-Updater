@@ -267,6 +267,18 @@ public class BruteParams implements DndPluginCallerParams {
 	}
 
 	/**
+	 * @param s
+	 * @return the equivalent param
+	 */
+	public final static BruteParams valueOf(final String s) {
+		for (final BruteParams value : values) {
+			if (value.s.equalsIgnoreCase(s))
+				return value;
+		}
+		return null;
+	}
+
+	/**
 	 * @return an array containing all values
 	 */
 	public static final BruteParams[] values() {
@@ -305,6 +317,7 @@ public class BruteParams implements DndPluginCallerParams {
 		return values;
 	}
 
+
 	private final static BruteParams[] buildValues() {
 		final Field[] fields = BruteParams.class.getFields();
 		final BruteParams[] values = new BruteParams[fields.length];
@@ -318,11 +331,11 @@ public class BruteParams implements DndPluginCallerParams {
 		return values;
 	}
 
-
 	@Override
 	public final Object defaultValue() {
 		return defaultValue;
 	}
+
 
 	@Override
 	public final void display(final JPanel panel) {
@@ -334,7 +347,6 @@ public class BruteParams implements DndPluginCallerParams {
 		panel.add(label, BorderLayout.SOUTH);
 		value.display(slider, label);
 	}
-
 
 	@Override
 	public final
@@ -360,17 +372,18 @@ public class BruteParams implements DndPluginCallerParams {
 		for (final Entry<Integer, JPanel> e : mapPanel.entrySet()) {
 			e.getValue().add(
 					new JLabel(s + "   " + mapTarget.get(e.getKey()).getName()
-							+ " " + e.getKey() + "/" + targets),
+							+ " " + e.getKey() + "/" + mapTarget.size()),
 					BorderLayout.NORTH);
 		}
 	}
+
 
 	@Override
 	public final String toString() {
 		return s;
 	}
 
-
+	
 	@Override
 	public final String value() {
 		return value.value();

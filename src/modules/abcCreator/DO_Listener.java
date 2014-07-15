@@ -36,120 +36,6 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 		object.getDisplayableComponent().setBackground(DNDListener.C_INACTIVE);
 	}
 
-	@Override
-	protected final void enter(boolean enter) {
-		if (enter) {
-			state.object = object;
-			if (object != state.dragging) {
-				mark(enter);
-			}
-		} else {
-			state.object = null;
-			if (state.dragging == null || state.dragging != object) {
-				mark(false);
-			}
-		}
-
-	}
-
-	@Override
-	protected final void trigger(boolean released, int button) {
-		if (!released) {
-			mark(false);
-			state.dragging = object;
-			object.getDisplayableComponent().setBackground(
-					DNDListener.C_DRAGGING);
-		} else {
-			state.dragging.getDisplayableComponent().setBackground(
-					DNDListener.C_INACTIVE);
-			state.dragging = null;
-			synchronized (state) {
-				if (state.loadingMap) {
-					mark(false);
-					return;
-				}
-				state.upToDate = false;
-				state.label.setText("");
-			}
-			if (state.object != null) {
-				mark(true);
-				if (button == MouseEvent.BUTTON1) {
-					if (panelOption == null) {
-						displayParamMenu();
-					} else {
-						object.getDisplayableComponent().remove(panelOption);
-						object.getDisplayableComponent().revalidate();
-						panelOption = null;
-					}
-					return;
-				} else if (button == MouseEvent.BUTTON3) {
-					final DragObject<C, D, T> clone = object.clone();
-					state.plugin.initObject(clone);
-					clone.addTarget(state.emptyTarget);
-					state.emptyTarget.link(clone);
-				}
-			} else if (state.target != null) {
-				if (state.split) {
-					if (object.getTargetContainer() == state.target
-							.getContainer()) {
-						if (!object.addTarget(state.target))
-							caller.printError("To large split");
-					} else {
-						wipeTargetsAndLink();
-					}
-				} else {
-					wipeTargetsAndLink();
-				}
-			} else if (state.targetC != null) {
-				if (state.emptyTarget.getContainer() == state.targetC) {
-					state.target = state.emptyTarget;
-				} else {
-					state.target = state.targetC.createNewTarget();
-					state.plugin.initTarget(state.target);
-					state.plugin.addToCenter(state.target);
-				}
-				if (state.split) {
-					if (state.targetC == object.getTargetContainer()) {
-						if (!object.addTarget(state.target)) {
-							state.targetC.delete(state.target);
-							final Container c =
-									state.target.getDisplayableComponent()
-											.getParent();
-							c.remove(state.target.getDisplayableComponent());
-							c.revalidate();
-							caller.printError("To large split");
-						}
-						state.target.link(object);
-					} else {
-						wipeTargetsAndLink();
-					}
-				} else {
-					wipeTargetsAndLink();
-				}
-				state.target = null;
-				if (object.isAlias()
-						&& state.targetC == state.emptyTarget.getContainer()) {
-					object.forgetAlias();
-					state.emptyTarget.getContainer().removeAllLinks(object);
-					final Container parent =
-							object.getDisplayableComponent().getParent();
-					parent.remove(object.getDisplayableComponent());
-					parent.revalidate();
-					mark(false);
-					return;
-				}
-			} else {
-				return;
-			}
-			mark(true);
-			if (panelOption != null) {
-				object.getDisplayableComponent().remove(panelOption);
-				panelOption = null;
-			}
-			object.getDisplayableComponent().revalidate();
-		}
-	}
-
 	private final void displayParam() {
 		panelOption.removeAll();
 		final Iterator<DropTarget<C, D, T>> targets = object.iterator();
@@ -320,6 +206,120 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			caller.link(object, state.target);
 		}
 
+	}
+
+	@Override
+	protected final void enter(boolean enter) {
+		if (enter) {
+			state.object = object;
+			if (object != state.dragging) {
+				mark(enter);
+			}
+		} else {
+			state.object = null;
+			if (state.dragging == null || state.dragging != object) {
+				mark(false);
+			}
+		}
+
+	}
+
+	@Override
+	protected final void trigger(boolean released, int button) {
+		if (!released) {
+			mark(false);
+			state.dragging = object;
+			object.getDisplayableComponent().setBackground(
+					DNDListener.C_DRAGGING);
+		} else {
+			state.dragging.getDisplayableComponent().setBackground(
+					DNDListener.C_INACTIVE);
+			state.dragging = null;
+			synchronized (state) {
+				if (state.loadingMap) {
+					mark(false);
+					return;
+				}
+				state.upToDate = false;
+				state.label.setText("");
+			}
+			if (state.object != null) {
+				mark(true);
+				if (button == MouseEvent.BUTTON1) {
+					if (panelOption == null) {
+						displayParamMenu();
+					} else {
+						object.getDisplayableComponent().remove(panelOption);
+						object.getDisplayableComponent().revalidate();
+						panelOption = null;
+					}
+					return;
+				} else if (button == MouseEvent.BUTTON3) {
+					final DragObject<C, D, T> clone = object.clone();
+					state.plugin.initObject(clone);
+					clone.addTarget(state.emptyTarget);
+					state.emptyTarget.link(clone);
+				}
+			} else if (state.target != null) {
+				if (state.split) {
+					if (object.getTargetContainer() == state.target
+							.getContainer()) {
+						if (!object.addTarget(state.target))
+							caller.printError("To large split");
+					} else {
+						wipeTargetsAndLink();
+					}
+				} else {
+					wipeTargetsAndLink();
+				}
+			} else if (state.targetC != null) {
+				if (state.emptyTarget.getContainer() == state.targetC) {
+					state.target = state.emptyTarget;
+				} else {
+					state.target = state.targetC.createNewTarget();
+					state.plugin.initTarget(state.target);
+					state.plugin.addToCenter(state.target);
+				}
+				if (state.split) {
+					if (state.targetC == object.getTargetContainer()) {
+						if (!object.addTarget(state.target)) {
+							state.targetC.delete(state.target);
+							final Container c =
+									state.target.getDisplayableComponent()
+											.getParent();
+							c.remove(state.target.getDisplayableComponent());
+							c.revalidate();
+							caller.printError("To large split");
+						}
+						state.target.link(object);
+					} else {
+						wipeTargetsAndLink();
+					}
+				} else {
+					wipeTargetsAndLink();
+				}
+				state.target = null;
+				if (object.isAlias()
+						&& state.targetC == state.emptyTarget.getContainer()) {
+					object.forgetAlias();
+					state.emptyTarget.getContainer().removeAllLinks(object);
+					final Container parent =
+							object.getDisplayableComponent().getParent();
+					parent.remove(object.getDisplayableComponent());
+					parent.revalidate();
+					mark(false);
+					return;
+				}
+			} else {
+				return;
+			}
+			mark(true);
+			if (panelOption != null) {
+				object.getDisplayableComponent().remove(panelOption);
+				panelOption = null;
+			}
+			object.getDisplayableComponent().revalidate();
+		}
 	}
 
 }

@@ -20,13 +20,6 @@ public interface DropTargetContainer<C extends Container, D extends Container, T
 	void clearTargets();
 
 	/**
-	 * Deletes given target
-	 * 
-	 * @param target
-	 */
-	void delete(DropTarget<C, D, T> target);
-
-	/**
 	 * Creates a new DropTarget and initializes it,
 	 * 
 	 * @param comp
@@ -34,6 +27,13 @@ public interface DropTargetContainer<C extends Container, D extends Container, T
 	 * @return the created DropTarget
 	 */
 	DropTarget<C, D, T> createNewTarget();
+
+	/**
+	 * Deletes given target
+	 * 
+	 * @param target
+	 */
+	void delete(DropTarget<C, D, T> target);
 
 	/**
 	 * @return the Component to display <i>this</i> DropTarget

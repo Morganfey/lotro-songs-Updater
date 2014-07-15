@@ -17,12 +17,6 @@ final class TC_Listener<C extends Container, D extends Container, T extends Cont
 	}
 
 	@Override
-	protected final void trigger(boolean release, int button) {
-		// nothing to do
-
-	}
-
-	@Override
 	protected final void enter(boolean enter) {
 		if (enter)
 			state.targetC = targetC;
@@ -50,6 +44,12 @@ final class TC_Listener<C extends Container, D extends Container, T extends Cont
 				}
 			}
 		}
+	}
+
+	@Override
+	protected final void trigger(boolean release, int button) {
+		// nothing to do
+
 	}
 
 }

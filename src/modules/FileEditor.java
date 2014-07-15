@@ -199,6 +199,11 @@ public class FileEditor implements Module {
 	}
 
 	@Override
+	public final void repair() {
+		// nothing to do
+	}
+
+	@Override
 	public final void run() {
 		if (getVersion() == 0) {
 			io.printMessage(
@@ -343,6 +348,13 @@ public class FileEditor implements Module {
 		return data;
 	}
 
+
+	private final NameScheme getNameScheme() throws InvalidNameSchemeException {
+		if (scheme == null)
+			scheme = new NameScheme(SONG_SCHEME.value());
+		return scheme;
+	}
+
 	private final void resetModDate() {
 		final Path repo =
 				container.getRoot().resolve(
@@ -380,7 +392,6 @@ public class FileEditor implements Module {
 		}
 	}
 
-
 	private final TreeSet<Path> selectFilesOnly(Set<Path> selection) {
 		final TreeSet<Path> selectionFiles = new TreeSet<>();
 		final ArrayDeque<Path> queue = new ArrayDeque<>(selection);
@@ -402,12 +413,6 @@ public class FileEditor implements Module {
 		return selectionFiles;
 	}
 
-	private final NameScheme getNameScheme() throws InvalidNameSchemeException {
-		if (scheme == null)
-			scheme = new NameScheme(SONG_SCHEME.value());
-		return scheme;
-	}
-
 	private final void uniformSongs(final Set<Path> selection)
 			throws InvalidNameSchemeException {
 		final TreeSet<Path> selectionFiles = selectFilesOnly(selection);
@@ -421,10 +426,5 @@ public class FileEditor implements Module {
 			io.updateProgress();
 		}
 		io.endProgress();
-	}
-
-	@Override
-	public final void repair() {
-		// nothing to do
 	}
 }

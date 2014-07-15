@@ -31,12 +31,12 @@ public interface Module {
 	Module init(final main.StartupContainer sc);
 
 	/**
-	 * Executes this module
-	 */
-	void run();
-
-	/**
 	 * Requests to repair all permanently stored data
 	 */
 	void repair();
+
+	/**
+	 * Executes this module
+	 */
+	void run();
 }

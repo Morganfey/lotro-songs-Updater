@@ -102,6 +102,33 @@ public final class SongbookUpdater implements Module {
 		return new SongbookUpdater(sc, this);
 	}
 
+	@Override
+	public final void repair() {
+		final String home =
+				Main.getConfigValue(Main.GLOBAL_SECTION, Main.PATH_KEY, null);
+		if (home == null) {
+			System.out
+					.printf("Unable to determine home - SongbookUpdateData could not been deleted");
+			return;
+		}
+		final Path basePath = Path.getPath(home.split("/"));
+		final Path updateDataPath =
+				basePath.resolve("PluginData").resolve("SongbookUpdateData");
+		final Path updateDataPathZip =
+				basePath.resolve("PluginData")
+						.resolve("SongbookUpdateData.zip");
+		if (updateDataPath.exists()) {
+			final boolean success = updateDataPath.delete();
+			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
+					updateDataPath.toString(), success ? "" : " failed");
+		}
+		if (updateDataPathZip.exists()) {
+			final boolean success = updateDataPathZip.delete();
+			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
+					updateDataPathZip.toString(), success ? "" : " failed");
+		}
+	}
+
 	/**
 	 * Causes the re-writing of Songbook.plugindata for all profiles found in
 	 * UserPreferences.ini
@@ -113,6 +140,7 @@ public final class SongbookUpdater implements Module {
 		}
 		updateSongbookData();
 	}
+
 
 	/*
 	 * creates the file needed for Songbook-plugin
@@ -197,33 +225,5 @@ public final class SongbookUpdater implements Module {
 		io.printMessage(null,
 				"Update of your songbook is complete.\nAvailable songs: "
 						+ container.size(), true);
-	}
-
-
-	@Override
-	public final void repair() {
-		final String home =
-				Main.getConfigValue(Main.GLOBAL_SECTION, Main.PATH_KEY, null);
-		if (home == null) {
-			System.out
-					.printf("Unable to determine home - SongbookUpdateData could not been deleted");
-			return;
-		}
-		final Path basePath = Path.getPath(home.split("/"));
-		final Path updateDataPath =
-				basePath.resolve("PluginData").resolve("SongbookUpdateData");
-		final Path updateDataPathZip =
-				basePath.resolve("PluginData")
-						.resolve("SongbookUpdateData.zip");
-		if (updateDataPath.exists()) {
-			final boolean success = updateDataPath.delete();
-			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
-					updateDataPath.toString(), success ? "" : " failed");
-		}
-		if (updateDataPathZip.exists()) {
-			final boolean success = updateDataPathZip.delete();
-			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
-					updateDataPathZip.toString(), success ? "" : " failed");
-		}
 	}
 }
