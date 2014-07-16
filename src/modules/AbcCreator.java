@@ -711,7 +711,7 @@ public class AbcCreator implements Module,
 						if (FileSystem.type == FileSystem.OSType.WINDOWS) {
 							pb.command().add("\"" + c + "\"");
 						} else {
-							pb.command().add(c.replaceAll(" ", "\\\\ "));
+							pb.command().add(c.replaceAll(" ", "\\ "));
 						}
 					} else {
 						pb.command().add(c);

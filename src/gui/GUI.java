@@ -181,6 +181,7 @@ public class GUI implements GUIInterface {
 		for (final Button b : Button.values()) {
 			b.getButton().addMouseListener(new ButtonListener(b));
 		}
+		Thread.setDefaultUncaughtExceptionHandler(master.getUncaughtExceptionHandler());
 	}
 
 	/**
