@@ -1,7 +1,6 @@
 package stone.util;
 
-import stone.gui.GUI;
-import stone.modules.Main;
+import stone.io.GUI;
 
 import java.awt.Color;
 import java.util.HashMap;
@@ -37,7 +36,7 @@ public abstract class Option {
 	protected final String name;
 	private JPanel panel;
 	/** gui used to display */
-	protected stone.gui.GUIInterface gui;
+	protected stone.io.GUIInterface gui;
 
 	private final Map<JTextArea, ColorEntry> colorsTextArea = new HashMap<>();
 	private final OptionContainer optionContainer;
@@ -117,14 +116,14 @@ public abstract class Option {
 	/**
 	 * Uses given panel to display this option.
 	 * 
-	 * @param panel
-	 * @param gui
+	 * @param rootPanel
+	 * @param activeGui
 	 */
-	public final void displayWithGUI(final JPanel panel,
-			final stone.gui.GUIInterface gui) {
-		this.panel = panel;
-		this.gui = gui;
-		display(panel);
+	public final void displayWithGUI(final JPanel rootPanel,
+			final stone.io.GUIInterface activeGui) {
+		this.panel = rootPanel;
+		this.gui = activeGui;
+		display(rootPanel);
 	}
 
 	/**
@@ -137,7 +136,7 @@ public abstract class Option {
 	}
 
 	/**
-	 * Releases all resources allocated by {@link #displayWithGUI(JPanel, stone.gui.GUIInterface)}
+	 * Releases all resources allocated by {@link #displayWithGUI(JPanel, stone.io.GUIInterface)}
 	 */
 	public void endDisplay() {
 		panel = null;
@@ -212,5 +211,5 @@ public abstract class Option {
 		optionContainer.setConfigValue(section, key, value);
 	}
 
-	abstract void display(final JPanel panel);
+	abstract void display(final JPanel rootPanel);
 }

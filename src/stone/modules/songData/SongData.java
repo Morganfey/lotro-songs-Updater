@@ -18,7 +18,7 @@ public class SongData {
 	private long mod;
 
 	SongData(final Path song, final Map<Integer, String> voices, long mod) {
-		this(song, new TreeMap<Integer, String>(voices), mod);
+		this(song, new TreeMap<>(voices), mod);
 	}
 
 	SongData(final Path song, final TreeMap<Integer, String> voices, long mod) {

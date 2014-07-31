@@ -7,14 +7,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-
-import stone.modules.Main;
 
 
 /**
@@ -24,13 +20,13 @@ import stone.modules.Main;
  */
 public class PathOption extends Option {
 
-	private final PathOptionFileFilter filter;
-
-	private final TaskPool taskPool;
-
-	private final int selectionMode;
-
 	private final OptionContainer optionContainer;
+
+	final TaskPool taskPool;
+
+	final PathOptionFileFilter filter;
+
+	final int selectionMode;
 
 	/**
 	 * Creates a new PathOption and registers it at the OptionContainer
@@ -127,42 +123,7 @@ public class PathOption extends Option {
 			@Override
 			public final void mouseReleased(final MouseEvent e) {
 				e.consume();
-				taskPool.addTask(new Runnable() {
-
-					@Override
-					public void run() {
-						final Path path = getValue();
-						final String value;
-						if (path == null) {
-							value = null;
-						} else {
-							value = path.toString();
-						}
-						final JFileChooser fileChooser =
-								new JFileChooser(value);
-						final JFrame frame = new JFrame();
-						fileChooser.setFileFilter(filter);
-						fileChooser.setDialogTitle(getDescription());
-						fileChooser.setFileSelectionMode(selectionMode);
-
-						frame.setLocation(e.getLocationOnScreen());
-						try {
-							final int ret = fileChooser.showOpenDialog(frame);
-							if (ret == JFileChooser.APPROVE_OPTION) {
-								value(fileChooser.getSelectedFile());
-								textField.setText(PathOption.super.value());
-								textField.setForeground(Color.BLACK);
-							} else {
-								PathOption.super.value(null);
-								textField.setText(getTooltip());
-								textField.setForeground(Color.GRAY);
-							}
-						} finally {
-							frame.setVisible(false);
-							frame.dispose();
-						}
-					}
-				});
+				taskPool.addTask(new PathOptionTask(PathOption.this, textField));
 
 			}
 		});
@@ -228,16 +189,16 @@ public class PathOption extends Option {
 		throw new UnsupportedOperationException("Use value(File) instead");
 	}
 
-	private final void value(final File fileSelected) {
+	final void value(final File fileSelected) {
 		final File file = filter.value(fileSelected);
-		final Path path = Path.getPath(file.toString());
+		final Path path = Path.getPath(file.toString().split("\\" + FileSystem.getFileSeparator()));
 		final String base = readBase();
 		super.value(path.relativize(Path.getPath(base.split("/"))));
 	}
 
 	private final String readBase() {
-		return this.optionContainer
-				.getConfigValue(stone.modules.Main.GLOBAL_SECTION,
-						stone.modules.Main.PATH_KEY, null);
+		return this.optionContainer.getConfigValue(
+				stone.modules.Main.GLOBAL_SECTION, stone.modules.Main.PATH_KEY,
+				null);
 	}
 }

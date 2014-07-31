@@ -3,15 +3,10 @@ package stone;
 import stone.io.IOHandler;
 import stone.modules.Main;
 import stone.modules.Module;
-import stone.modules.songData.SongDataContainer;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.JarFile;
 
 import stone.util.Flag;
 import stone.util.OptionContainer;
@@ -42,7 +37,7 @@ public class StartupContainer {
 
 	private Main main;
 
-	private final Map<String, Container> container = new HashMap<>();
+	private final Map<String, Container> containerMap = new HashMap<>();
 
 	private int wait = 2;
 
@@ -55,23 +50,28 @@ public class StartupContainer {
 		} catch (final InterruptedException e) {
 			e.printStackTrace();
 		}
-		boolean jar = false;
-		Path workingDirectory = null;
+		boolean jar_ = false;
+		Path workingDirectory_ = null;
 		try {
 			final Class<?> loaderClass = loader.getClass();
-			jar =
+			jar_ =
 					(boolean) loaderClass.getMethod("wdIsJarArchive").invoke(
 							loader);
-			workingDirectory =
+			workingDirectory_ =
 					Path.getPath(loaderClass.getMethod("getWorkingDir")
-							.invoke(loader).toString());
+							.invoke(loader).toString().split("/"));
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
-		this.workingDirectory = workingDirectory;
-		this.jar = jar;
+		this.workingDirectory = workingDirectory_;
+		this.jar = jar_;
 	}
 
+	/**
+	 * Only one instance shall exist at one time.
+	 * 
+	 * @return the new created instance.
+	 */
 	public final static StartupContainer createInstance() {
 		return new StartupContainer();
 	}
@@ -116,14 +116,27 @@ public class StartupContainer {
 		return taskPool;
 	}
 
-	public final void finishInit(final Flag flags) {
+	/**
+	 * Calling this method will provide the parsed command line arguments to any module.
+	 * 
+	 * @param flags
+	 */
+	public final void finishInit(@SuppressWarnings("hiding") final Flag flags) {
 		this.flags = flags;
 	}
 
+	/**
+	 * @return the instance of the main-module
+	 */
 	public final Main getMain() {
 		return main;
 	}
 
+	/**
+	 * Sets the instance of the main-module.
+	 * 
+	 * @param main
+	 */
 	public final void setMain(final Main main) {
 		this.main = main;
 	}
@@ -133,16 +146,16 @@ public class StartupContainer {
 	}
 
 	public final Container getContainer(final String s) {
-		final Container container = this.container.get(s);
+		final Container container = this.containerMap.get(s);
 		if (container == null) {
 			try {
-				final Class<Container> containerClass =
+				@SuppressWarnings("unchecked") final Class<Container> containerClass =
 						(Class<Container>) loader.loadClass(s);
 				Container containerNew;
 				containerNew =
 						(Container) containerClass.getMethod("create",
 								getClass()).invoke(null, this);
-				this.container.put(s, containerNew);
+				this.containerMap.put(s, containerNew);
 				return containerNew;
 			} catch (IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchMethodException
@@ -167,7 +180,7 @@ public class StartupContainer {
 			}
 	}
 
-	public final void createFinalIO(final IOHandler io) {
+	public final void createFinalIO(@SuppressWarnings("hiding") final IOHandler io) {
 		this.io = io;
 	}
 
@@ -179,9 +192,11 @@ public class StartupContainer {
 		return jar;
 	}
 
-	public final Class<Module> loadModule(final String module) {
+	public final static Class<Module> loadModule(final String module) {
 		try {
-			return (Class<Module>) loader.loadClass("stone.modules." + module);
+			@SuppressWarnings("unchecked") final Class<Module> clazz =
+					(Class<Module>) loader.loadClass("stone.modules." + module);
+			return clazz;
 		} catch (final ClassNotFoundException e) {
 			e.printStackTrace();
 		}

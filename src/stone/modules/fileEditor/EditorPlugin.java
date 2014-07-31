@@ -7,8 +7,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 
-import stone.gui.GUIInterface;
-import stone.gui.GUIPlugin;
+import stone.io.GUIInterface;
+import stone.io.GUIPlugin;
 
 
 /**

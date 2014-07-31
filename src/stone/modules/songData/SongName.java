@@ -32,7 +32,7 @@ public class SongName implements Map<Integer, String> {
 	private Integer n = null;
 	private Path path = null;
 
-	private final Path base;
+	private final Path basePath;
 	private boolean init = false;
 	private final Map<Integer, Integer> renumberMap = new HashMap<>();
 	private final Map<Integer, Integer[]> partsIndices = new TreeMap<>();
@@ -40,7 +40,7 @@ public class SongName implements Map<Integer, String> {
 	private final Map<Integer, String> partsName = new HashMap<>();
 
 	SongName(final Path base) {
-		this.base = base;
+		this.basePath = base;
 	}
 
 	private static final int findEnd(final StringBuilder sb, final String line,
@@ -49,7 +49,8 @@ public class SongName implements Map<Integer, String> {
 			if (line.length() == pos) {
 				return pos;
 			}
-			final char c = line.charAt(pos++);
+			int i = pos;
+			final char c = line.charAt(i++);
 			switch (c) {
 				case '/':
 				case '0':
@@ -83,13 +84,13 @@ public class SongName implements Map<Integer, String> {
 				case 'z':
 				case '[':
 				case ']':
-					return pos - 1;
+					return i - 1;
 
 				case ' ':
-					return pos;
+					return i;
 
 				case '+':
-					return line.indexOf('+', pos) + 1;
+					return line.indexOf('+', i) + 1;
 
 				case '\'':
 				case ',':
@@ -97,10 +98,10 @@ public class SongName implements Map<Integer, String> {
 
 				case '-':
 				case '^':
-					return pos;
+					return i;
 
 				default:
-					return pos;
+					return i;
 			}
 		}
 	}
@@ -198,10 +199,10 @@ public class SongName implements Map<Integer, String> {
 			sb.append("/");
 			sb.append(n);
 		}
-		final String partsName = this.partsName.get(xIdx);
-		if (partsName != null) {
+		final String partsName_ = this.partsName.get(xIdx);
+		if (partsName_ != null) {
 			sb.append(" ");
-			sb.append(partsName);
+			sb.append(partsName_);
 		}
 
 		if (xIdx == 1) {
@@ -302,7 +303,7 @@ public class SongName implements Map<Integer, String> {
 		if (path == null) {
 			ret += "<path>";
 		} else {
-			ret += path.relativize(base);
+			ret += path.relativize(basePath);
 		}
 		ret += " " + partsName;
 		return ret;
@@ -365,6 +366,7 @@ public class SongName implements Map<Integer, String> {
 	}
 
 	private final void calculateDuration(final IOHandler io) {
+		@SuppressWarnings("resource")
 		final InputStream in = io.openIn(path.toFile());
 		double max = 0;
 		double quantity = 1;

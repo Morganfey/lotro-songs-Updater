@@ -1,8 +1,8 @@
 package stone.modules;
 
-import stone.gui.GUIInterface.Button;
 import stone.io.ExceptionHandle;
 import stone.io.IOHandler;
+import stone.io.GUIInterface.Button;
 
 import java.io.File;
 import java.io.IOException;

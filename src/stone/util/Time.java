@@ -115,10 +115,10 @@ public final class Time {
 	 * @return an array containing all month names
 	 */
 	public final static String[] getMonthNames() {
-		final String[] namesOfMonth = new String[Time.namesOfMonth.length];
-		System.arraycopy(Time.namesOfMonth, 0, namesOfMonth, 0,
-				namesOfMonth.length);
-		return namesOfMonth;
+		final String[] namesOfMonth_ = new String[Time.namesOfMonth.length];
+		System.arraycopy(Time.namesOfMonth, 0, namesOfMonth_, 0,
+				namesOfMonth_.length);
+		return namesOfMonth_;
 	}
 
 	/**
@@ -134,10 +134,10 @@ public final class Time {
 	 * @return an array containing all shortened month names
 	 */
 	public final static String[] getShortMonthNames() {
-		final String[] namesOfMonth = new String[Time.shortNamesOfMonth.length];
-		System.arraycopy(Time.shortNamesOfMonth, 0, namesOfMonth, 0,
-				namesOfMonth.length);
-		return namesOfMonth;
+		final String[] namesOfMonth_ = new String[Time.shortNamesOfMonth.length];
+		System.arraycopy(Time.shortNamesOfMonth, 0, namesOfMonth_, 0,
+				namesOfMonth_.length);
+		return namesOfMonth_;
 	}
 
 	private final static long getDays(long year) {

@@ -30,29 +30,27 @@ public class CreateBuilds {
 						CreateBuilds.class.getCanonicalName().toString()
 								.replace('.', '/')
 								+ ".class");
-		final Path root =
-				Path.getPath(url.toString().substring(5).split("/"))
-						.getParent().getParent();
+		final Path root = Path.getPath(url).getParent().getParent();
 		final Path p = root.resolve("modules");
 		final Path info = root.getParent().getParent().resolve("moduleInfo");
-		
+
 		info.delete();
 		info.toFile().mkdirs();
-		
+
 		for (final String s : p.toFile().list()) {
 			new ClassLoader() {
 
 				@SuppressWarnings("unchecked")
-				public Class<Module> loadClass0(final String s) {
-					if (s.contains("$")) {
+				public Class<Module> loadClass0(final String moduleName) {
+					if (moduleName.contains("$")) {
 						return null;
 					}
-					if (!s.startsWith("stone.modules.") || s.endsWith("Module")
-							|| s.endsWith("EnableModuleListener")) {
+					if (!moduleName.startsWith("stone.modules.") || moduleName.endsWith("Module")
+							|| moduleName.endsWith("EnableModuleListener") || moduleName.endsWith("ConfigWriter")) {
 						return null;
 					}
 					try {
-						return (Class<Module>) loadClass(s);
+						return (Class<Module>) loadClass(moduleName);
 					} catch (final Exception e) {
 						return null;
 					}

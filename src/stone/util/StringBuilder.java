@@ -235,9 +235,8 @@ public class StringBuilder {
 			System.arraycopy(content[cIdx], head, content[cIdxNext], 0, l);
 			System.arraycopy(content[cIdx], 0, content[cIdxNext], l, tail);
 			return new String(content[cIdxNext], 0, tail + l);
-		} else {
-			return new String(content[cIdx], head, tail - head);
 		}
+		return new String(content[cIdx], head, tail - head);
 	}
 
 	private final void copy() {

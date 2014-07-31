@@ -1,10 +1,5 @@
 package stone.io;
 
-import stone.gui.GUI;
-import stone.gui.GUIInterface;
-import stone.gui.GUIPlugin;
-import stone.gui.ProgressMonitor;
-
 import java.awt.Image;
 import java.io.Closeable;
 import java.io.File;
@@ -49,13 +44,13 @@ public class IOHandler {
 	private final ArrayDeque<String> logStack;
 
 	private final GUIInterface gui;
-	private final GUI guiReal;
-
 	private boolean closed = false;
 
-	private final MasterThread master;
-
 	private final Image icon;
+
+	final GUI guiReal;
+
+	final MasterThread master;
 
 	/**
 	 * Creates a new IO-Handler
@@ -70,13 +65,13 @@ public class IOHandler {
 	public IOHandler(final StartupContainer sc, final String iconFile) {
 		final Path workingDirectory = sc.getWorkingDir();
 		master = sc.getMaster();
-		Image icon = null;
+		Image icon_ = null;
 		final Image iconFinal;
 		if (!sc.wdIsJarArchive()) {
 			final File f = workingDirectory.resolve(iconFile).toFile();
 			if (f.exists()) {
 				try {
-					icon = ImageIO.read(f);
+					icon_ = ImageIO.read(f);
 				} catch (final IOException ioe) {
 					handleException(ExceptionHandle.SUPPRESS, ioe);
 				}
@@ -88,7 +83,7 @@ public class IOHandler {
 				try {
 					final JarEntry iconEntry = jar.getJarEntry(iconFile);
 					if (iconEntry != null) {
-						icon = ImageIO.read(jar.getInputStream(iconEntry));
+						icon_ = ImageIO.read(jar.getInputStream(iconEntry));
 					} else {
 						System.out.println("Icon not found");
 					}
@@ -103,7 +98,7 @@ public class IOHandler {
 			}
 		}
 
-		iconFinal = icon;
+		iconFinal = icon_;
 		this.icon = iconFinal;
 
 		class GUIProxy extends Proxy {
@@ -124,8 +119,6 @@ public class IOHandler {
 		}
 		guiReal = new GUI((GUI) sc.getIO().gui, master, iconFinal);
 		class GUIInvocationHandler implements InvocationHandler {
-
-			private final GUI guiReal = IOHandler.this.guiReal;
 
 			@Override
 			public Object invoke(final Object proxy, final Method method,
@@ -176,6 +169,7 @@ public class IOHandler {
 	 * @param bytesToDiscard
 	 *            number of bytes of file content to discard
 	 */
+	@SuppressWarnings("resource")
 	public final void append(final File fileToAppendTo, final File content,
 			int bytesToDiscard) {
 		OutputStream out = null;
@@ -190,9 +184,6 @@ public class IOHandler {
 				in = new InputStream(content, FileSystem.UTF8);
 				openStreams.add(in);
 			} catch (final FileNotFoundException e) {
-				if (out != null) {
-					close(out);
-				}
 				handleException(ExceptionHandle.TERMINATE, e);
 				return;
 			}
@@ -310,7 +301,7 @@ public class IOHandler {
 	}
 
 	/**
-	 * Calls {@link stone.gui.GUIInterface#getOptions(Collection)} with given options
+	 * Calls {@link stone.io.GUIInterface#getOptions(Collection)} with given options
 	 * 
 	 * @param options
 	 */
@@ -455,6 +446,7 @@ public class IOHandler {
 			final Enumeration<? extends ZipEntry> entries = zip.entries();
 			while (entries.hasMoreElements()) {
 				final ZipEntry zipEntry = entries.nextElement();
+				@SuppressWarnings("resource")
 				final OutputStream out =
 						openOut(zipFile.getParent().resolve(zipEntry.getName())
 								.toFile());

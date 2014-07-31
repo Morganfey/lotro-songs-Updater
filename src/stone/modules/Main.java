@@ -2,10 +2,8 @@ package stone.modules;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import stone.StartupContainer;
 import stone.io.IOHandler;
@@ -28,21 +26,22 @@ public class Main implements Module {
 
 	private static final int VERSION = 1;
 
-	private static Main instance;
-
 	/**
 	 * The users homeDir
 	 */
 	public final Path homeDir = FileSystem.getBase();
 
-	private final Path homeSetting = homeDir.resolve(".SToNe");
+	final Path homeSetting = homeDir.resolve(".SToNe");
 
-	private final Map<String, Map<String, String>> configOld = new HashMap<>();
+	TaskPool taskPool;
 
-	private final Map<String, Map<String, String>> configNew = new HashMap<>();
+	final Map<String, Map<String, String>> configOld = new HashMap<>();
 
-	private TaskPool taskPool;
+	final Map<String, Map<String, String>> configNew = new HashMap<>();
 
+	/**
+	 * The name to be used for naming the config-file and the title.
+	 */
 	public static final String TOOLNAME = "SToNe";
 
 	/**
@@ -75,12 +74,10 @@ public class Main implements Module {
 	 */
 	public static final String REPAIR = "Repair";
 
+	/**
+	 * Creates a new instance providing the parsed entries of the config
+	 */
 	public Main() {
-		instance = this;
-	}
-
-	public final static Main getInstance() {
-		return instance;
 	}
 
 	private static final void createIO(final StartupContainer os) {
@@ -103,78 +100,7 @@ public class Main implements Module {
 			return;
 		}
 
-		final Runnable r = new Runnable() {
-
-			@Override
-			public void run() {
-				final java.io.OutputStream out;
-				final StringBuilder sb = new StringBuilder();
-
-				synchronized (configOld) {
-					synchronized (configNew) {
-						// throw all values into configOld
-						for (final Map.Entry<String, Map<String, String>> entryMap : configNew
-								.entrySet()) {
-							final Map<String, String> map =
-									configOld.get(entryMap.getKey());
-							if (map == null) {
-								configOld.put(entryMap.getKey(),
-										entryMap.getValue());
-							} else {
-								map.putAll(entryMap.getValue());
-							}
-						}
-						configNew.clear();
-					}
-
-					// search for null keys
-					final Set<String> sectionsToRemove = new HashSet<>();
-					for (final Map.Entry<String, Map<String, String>> entryMap : configOld
-							.entrySet()) {
-						final Set<String> keysToRemove = new HashSet<>();
-						for (final Map.Entry<String, String> map : entryMap
-								.getValue().entrySet()) {
-							if (map.getValue() == null
-									|| map.getValue().isEmpty()) {
-								keysToRemove.add(map.getKey());
-							}
-						}
-						for (final String key : keysToRemove) {
-							entryMap.getValue().remove(key);
-						}
-						if (entryMap.getValue().isEmpty()) {
-							sectionsToRemove.add(entryMap.getKey());
-						}
-					}
-					for (final String section : sectionsToRemove) {
-						configOld.remove(section);
-					}
-				}
-
-				for (final Map.Entry<String, Map<String, String>> sections : configOld
-						.entrySet()) {
-					sb.append(sections.getKey());
-					sb.append(FileSystem.getLineSeparator());
-					for (final Map.Entry<String, String> entries : sections
-							.getValue().entrySet()) {
-						sb.append("\t");
-						sb.append(entries.getKey());
-						sb.append(" = ");
-						sb.append(entries.getValue());
-						sb.append(FileSystem.getLineSeparator());
-					}
-				}
-
-				try {
-					out = new java.io.FileOutputStream(homeSetting.toFile());
-					out.write(sb.toString().getBytes());
-					out.flush();
-					out.close();
-				} catch (final IOException e) {
-					homeSetting.delete();
-				}
-			}
-		};
+		final Runnable r = new MainConfigWriter(this);
 		if (taskPool == null) {
 			r.run();
 		} else {
@@ -232,6 +158,7 @@ public class Main implements Module {
 		return null;
 	}
 
+	@Override
 	public final void repair() {
 		if (homeSetting.exists()) {
 			final boolean success = homeSetting.delete();
@@ -241,12 +168,21 @@ public class Main implements Module {
 	}
 
 
+	/**
+	 * Not supported call {@link #run(StartupContainer, Flag)} instead
+	 */
 	@Override
 	public final void run() {
 		throw new UnsupportedOperationException();
 	}
 
 
+	/**
+	 * The actual main method executing this main module.
+	 * 
+	 * @param sc
+	 * @param flags
+	 */
 	public final void run(final StartupContainer sc, final Flag flags) {
 		final IOHandler io;
 		taskPool = sc.createTaskPool();
@@ -262,6 +198,7 @@ public class Main implements Module {
 			public void run() {
 				try {
 					sc.finishInit(flags); // sync barrier 1
+					@SuppressWarnings("resource")
 					final InputStream in =
 							io.openIn(homeSetting.toFile(), FileSystem.UTF8);
 					final StringBuilder sb = new StringBuilder();
@@ -351,7 +288,7 @@ public class Main implements Module {
 		}
 	}
 
-	private final String parseConfig(final StringBuilder line,
+	final String parseConfig(final StringBuilder line,
 			final String section) {
 		int idx = 0;
 		if (line.length() == 0) {
@@ -375,17 +312,16 @@ public class Main implements Module {
 			}
 			line.setLength(line.length() - idx);
 			return currentSection;
-		} else {
-			final int start = idx++;
-			while (line.charAt(idx) != '=') {
-				++idx;
-			}
-			final String key = line.substring(start, idx).trim();
-			final String value = line.substring(++idx, line.length()).trim();
-			configOld.get(section).put(key, value);
-			line.setLength(0);
-			return section;
 		}
+		final int start = idx++;
+		while (line.charAt(idx) != '=') {
+			++idx;
+		}
+		final String key = line.substring(start, idx).trim();
+		final String value = line.substring(++idx, line.length()).trim();
+		configOld.get(section).put(key, value);
+		line.setLength(0);
+		return section;
 
 	}
 

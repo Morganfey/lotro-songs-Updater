@@ -6,8 +6,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import stone.gui.GUIInterface;
-import stone.gui.GUIPlugin;
+import stone.io.GUIInterface;
+import stone.io.GUIPlugin;
 
 
 /**

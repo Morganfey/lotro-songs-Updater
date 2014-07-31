@@ -49,8 +49,8 @@ public class SongDataContainer implements Container {
 		taskPool = sc.getTaskPool();
 		master = sc.getMaster();
 		final String home =
-				sc.getMain().getConfigValue(Main.GLOBAL_SECTION,
-						Main.PATH_KEY, null);
+				sc.getMain().getConfigValue(Main.GLOBAL_SECTION, Main.PATH_KEY,
+						null);
 		assert home != null;
 		final Path basePath = Path.getPath(home.split("/")).resolve("Music");
 		if (!basePath.exists()) {
@@ -89,6 +89,7 @@ public class SongDataContainer implements Container {
 	/**
 	 * fills the container
 	 */
+	@SuppressWarnings("resource")
 	public final void fill() {
 		if (master.isInterrupted()) {
 			return;
@@ -108,39 +109,51 @@ public class SongDataContainer implements Container {
 				final Crawler crawler;
 				io.openZipIn(zippedSongDataPath);
 				final InputStream in = io.openIn(songDataPath.toFile());
-				if (songDataPath.toFile().length() == 0) {
-					io.append(songDataPath.toFile(),
-							songDataUpdatePath.toFile(), 0);
-					in.reset();
-				} else {
-					io.append(songDataPath.toFile(),
-							songDataUpdatePath.toFile(), 1);
-				}
-				out = io.openOut(songDataUpdatePath.toFile());
-				io.write(out, SongDataDeserializer_3.getHeader());
-				crawler =
-						new Crawler(io, tree.getRoot(), new ArrayDeque<Path>(),
-								queue);
-				scanner = new Scanner(io, queue, master, out, tree, songsFound);
-				taskPool.addTaskForAll(crawler, scanner);
-				in.registerProgressMonitor(io);
-				io.setProgressTitle("Reading data base of previous run");
 				try {
-					SongDataDeserializer.deserialize(in, this, tree.getRoot());
-					io.startProgress("Parsing songs", -1);
-					synchronized (io) {
-						crawler.historySolved();
-						if (crawler.terminated()) {
-							io.setProgressSize(crawler.getProgress());
-						}
+					if (songDataPath.toFile().length() == 0) {
+						io.append(songDataPath.toFile(),
+								songDataUpdatePath.toFile(), 0);
+						in.reset();
+					} else {
+						io.append(songDataPath.toFile(),
+								songDataUpdatePath.toFile(), 1);
 					}
+
+					out = io.openOut(songDataUpdatePath.toFile());
+					try {
+						io.write(out, SongDataDeserializer_3.getHeader());
+						crawler =
+								new Crawler(io, tree.getRoot(),
+										new ArrayDeque<Path>(), queue);
+						scanner =
+								new Scanner(io, queue, master, out, tree,
+										songsFound);
+						taskPool.addTaskForAll(crawler, scanner);
+						in.registerProgressMonitor(io);
+						io.setProgressTitle("Reading data base of previous run");
+						try {
+							SongDataDeserializer.deserialize(in, this,
+									tree.getRoot());
+							io.startProgress("Parsing songs", -1);
+							synchronized (io) {
+								crawler.historySolved();
+								if (crawler.terminated()) {
+									io.setProgressSize(crawler.getProgress());
+								}
+							}
+							io.close(in);
+							in.deleteFile();
+						} catch (final IOException e) {
+							io.close(in);
+							songDataPath.delete();
+							zippedSongDataPath.delete();
+							io.handleException(ExceptionHandle.SUPPRESS, e);
+						}
+					} finally {
+						io.close(out);
+					}
+				} finally {
 					io.close(in);
-					in.deleteFile();
-				} catch (final IOException e) {
-					io.close(in);
-					songDataPath.delete();
-					zippedSongDataPath.delete();
-					io.handleException(ExceptionHandle.SUPPRESS, e);
 				}
 			} else {
 				io.startProgress("parsing songs", songsFound.size());
@@ -152,7 +165,7 @@ public class SongDataContainer implements Container {
 			taskPool.waitForTasks();
 			dirty = false;
 			io.endProgress();
-			for (final ABC_ERROR e : ABC_ERROR.messages.values()) {
+			for (final AbtractEoWInAbc e : AbtractEoWInAbc.messages.values()) {
 				io.printError(e.printMessage(), true);
 			}
 			io.close(out);
@@ -235,88 +248,83 @@ public class SongDataContainer implements Container {
 	 * @param masterPluginData
 	 *            the file where the Songbook-plugin expects it
 	 */
+	@SuppressWarnings("resource")
 	public final void writeNewSongbookData(final File masterPluginData) {
 		final OutputStream outMaster;
 
 		outMaster = io.openOut(masterPluginData);
+		try {
+			// head
+			io.write(outMaster, "return\r\n{\r\n");
 
-		// head
-		io.write(outMaster, "return\r\n{\r\n");
-
-		// section dirs
-		io.write(outMaster, "\t[\"Directories\"] =\r\n\t{\r\n");
-		final Iterator<Path> dirIterator = tree.dirsIterator();
-		if (dirIterator.hasNext()) {
-			io.write(outMaster, "\t\t[1] = \"/\"");
-			for (int dirIdx = 2; dirIterator.hasNext(); dirIdx++) {
-				io.writeln(outMaster, ",");
-				io.write(outMaster, "\t\t[" + dirIdx + "] = \"/"
-						+ dirIterator.next().relativize(tree.getRoot()) + "/\"");
+			// section dirs
+			io.write(outMaster, "\t[\"Directories\"] =\r\n\t{\r\n");
+			final Iterator<Path> dirIterator = tree.dirsIterator();
+			if (dirIterator.hasNext()) {
+				io.write(outMaster, "\t\t[1] = \"/\"");
+				for (int dirIdx = 2; dirIterator.hasNext(); dirIdx++) {
+					io.writeln(outMaster, ",");
+					io.write(outMaster, "\t\t[" + dirIdx + "] = \"/"
+							+ dirIterator.next().relativize(tree.getRoot())
+							+ "/\"");
+				}
+				io.writeln(outMaster, "");
 			}
-			io.writeln(outMaster, "");
+			io.writeln(outMaster, "\t},");
+
+			// section songs
+			io.writeln(outMaster, "\t[\"Songs\"] =");
+			int songIdx = 0;
+
+			final Iterator<Path> songsIterator = tree.filesIterator();
+			while (songsIterator.hasNext()) {
+				final Path path = songsIterator.next();
+				final SongData song = tree.get(path);
+				if (songIdx++ == 0) {
+					io.writeln(outMaster, "\t{");
+				} else {
+					io.writeln(outMaster, "\t\t},");
+				}
+
+				io.writeln(outMaster, "\t\t[" + songIdx + "] =");
+				io.writeln(outMaster, "\t\t{");
+				final String name;
+				name =
+						path.getFileName().substring(0,
+								path.getFileName().lastIndexOf("."));
+
+				io.write(outMaster, "\t\t\t[\"Filepath\"] = \"/");
+				if (path.getParent() != tree.getRoot()) {
+					io.write(outMaster,
+							path.getParent().relativize(tree.getRoot()));
+					io.write(outMaster, "/");
+				}
+				io.writeln(outMaster, "\",");
+				io.writeln(outMaster, "\t\t\t[\"Filename\"] = \"" + name
+						+ "\",");
+				io.writeln(outMaster, "\t\t\t[\"Tracks\"] = ");
+				io.write(outMaster, song.toPluginData());
+				io.updateProgress();
+			}
+
+			// tail
+			io.writeln(outMaster, "\t\t}");
+			io.writeln(outMaster, "\t}");
+			io.write(outMaster, "}");
+		} finally {
+			io.close(outMaster);
 		}
-		io.writeln(outMaster, "\t},");
-
-		// section songs
-		io.writeln(outMaster, "\t[\"Songs\"] =");
-		int songIdx = 0;
-
-		final Iterator<Path> songsIterator = tree.filesIterator();
-		while (songsIterator.hasNext()) {
-			final Path path = songsIterator.next();
-			final SongData song = tree.get(path);
-			if (songIdx++ == 0) {
-				io.writeln(outMaster, "\t{");
-			} else {
-				io.writeln(outMaster, "\t\t},");
-			}
-
-			io.writeln(outMaster, "\t\t[" + songIdx + "] =");
-			io.writeln(outMaster, "\t\t{");
-			final String name;
-			name =
-					path.getFileName().substring(0,
-							path.getFileName().lastIndexOf("."));
-
-			io.write(outMaster, "\t\t\t[\"Filepath\"] = \"/");
-			if (path.getParent() != tree.getRoot()) {
-				io.write(outMaster, path.getParent().relativize(tree.getRoot()));
-				io.write(outMaster, "/");
-			}
-			io.writeln(outMaster, "\",");
-			io.writeln(outMaster, "\t\t\t[\"Filename\"] = \"" + name + "\",");
-			io.writeln(outMaster, "\t\t\t[\"Tracks\"] = ");
-			io.write(outMaster, song.toPluginData());
-			io.updateProgress();
-		}
-
-		// tail
-		io.writeln(outMaster, "\t\t}");
-		io.writeln(outMaster, "\t}");
-		io.write(outMaster, "}");
-		io.close(outMaster);
 	}
 
 	final DirTree getDirTree() {
 		return tree;
 	}
-	
+
+	/**
+	 * @param sc
+	 * @return the created new instance
+	 */
 	public final static Container create(final StartupContainer sc) {
 		return new SongDataContainer(sc);
-	}
-}
-
-enum Error_Type {
-
-	WARN("Warning: in line"), ERROR("Error: in line");
-	private final String s;
-
-	private Error_Type(final String s) {
-		this.s = s;
-	}
-
-	@Override
-	final public String toString() {
-		return s;
 	}
 }

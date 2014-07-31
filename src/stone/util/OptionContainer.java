@@ -16,7 +16,7 @@ public class OptionContainer {
 	private final Map<String, Option> options = new HashMap<>();
 
 
-	private final Main main; 
+	private final Main main;
 	private final Flag flags;
 
 	/**
@@ -24,6 +24,7 @@ public class OptionContainer {
 	 * flags
 	 * 
 	 * @param flags
+	 * @param main 
 	 */
 	public OptionContainer(final Flag flags, final Main main) {
 		this.flags = flags;

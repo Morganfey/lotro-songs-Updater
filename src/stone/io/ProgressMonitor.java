@@ -1,4 +1,4 @@
-package stone.gui;
+package stone.io;
 
 /**
  * A progress monitor either using a GUI or printing on stdout to display a

@@ -1,4 +1,4 @@
-package stone.gui;
+package stone.io;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -101,7 +101,7 @@ public class GUI implements GUIInterface {
 
 	private final JProgressBar bar;
 
-	private Button pressed;
+	Button pressed;
 
 	private final MasterThread master;
 
@@ -607,9 +607,8 @@ public class GUI implements GUIInterface {
 				if (offset2 < 0) {
 					len = Math.max(len, message.length() - offset);
 					break;
-				} else {
-					len = Math.max(len, offset2 - offset);
 				}
+				len = Math.max(len, offset2 - offset);
 				offset = offset2;
 			}
 		}

@@ -289,12 +289,12 @@ public class MidiMap {
 		for (int y = heightPerSong - 1; y < d.height; y += heightPerSong) {
 			g0.drawLine(0, y, d.width, y);
 		}
-		final int scale = getScale();
+		final int scale_ = getScale();
 
 		// draw notes
 		for (final Note note : notes) {
-			final int x0 = (int) (note.start * scale);
-			final int x1 = (int) (note.end * scale);
+			final int x0 = (int) (note.start * scale_);
+			final int x1 = (int) (note.end * scale_);
 			final int y;
 			if (note.key < MidiMap.NOTE_BOT) {
 				y = note.track * heightPerSong - 1;
@@ -343,11 +343,11 @@ public class MidiMap {
 	}
 
 	private final int getScale() {
-		int scale;
+		final int scale_;
 		synchronized (this) {
-			scale = this.scale;
+			scale_ = this.scale;
 		}
-		return scale;
+		return scale_;
 	}
 
 }

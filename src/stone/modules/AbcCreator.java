@@ -122,7 +122,7 @@ public class AbcCreator implements Module,
 			return "...";
 		}
 
-		synchronized final void drawState(final IOHandler io) {
+		synchronized final void drawState(@SuppressWarnings("hiding") final IOHandler io) {
 			this.io = io;
 			if (failed) {
 				return;
@@ -135,8 +135,8 @@ public class AbcCreator implements Module,
 			return failed;
 		}
 
-		synchronized final void incrementSize(int size) {
-			this.size += size;
+		synchronized final void incrementSize(int value) {
+			this.size += value;
 			if (io != null) {
 				io.setProgressSize(this.size);
 			}
@@ -162,7 +162,8 @@ public class AbcCreator implements Module,
 			}
 		}
 
-		synchronized final void startPhase(final Object state) {
+		synchronized final void startPhase(
+				@SuppressWarnings("hiding") final Object state) {
 			this.state = state;
 			progress = 0;
 			size = -1;
@@ -171,7 +172,9 @@ public class AbcCreator implements Module,
 			}
 		}
 
-		synchronized final void startPhase(final Object state, int size) {
+		synchronized final void startPhase(
+				@SuppressWarnings("hiding") final Object state,
+				@SuppressWarnings("hiding") int size) {
 			this.state = state;
 			progress = 0;
 			this.size = size;
@@ -211,6 +214,14 @@ public class AbcCreator implements Module,
 
 	private static final Path javaPath = AbcCreator.getJavaPath();
 
+	final Path bruteDir;
+
+	final IOHandler io;
+
+	final InitState initState;
+
+	final MasterThread master;
+
 	private final PathOption ABC_PLAYER;
 
 	private final PathOption DRUM_MAPS;
@@ -218,10 +229,6 @@ public class AbcCreator implements Module,
 	private final PathOption INSTRUMENT_MAP;
 
 	private final StringOption STYLE;
-
-	private final IOHandler io;
-
-	private final Path bruteDir;
 
 	private final Path brutesMidi;// = bruteDir.resolve("mid.mid");
 
@@ -236,15 +243,11 @@ public class AbcCreator implements Module,
 	private final TaskPool taskPool;
 
 	private final Main main;
-	private final MasterThread master;
-
 	private final Path wdDir;
 
 	private Path midi, abc;
 
 	private final Set<Integer> maps = new HashSet<>();
-
-	private final InitState initState;
 
 	private AbcMapPlugin dragAndDropPlugin;
 
@@ -366,14 +369,17 @@ public class AbcCreator implements Module,
 
 	private final static Path getJavaPath() {
 		final Path javaBin =
-				Path.getPath(System.getProperty("java.home")).resolve("bin");
-		final Path javaPath;
+				Path.getPath(
+						System.getProperty("java.home").split(
+								"\\" + FileSystem.getFileSeparator())).resolve(
+						"bin");
+		final Path javaPath_;
 		if (FileSystem.type == FileSystem.OSType.WINDOWS) {
-			javaPath = javaBin.resolve("java.exe");
+			javaPath_ = javaBin.resolve("java.exe");
 		} else {
-			javaPath = javaBin.resolve("java");
+			javaPath_ = javaBin.resolve("java");
 		}
-		return javaPath;
+		return javaPath_;
 	}
 
 	/**
@@ -497,7 +503,8 @@ public class AbcCreator implements Module,
 	@Override
 	public final void loadMap(final File mapToLoad,
 			final DndPluginCaller.LoadedMapEntry c) {
-		final InputStream in = io.openIn(mapToLoad);
+		@SuppressWarnings("resource") final InputStream in =
+				io.openIn(mapToLoad);
 		in.registerProgressMonitor(io);
 		class ParseState {
 			private int state;
@@ -677,6 +684,7 @@ public class AbcCreator implements Module,
 		return BruteParams.valuesGlobal();
 	}
 
+	@SuppressWarnings("resource")
 	private final int call(final Path location, final CallType type,
 			final Path wd, final String... cmd) throws IOException,
 			InterruptedException {
@@ -799,50 +807,49 @@ public class AbcCreator implements Module,
 		return exit;
 	}
 
-	private final int call(final String string, final Path bruteDir)
+	private final int call(final String string, final Path bruteDirectory)
 			throws IOException, InterruptedException {
-		final Path exe = bruteDir.resolve(string);
+		final Path exe = bruteDirectory.resolve(string);
 		if (!exe.toFile().canExecute()) {
 			exe.toFile().setExecutable(true);
 		}
 
-		return call(exe, CallType.EXE_WAIT, bruteDir);
+		return call(exe, CallType.EXE_WAIT, bruteDirectory);
 	}
 
-	private final Set<Path> copy(final Path source, final Path destination)
+	@SuppressWarnings("resource")
+	final Set<Path> copy(final Path source, final Path destination)
 			throws IOException {
 		final Set<Path> filesAndDirs = new HashSet<>();
 		if (source.toFile().isDirectory()) {
 			if (destination.toFile().exists()
 					&& !destination.toFile().isDirectory()) {
 				throw new IOException("Copying directory to file");
-			} else {
-				for (final String s : source.toFile().list()) {
-					if (!destination.toFile().exists()) {
-						if (!destination.toFile().mkdir()) {
-							throw new IOException("Unable to create directory "
-									+ destination);
-						}
-					}
-					filesAndDirs.add(destination.resolve(s));
-					taskPool.addTask(new Runnable() {
-						@Override
-						public final void run() {
-							if (master.isInterrupted()) {
-								return;
-							}
-							try {
-								copyRek(source.resolve(s),
-										destination.resolve(s));
-							} catch (final IOException e) {
-								e.printStackTrace();
-							}
-							initState.progress();
-						}
-					});
-				}
-				return filesAndDirs;
 			}
+			for (final String s : source.toFile().list()) {
+				if (!destination.toFile().exists()) {
+					if (!destination.toFile().mkdir()) {
+						throw new IOException("Unable to create directory "
+								+ destination);
+					}
+				}
+				filesAndDirs.add(destination.resolve(s));
+				taskPool.addTask(new Runnable() {
+					@Override
+					public final void run() {
+						if (master.isInterrupted()) {
+							return;
+						}
+						try {
+							copyRek(source.resolve(s), destination.resolve(s));
+						} catch (final IOException e) {
+							e.printStackTrace();
+						}
+						initState.progress();
+					}
+				});
+			}
+			return filesAndDirs;
 		}
 		final InputStream in = io.openIn(source.toFile());
 		final OutputStream out = io.openOut(destination.toFile());
@@ -852,45 +859,45 @@ public class AbcCreator implements Module,
 		return filesAndDirs;
 	}
 
-	private final void copyRek(final Path source, final Path destination)
+	final void copyRek(final Path source, final Path destination)
 			throws IOException {
 		if (source.toFile().isDirectory()) {
 			if (destination.toFile().exists()
 					&& !destination.toFile().isDirectory()) {
 				initState.setFailed();
 				throw new IOException("Copying directory to file");
-			} else {
-				final String[] files = source.toFile().list();
-				initState.incrementSize(files.length);
-				for (final String s : files) {
-					if (!destination.toFile().exists()) {
-						if (!destination.toFile().mkdir()) {
-							throw new IOException("Unable to create directory "
-									+ destination);
-						}
+			}
+			final String[] files = source.toFile().list();
+			initState.incrementSize(files.length);
+			for (final String s : files) {
+				if (!destination.toFile().exists()) {
+					if (!destination.toFile().mkdir()) {
+						throw new IOException("Unable to create directory "
+								+ destination);
 					}
-					taskPool.addTask(new Runnable() {
-						@Override
-						public final void run() {
-							if (master.isInterrupted() || initState.failed()) {
-								bruteDir.delete();
-								return;
-							}
-							try {
-								copyRek(source.resolve(s),
-										destination.resolve(s));
-							} catch (final IOException e) {
-								e.printStackTrace();
-							}
-							initState.progress();
-						}
-					});
 				}
+				taskPool.addTask(new Runnable() {
+					@Override
+					public final void run() {
+						if (master.isInterrupted() || initState.failed()) {
+							bruteDir.delete();
+							return;
+						}
+						try {
+							copyRek(source.resolve(s), destination.resolve(s));
+						} catch (final IOException e) {
+							e.printStackTrace();
+						}
+						initState.progress();
+					}
+				});
 			}
 			return;
 		}
-		final InputStream in = io.openIn(source.toFile());
-		final OutputStream out = io.openOut(destination.toFile());
+		@SuppressWarnings("resource") final InputStream in =
+				io.openIn(source.toFile());
+		@SuppressWarnings("resource") final OutputStream out =
+				io.openOut(destination.toFile());
 		io.write(in, out);
 		io.close(out);
 	}
@@ -922,6 +929,7 @@ public class AbcCreator implements Module,
 
 	}
 
+	@SuppressWarnings("resource")
 	private final Path generateMap(final Object name, final Object title) {
 		final Path map = midi.getParent().resolve(midi.getFileName() + ".map");
 		final OutputStream out = io.openOut(map.toFile());
@@ -989,16 +997,16 @@ public class AbcCreator implements Module,
 	/*
 	 * Copies all BruTE into current directory
 	 */
-	private final boolean init() throws IOException {
+	final boolean init() throws IOException {
 		if (wdDir.toFile().isDirectory()) {
-			final Path bruteDir = wdDir.resolve("Brute");
-			if (!bruteDir.exists()) {
-				System.err.println("Unable to find Brute\n" + bruteDir
+			final Path workingBrute = wdDir.resolve("Brute");
+			if (!workingBrute.exists()) {
+				System.err.println("Unable to find Brute\n" + workingBrute
 						+ " does not exist.");
 				return false;
 			}
 			initState.startPhase(InitState.COPY);
-			initState.setSize(InitState.COPY, copy(bruteDir, this.bruteDir)
+			initState.setSize(InitState.COPY, copy(workingBrute, this.bruteDir)
 					.size());
 		} else {
 			final JarFile jarFile;
@@ -1124,8 +1132,9 @@ public class AbcCreator implements Module,
 				return;
 			}
 			final String defaultTitle = midi.getFileName();
+			final List<Option> options = new ArrayList<>();
+			
 			TITLE.value(defaultTitle);
-			final List<Option> options = new ArrayList<Option>();
 			options.add(TITLE);
 			io.getOptions(options);
 			if (master.isInterrupted()) {
@@ -1146,8 +1155,9 @@ public class AbcCreator implements Module,
 	}
 
 
+	@SuppressWarnings("resource")
 	private final void unpack(final JarFile jarFile,
-			final ZipEntry... jarEntries) throws IOException {
+			final ZipEntry... jarEntries) {
 		for (final ZipEntry jarEntry : jarEntries) {
 			if (master.isInterrupted()) {
 				return;

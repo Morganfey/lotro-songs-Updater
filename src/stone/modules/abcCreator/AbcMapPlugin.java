@@ -28,7 +28,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
-import stone.gui.GUI;
+import stone.io.GUI;
 import stone.io.IOHandler;
 import stone.modules.AbcCreator;
 import stone.modules.midiData.MidiInstrument;
@@ -43,12 +43,147 @@ import stone.util.TaskPool;
 public final class AbcMapPlugin extends
 		DragAndDropPlugin<JPanel, JPanel, JPanel> {
 
-	private final Map<MidiInstrumentDropTarget, Set<Integer>> instrumentToTrack =
+	private final class MapLoadingThread extends Thread {
+		
+		private final File mapToLoad;
+		final Map<String, Track> idToTrackMap;
+
+		MapLoadingThread(File mapToLoad, Map<String, Track> idToTrackMap) {
+			this.mapToLoad = mapToLoad;
+			this.idToTrackMap = idToTrackMap;
+		}
+
+		@Override
+		public final void run() {
+
+			final List<DropTarget<JPanel, JPanel, JPanel>> targetList =
+					new ArrayList<>();
+			final Map<Track, DropTargetContainer<JPanel, JPanel, JPanel>> cloneDeciderMap =
+					new HashMap<>();
+			final Map<Track, Map<DropTargetContainer<JPanel, JPanel, JPanel>, Track>> cloneMap =
+					new HashMap<>();
+
+			class LoadedMapEntry implements
+					DndPluginCaller.LoadedMapEntry {
+
+				boolean error;
+				private DropTarget<JPanel, JPanel, JPanel> target;
+
+				@Override
+				public final void addEntry(
+						final String string) {
+					final String[] s = string.split(" ");
+					final Track t;
+					synchronized (MapLoadingThread.this.idToTrackMap) {
+						t = MapLoadingThread.this.idToTrackMap.get(s[0]);
+					}
+					final DropTargetContainer<JPanel, JPanel, JPanel> m =
+							cloneDeciderMap.get(t);
+					final Track o;
+					if (m == null) {
+						cloneDeciderMap.put(t,
+								target.getContainer());
+						t.getTargetContainer()
+								.removeAllLinks(t);
+						t.clearTargets();
+//						initTarget(target);
+						o = t;
+					} else if (m != target.getContainer()) {
+						final Map<DropTargetContainer<JPanel, JPanel, JPanel>, Track> cloneEntry =
+								cloneMap.get(t);
+						if (cloneEntry == null) {
+							cloneMap.put(
+									t,
+									new HashMap<DropTargetContainer<JPanel, JPanel, JPanel>, Track>());
+						}
+						final Track tClone =
+								cloneMap.get(t).get(m);
+						if (tClone == null) {
+							final Track clone = t.clone();
+							cloneMap.get(t).put(m, clone);
+							panelLeft.add(clone
+									.getDisplayableComponent());
+							panelLeft.validate();
+							initObject(clone);
+//												initTarget(target);
+						}
+						o = cloneMap.get(t).get(m);
+					} else {
+						o = t;
+					}
+					link(o, target);
+					for (int i = 1; i < s.length;) {
+						if (s[i].equals("split")) {
+							i += 3;
+						} else {
+							try {
+								o.setParam(
+										BruteParams
+												.valueOf(s[i]),
+										target,
+										Integer.parseInt(s[i + 1]));
+								i += 2;
+							} catch (final Exception e) {
+								error = true;
+							}
+						}
+					}
+				}
+
+				@Override
+				public final void addPart(
+						final String string) {
+					final String[] s = string.split(" ");
+					final MidiInstrument m =
+							MidiInstrument.valueOf(s[0]);
+					target = m.createNewTarget();
+					targetList.add(target);
+					if (s.length == 2)
+						try {
+							target.setParam("map",
+									Integer.parseInt(s[1]));
+						} catch (final Exception e) {
+							error = true;
+						}
+				}
+
+				@Override
+				public final void error() {
+					error = true;
+				}
+			}
+
+			final LoadedMapEntry loader =
+					new LoadedMapEntry();
+
+			AbcMapPlugin.this.caller.loadMap(this.mapToLoad,
+					loader);
+			if (loader.error) {
+				state.label.setText("Loading map failed");
+			} else {
+				state.loadingMap = false;
+				state.label
+						.setText("Parsing completed - Updating GUI ...");
+				for (final DropTarget<JPanel, JPanel, JPanel> t : targetList) {
+					t.getDisplayableComponent();
+					addToCenter(t);
+				}
+				state.label
+						.setText("Loading map completed");
+			}
+			synchronized (state) {
+				state.upToDate = false;
+				state.running = false;
+				state.notifyAll();
+			}
+		}
+	}
+
+	final Map<MidiInstrumentDropTarget, Set<Integer>> instrumentToTrack =
 			new TreeMap<>();
-	private final Map<Integer, DragObject<JPanel, JPanel, JPanel>> trackMap =
+	final Map<Integer, DragObject<JPanel, JPanel, JPanel>> trackMap =
 			new HashMap<>();
 
-	private JPanel panelLeft;
 	private JScrollPane center;
 	private Container empty;
 
@@ -185,7 +320,6 @@ public final class AbcMapPlugin extends
 	@Override
 	protected final JPanel createButtonPanel() {
 		final JPanel panel = new JPanel();
-		final JPanel panelCenter = new JPanel();
 		final JToggleButton splitButton = new JToggleButton("Split");
 
 		splitButton.addChangeListener(new ChangeListener() {
@@ -399,133 +533,7 @@ public final class AbcMapPlugin extends
 
 					final Map<String, Track> idToTrackMap = new HashMap<>();
 					synchronized (idToTrackMap) {
-						final Thread t = new Thread() {
-
-							@Override
-							public final void run() {
-
-								final List<DropTarget<JPanel, JPanel, JPanel>> targets =
-										new ArrayList<>();
-								final Map<Track, DropTargetContainer<JPanel, JPanel, JPanel>> cloneDeciderMap =
-										new HashMap<>();
-								final Map<Track, Map<DropTargetContainer<JPanel, JPanel, JPanel>, Track>> cloneMap =
-										new HashMap<>();
-
-								class LoadedMapEntry implements
-										DndPluginCaller.LoadedMapEntry {
-
-									private boolean error;
-									private DropTarget<JPanel, JPanel, JPanel> target;
-
-									@Override
-									public final void addEntry(
-											final String string) {
-										final String[] s = string.split(" ");
-										final Track t;
-										synchronized (idToTrackMap) {
-											t = idToTrackMap.get(s[0]);
-										}
-										final DropTargetContainer<JPanel, JPanel, JPanel> m =
-												cloneDeciderMap.get(t);
-										final Track o;
-										if (m == null) {
-											cloneDeciderMap.put(t,
-													target.getContainer());
-											t.getTargetContainer()
-													.removeAllLinks(t);
-											t.clearTargets();
-//											initTarget(target);
-											o = t;
-										} else if (m != target.getContainer()) {
-											final Map<DropTargetContainer<JPanel, JPanel, JPanel>, Track> cloneEntry =
-													cloneMap.get(t);
-											if (cloneEntry == null) {
-												cloneMap.put(
-														t,
-														new HashMap<DropTargetContainer<JPanel, JPanel, JPanel>, Track>());
-											}
-											final Track tClone =
-													cloneMap.get(t).get(m);
-											if (tClone == null) {
-												final Track clone = t.clone();
-												cloneMap.get(t).put(m, clone);
-												panelLeft.add(clone
-														.getDisplayableComponent());
-												panelLeft.validate();
-												initObject(clone);
-//												initTarget(target);
-											}
-											o = cloneMap.get(t).get(m);
-										} else {
-											o = t;
-										}
-										link(o, target);
-										for (int i = 1; i < s.length;) {
-											if (s[i].equals("split")) {
-												i += 3;
-											} else {
-												try {
-													o.setParam(
-															BruteParams
-																	.valueOf(s[i]),
-															target,
-															Integer.parseInt(s[i + 1]));
-													i += 2;
-												} catch (final Exception e) {
-													error = true;
-												}
-											}
-										}
-									}
-
-									@Override
-									public final void addPart(
-											final String string) {
-										final String[] s = string.split(" ");
-										final MidiInstrument m =
-												MidiInstrument.valueOf(s[0]);
-										target = m.createNewTarget();
-										targets.add(target);
-										if (s.length == 2)
-											try {
-												target.setParam("map",
-														Integer.parseInt(s[1]));
-											} catch (final Exception e) {
-												error = true;
-											}
-									}
-
-									@Override
-									public final void error() {
-										error = true;
-									}
-								}
-
-								final LoadedMapEntry loader =
-										new LoadedMapEntry();
-
-								AbcMapPlugin.this.caller.loadMap(mapToLoad,
-										loader);
-								if (loader.error) {
-									state.label.setText("Loading map failed");
-								} else {
-									state.loadingMap = false;
-									state.label
-											.setText("Parsing completed - Updating GUI ...");
-									for (final DropTarget<JPanel, JPanel, JPanel> t : targets) {
-										t.getDisplayableComponent();
-										addToCenter(t);
-									}
-									state.label
-											.setText("Loading map completed");
-								}
-								synchronized (state) {
-									state.upToDate = false;
-									state.running = false;
-									state.notifyAll();
-								}
-							}
-						};
+						final Thread t = new MapLoadingThread(mapToLoad, idToTrackMap);
 						t.start();
 						int toFind = trackMap.size();
 						for (int i = 1; toFind-- > 0; i++) {
@@ -589,9 +597,9 @@ public final class AbcMapPlugin extends
 						@Override
 						protected final void trigger() {
 							globalMenuPanel.removeAll();
-							final JPanel panel = new JPanel();
-							globalMenuPanel.add(panel);
-							m.display(panel);
+							final JPanel panel0 = new JPanel();
+							globalMenuPanel.add(panel0);
+							m.display(panel0);
 							globalMenu.revalidate();
 						}
 					};
@@ -709,7 +717,7 @@ public final class AbcMapPlugin extends
 		final JScrollPane scrollPane;
 
 		midiIds.remove(0);
-		panelLeft = new JPanel();
+		panelLeft.removeAll();
 		panelLeft.setLayout(new GridLayout(0, 1));
 		for (final Integer id : midiIds) {
 			final Track track = new Track(idBrute.get(id), id, titles.get(id));
@@ -717,7 +725,7 @@ public final class AbcMapPlugin extends
 			panelLeft.add(track.getDisplayableComponent());
 			track.getDisplayableComponent().add(new JLabel(track.getName()));
 			track.getDisplayableComponent().addMouseListener(
-					new DO_Listener<JPanel, JPanel, JPanel>(track, state, Track
+					new DO_Listener<>(track, state, Track
 							.getParams(), caller));
 			final MidiInstrument instrument = instruments.get(id);
 			final DropTarget<JPanel, JPanel, JPanel> target;
@@ -741,7 +749,7 @@ public final class AbcMapPlugin extends
 		panelLeft.add(object.getDisplayableComponent());
 		object.getDisplayableComponent().add(new JLabel(object.getName()));
 		object.getDisplayableComponent().addMouseListener(
-				new DO_Listener<JPanel, JPanel, JPanel>(object, state, Track
+				new DO_Listener<>(object, state, Track
 						.getParams(), caller));
 		panelLeft.revalidate();
 	}
@@ -759,7 +767,7 @@ public final class AbcMapPlugin extends
 			final JLabel label = new JLabel(t.getName());
 			final JPanel panel = t.getDisplayableComponent();
 			panel.removeAll(); // needed in case of not first run
-			panel.addMouseListener(new TC_Listener<JPanel, JPanel, JPanel>(t,
+			panel.addMouseListener(new TC_Listener<>(t,
 					state));
 			panel.setMinimumSize(new Dimension(120, 15));
 			panel.setPreferredSize(new Dimension(120, 33));
@@ -837,7 +845,7 @@ public final class AbcMapPlugin extends
 		panelNew.add(paramPanel, BorderLayout.SOUTH);
 
 		target.getDisplayableComponent().addMouseListener(
-				new DT_Listener<JPanel, JPanel, JPanel>(target, state));
+				new DT_Listener<>(target, state));
 	}
 
 }

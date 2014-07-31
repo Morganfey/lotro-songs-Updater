@@ -5,9 +5,9 @@ import java.awt.BorderLayout;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
-import stone.gui.GUI;
-import stone.gui.GUIInterface;
-import stone.gui.GUIPlugin;
+import stone.io.GUI;
+import stone.io.GUIInterface;
+import stone.io.GUIPlugin;
 
 
 /**

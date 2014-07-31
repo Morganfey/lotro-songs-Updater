@@ -19,7 +19,7 @@ import javax.swing.JTextField;
  */
 public final class StringOption extends Option {
 
-	private JTextField textField;
+	JTextField textField;
 
 	/**
 	 * Creates a new StringOption and registers it at the OptionContainer

@@ -3,8 +3,6 @@ package stone.modules.fileEditor;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,8 +13,8 @@ import javax.swing.JScrollPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import stone.gui.GUIInterface;
-import stone.gui.GUIPlugin;
+import stone.io.GUIInterface;
+import stone.io.GUIPlugin;
 import stone.modules.FileEditor;
 import stone.util.Path;
 
@@ -28,11 +26,11 @@ import stone.util.Path;
  */
 public abstract class FileEditorPlugin extends GUIPlugin {
 
-	private final FileEditor fileEditor;
-	private Path currentDir;
+	final FileEditor fileEditor;
+	Path currentDir;
 	private final Path base;
 	private final JLabel pathLabel;
-	private final Set<Path> selection;
+	final Set<Path> selection;
 
 	/**
 	 * @param fileEditor
@@ -52,7 +50,7 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 		return selection;
 	}
 
-	private final void displayDir(final JPanel panel, final JScrollPane scroll) {
+	final void displayDir(final JPanel panel, final JScrollPane scroll) {
 		final String[] dirs = fileEditor.getDirs(currentDir);
 		final String[] songs = fileEditor.getFiles(currentDir);
 		if (base == currentDir)
@@ -90,76 +88,8 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 			if (box != null)
 				contentPanel.add(box, BorderLayout.WEST);
 
-			contentPanel.addMouseListener(new MouseListener() {
-
-				@Override
-				public final void mouseClicked(final MouseEvent e) {
-					e.consume();
-				}
-
-				@Override
-				public final void mouseEntered(final MouseEvent e) {
-					e.consume();
-				}
-
-				@Override
-				public final void mouseExited(final MouseEvent e) {
-					e.consume();
-				}
-
-				@Override
-				public final void mousePressed(final MouseEvent e) {
-					e.consume();
-				}
-
-				@Override
-				public final void mouseReleased(final MouseEvent e) {
-					panel.removeAll();
-					if (currentDir.getParent() == p) {
-						boolean all = true;
-						final Set<Path> paths = new HashSet<>();
-						for (final String dir : dirs) {
-							final Path p = currentDir.resolve(dir);
-							if (p == currentDir.getParent())
-								continue;
-							if (!selection.contains(p)) {
-								all = false;
-								break;
-							}
-							paths.add(p);
-
-						}
-						if (all)
-							for (final String song : songs) {
-								final Path p = currentDir.resolve(song);
-								if (!selection.contains(p)) {
-									all = false;
-									break;
-								}
-								paths.add(p);
-							}
-						if (all) {
-							selection.removeAll(paths);
-							selection.add(currentDir);
-						}
-					} else if (selection.remove(p)) {
-						selection.remove(p);
-						for (final String dir : fileEditor.getDirs(p)) {
-							if (dir.equals(".."))
-								continue;
-							selection.add(p.resolve(dir));
-						}
-						for (final String song : fileEditor.getFiles(p)) {
-							selection.add(p.resolve(song));
-						}
-					}
-					currentDir = p;
-					displayDir(panel, scroll);
-					panel.revalidate();
-
-					repack();
-				}
-			});
+			contentPanel.addMouseListener(new DirMouseListener(this, dirs, p,
+					songs, panel, scroll));
 			label.setForeground(Color.ORANGE);
 			panel.add(contentPanel);
 		}
@@ -215,5 +145,10 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 				BorderLayout.WEST);
 		displayDir(panelSelection, scroll);
 		return false;
+	}
+
+	@Override
+	protected void repack() {
+		super.repack();
 	}
 }

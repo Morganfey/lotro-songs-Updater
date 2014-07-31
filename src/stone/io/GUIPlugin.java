@@ -1,4 +1,4 @@
-package stone.gui;
+package stone.io;
 
 import java.awt.Dimension;
 
@@ -37,7 +37,7 @@ public abstract class GUIPlugin {
 		}
 	}
 
-	final boolean display(final JPanel panel, final GUI gui) {
+	final boolean display(final JPanel panel, @SuppressWarnings("hiding") final GUI gui) {
 		this.gui = gui;
 		return display(panel);
 	}

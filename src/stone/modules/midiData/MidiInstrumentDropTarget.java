@@ -28,12 +28,65 @@ import stone.modules.abcCreator.DropTargetContainer;
 public class MidiInstrumentDropTarget implements
 		DropTarget<JPanel, JPanel, JPanel> {
 
+	private final class ParamListener implements MouseListener {
+		private final ActivePanelContainer shared;
+		private final JPanel mapPanel;
+		private final int i;
+		private final String key;
+
+		ParamListener(ActivePanelContainer shared, JPanel mapPanel,
+				int i, String key) {
+			this.shared = shared;
+			this.mapPanel = mapPanel;
+			this.i = i;
+			this.key = key;
+		}
+
+		@Override
+		public void mouseClicked(final MouseEvent e) {
+			e.consume();
+		}
+
+		@Override
+		public final void mouseEntered(final MouseEvent e) {
+			this.mapPanel.setBackground(Color.BLUE);
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			final Integer map = params.get(this.key);
+			final int mapId;
+			if (map == null) {
+				mapId = 0;
+			} else {
+				mapId = map.intValue();
+			}
+			this.mapPanel.setBackground(this.i == mapId ? Color.LIGHT_GRAY
+					: Color.WHITE);
+
+		}
+
+		@Override
+		public final void mousePressed(final MouseEvent e) {
+			e.consume();
+		}
+
+		@Override
+		public final void mouseReleased(final MouseEvent e) {
+			params.put(this.key, this.i);
+			if (this.shared.activePanel != null) {
+				this.shared.activePanel.setBackground(Color.WHITE);
+			}
+			this.shared.activePanel = this.mapPanel;
+		}
+	}
+
 	private final MidiInstrument midiInstrument;
 	private final Set<DragObject<JPanel, JPanel, JPanel>> objects =
 			new HashSet<>();
 	private final JPanel panel;
 	private final int number;
-	private final Map<String, Integer> params = new HashMap<>();
+	final Map<String, Integer> params = new HashMap<>();
 
 	MidiInstrumentDropTarget(final MidiInstrument midiInstrument, int id) {
 		this.midiInstrument = midiInstrument;
@@ -69,7 +122,7 @@ public class MidiInstrumentDropTarget implements
 			final JPanel menu,
 			final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
 		if (key.equals("map")) {
-			final JPanel panel = new JPanel();
+			final JPanel panel_ = new JPanel();
 			final JPanel closePanel = new JPanel();
 			final Set<Integer> maps =
 					((stone.modules.AbcCreator) caller).getMaps();
@@ -115,64 +168,23 @@ public class MidiInstrumentDropTarget implements
 
 				}
 			});
-			panel.setLayout(new GridLayout(0, 2));
+			panel_.setLayout(new GridLayout(0, 2));
 			container.setLayout(new BorderLayout());
-			container.add(panel);
+			container.add(panel_);
 			container.add(closePanel, BorderLayout.SOUTH);
-			class SharedObject {
-				JPanel panel;
-			}
-			final SharedObject shared = new SharedObject();
+			
+			final ActivePanelContainer shared = new ActivePanelContainer();
 			for (final int i : maps) {
 				final JPanel mapPanel = new JPanel();
 				if (i == mapId) {
 					mapPanel.setBackground(Color.LIGHT_GRAY);
-					shared.panel = mapPanel;
+					shared.activePanel = mapPanel;
 				} else {
 					mapPanel.setBackground(Color.WHITE);
 				}
-				mapPanel.addMouseListener(new MouseListener() {
-
-					@Override
-					public void mouseClicked(final MouseEvent e) {
-						e.consume();
-					}
-
-					@Override
-					public final void mouseEntered(final MouseEvent e) {
-						mapPanel.setBackground(Color.BLUE);
-					}
-
-					@Override
-					public void mouseExited(MouseEvent e) {
-						final Integer map = params.get(key);
-						final int mapId;
-						if (map == null) {
-							mapId = 0;
-						} else {
-							mapId = map.intValue();
-						}
-						mapPanel.setBackground(i == mapId ? Color.LIGHT_GRAY
-								: Color.WHITE);
-
-					}
-
-					@Override
-					public final void mousePressed(final MouseEvent e) {
-						e.consume();
-					}
-
-					@Override
-					public final void mouseReleased(final MouseEvent e) {
-						params.put(key, i);
-						if (shared.panel != null) {
-							shared.panel.setBackground(Color.WHITE);
-						}
-						shared.panel = mapPanel;
-					}
-				});
+				mapPanel.addMouseListener(new ParamListener(shared, mapPanel, i, key));
 				mapPanel.add(new JLabel("Map " + i));
-				panel.add(mapPanel);
+				panel_.add(mapPanel);
 			}
 		} else {
 			container.setLayout(new BorderLayout());

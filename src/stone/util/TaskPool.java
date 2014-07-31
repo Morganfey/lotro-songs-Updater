@@ -140,7 +140,7 @@ public class TaskPool {
 	 * @return <i>true</i> if a task has been executed, <i>false</i> if the pool
 	 *         has been closed while waiting
 	 */
-	private final boolean runTask() {
+	final boolean runTask() {
 		final Runnable t;
 		synchronized (taskPool) {
 			while (taskPool.isEmpty()) {

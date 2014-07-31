@@ -1,7 +1,6 @@
 package stone.modules.fileEditor;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,8 +44,7 @@ public class SongChangeData {
 				return 0.0;
 			if (base == TIME_BASE)
 				return beats / tempo;
-			else
-				return beats / tempo * (base / TIME_BASE);
+			return beats / tempo * (base / TIME_BASE);
 		}
 	}
 
@@ -55,7 +53,7 @@ public class SongChangeData {
 
 	private static final double TIME_BASE = 0.25;
 
-	private static Path base;
+	private static Path basePath;
 	private final Map<Integer, String> titles = new HashMap<>();
 	private final Map<Integer, Set<Instrument>> instruments = new HashMap<>();
 	private final Map<Integer, String> indices = new HashMap<>();
@@ -80,6 +78,7 @@ public class SongChangeData {
 
 	/**
 	 * @param voices
+	 * @param main 
 	 */
 	public SongChangeData(final SongData voices, final Main main) {
 		this.main = main;
@@ -111,13 +110,13 @@ public class SongChangeData {
 	}
 
 	private Path getBase() {
-		if (base != null)
-			return base;
+		if (basePath != null)
+			return basePath;
 		final String baseString =
 				main.getConfigValue(Main.GLOBAL_SECTION, Main.PATH_KEY, null);
 		if (baseString == null)
 			return null;
-		return base = Path.getPath(baseString.split("/")).resolve("Music");
+		return basePath = Path.getPath(baseString.split("/")).resolve("Music");
 	}
 
 	private static final String testDuration(final String durationS) {
@@ -266,7 +265,7 @@ public class SongChangeData {
 	 * @return the title of the song
 	 */
 	public final String getTitle() {
-		final Set<String> set = new HashSet<String>(titles.values());
+		final Set<String> set = new HashSet<>(titles.values());
 		if (set.isEmpty()) {
 			return file.getFileName().replaceFirst("\\.abc", "");
 		}
@@ -347,12 +346,13 @@ public class SongChangeData {
 		final Path tmp = writeChunks(io, scheme);
 		final String rel = file.relativize(getBase());
 		final Path base =
-				SongChangeData.base.getParent().resolve(
-						SongChangeData.base.getFileName() + "_rewritten");
+				SongChangeData.basePath.getParent().resolve(
+						SongChangeData.basePath.getFileName() + "_rewritten");
 		tmp.renameTo(base.resolve(rel.split("/")));
 	}
 
 
+	@SuppressWarnings("resource")
 	private final String calculateDuration(final IOHandler io) {
 		final InputStream in = io.openIn(file.toFile());
 		String line;
@@ -379,6 +379,7 @@ public class SongChangeData {
 											.trim());
 							if (posQ == 2)
 								break;
+							//$FALL-THROUGH$
 						case 'L':
 							int n = 0;
 							int d = 0;
@@ -417,6 +418,7 @@ public class SongChangeData {
 							continue;
 						case '%':
 							comment = true;
+							//$FALL-THROUGH$
 						case '=':
 						case ' ':
 						case '\t':
@@ -585,17 +587,17 @@ public class SongChangeData {
 			final String[] split = indicesS.split("/");
 			indices.put(key, split[0]);
 			total.add(Integer.parseInt(split[1].trim()));
-			String titleNew;
+			String titleNew_;
 			if (start > 0) {
-				titleNew = title.substring(0, start);
-				if (titleNew.endsWith("part"))
-					titleNew = titleNew.substring(0, titleNew.length() - 4);
+				titleNew_ = title.substring(0, start);
+				if (titleNew_.endsWith("part"))
+					titleNew_ = titleNew_.substring(0, titleNew_.length() - 4);
 			} else
-				titleNew = "";
+				titleNew_ = "";
 			if (end + 1 < title.length()) {
-				titleNew += title.substring(end);
+				titleNew_ += title.substring(end);
 			}
-			return titleNew;
+			return titleNew_;
 		}
 		idx = title.lastIndexOf("part ");
 		if (idx >= 0 && idx + 6 < title.length()) {
@@ -604,15 +606,15 @@ public class SongChangeData {
 			if (end < 0)
 				end = title.length();
 			indices.put(key, title.substring(start, end).trim());
-			String titleNew;
+			String titleNew_;
 			if (start > 0)
-				titleNew = title.substring(0, start - 5);
+				titleNew_ = title.substring(0, start - 5);
 			else
-				titleNew = "";
+				titleNew_ = "";
 			if (end + 1 < title.length()) {
-				titleNew += title.substring(end);
+				titleNew_ += title.substring(end);
 			}
-			return titleNew;
+			return titleNew_;
 		}
 		return title;
 	}
@@ -625,35 +627,35 @@ public class SongChangeData {
 				final String sub = title.substring(startInstrument, end);
 				final Set<Instrument> is = parse(sub);
 				instruments.put(i, is);
-				String titleNew;
+				String titleNew_;
 				if (startInstrument > 0)
-					titleNew = title.substring(0, startInstrument);
+					titleNew_ = title.substring(0, startInstrument);
 				else
-					titleNew = "";
+					titleNew_ = "";
 				if (end + 1 < title.length())
-					titleNew += title.substring(end + 1);
+					titleNew_ += title.substring(end + 1);
 				for (final Instrument instr : is) {
 					final int start =
-							titleNew.indexOf(instr.name().toLowerCase());
+							titleNew_.indexOf(instr.name().toLowerCase());
 					if (start < 0)
 						continue;
 					if (start == 0) {
-						titleNew = titleNew.substring(instr.name().length());
-						if (titleNew.startsWith(":"))
-							titleNew = titleNew.substring(1);
+						titleNew_ = titleNew_.substring(instr.name().length());
+						if (titleNew_.startsWith(":"))
+							titleNew_ = titleNew_.substring(1);
 					} else {
-						titleNew =
-								titleNew.substring(0, start)
-										+ titleNew.substring(start
+						titleNew_ =
+								titleNew_.substring(0, start)
+										+ titleNew_.substring(start
 												+ instr.name().length());
-						if (titleNew.startsWith(":", start))
-							titleNew =
-									titleNew.substring(0, start)
-											+ titleNew.substring(start + 1);
+						if (titleNew_.startsWith(":", start))
+							titleNew_ =
+									titleNew_.substring(0, start)
+											+ titleNew_.substring(start + 1);
 					}
 
 				}
-				return titleNew;
+				return titleNew_;
 			}
 		}
 		startInstrument = title.lastIndexOf(" - ");
@@ -662,33 +664,33 @@ public class SongChangeData {
 			final String sub = title.substring(startInstrument + 3, end);
 			final Set<Instrument> is = parse(sub);
 			instruments.put(i, is);
-			String titleNew;
+			String titleNew_;
 			if (startInstrument > 0)
-				titleNew = title.substring(0, startInstrument);
+				titleNew_ = title.substring(0, startInstrument);
 			else
-				titleNew = "";
+				titleNew_ = "";
 			if (end + 1 < title.length())
-				titleNew += title.substring(end + 1);
+				titleNew_ += title.substring(end + 1);
 			for (final Instrument instr : is) {
-				final int start = titleNew.indexOf(instr.name().toLowerCase());
+				final int start = titleNew_.indexOf(instr.name().toLowerCase());
 				if (start < 0)
 					continue;
 				if (start == 0) {
-					titleNew = titleNew.substring(instr.name().length());
-					if (titleNew.startsWith(":"))
-						titleNew = titleNew.substring(1);
+					titleNew_ = titleNew_.substring(instr.name().length());
+					if (titleNew_.startsWith(":"))
+						titleNew_ = titleNew_.substring(1);
 				} else {
-					titleNew =
-							titleNew.substring(0, start)
-									+ titleNew.substring(start
+					titleNew_ =
+							titleNew_.substring(0, start)
+									+ titleNew_.substring(start
 											+ instr.name().length());
-					if (titleNew.startsWith(":", start))
-						titleNew =
-								titleNew.substring(0, start)
-										+ titleNew.substring(start + 1);
+					if (titleNew_.startsWith(":", start))
+						titleNew_ =
+								titleNew_.substring(0, start)
+										+ titleNew_.substring(start + 1);
 				}
 			}
-			return titleNew;
+			return titleNew_;
 		}
 		return title;
 	}
@@ -754,6 +756,7 @@ public class SongChangeData {
 	}
 
 
+	@SuppressWarnings("resource")
 	private final Path writeChunks(final IOHandler io, final NameScheme scheme) {
 		final Path tmp = MasterThread.tmp().resolve(file.getFileName());
 		final Path headerChunk =
@@ -813,6 +816,7 @@ public class SongChangeData {
 		return tmp;
 	}
 
+	@SuppressWarnings("resource")
 	private final boolean writeChunks(final IOHandler io,
 			final Path headerChunk, final Map<Integer, Path> partsToChunk,
 			final NameScheme scheme) {
@@ -894,97 +898,12 @@ public class SongChangeData {
 		idxMap = indexMap;
 		numMap = numberMap;
 		total.clear();
-		int total = 0;
+		int total_ = 0;
 		for (final Boolean b : mapOpt.values()) {
 			if (!b)
-				++total;
+				++total_;
 		}
-		this.total.add(total);
+		this.total.add(total_);
 		dirty = true;
-	}
-
-
-}
-
-class Instrument {
-
-	private final InstrumentType type;
-	private final Set<Integer> numbers;
-
-	public Instrument(final InstrumentType type, final Set<Integer> numbers) {
-		this.type = type;
-		if (numbers.isEmpty())
-			this.numbers = new HashSet<>();
-		else
-			this.numbers = new HashSet<>(numbers);
-	}
-
-	public final String name() {
-		return type.name();
-	}
-
-	public final void print(final StringBuilder sb, final NameScheme ns) {
-		sb.append(ns.printInstrumentName(type));
-		ns.printInstrumentNumbers(sb, numbers);
-	}
-
-	@Override
-	public final String toString() {
-		final StringBuilder sb = new StringBuilder(type.name().toLowerCase());
-		sb.setCharAt(0, (char) (sb.charAt(0) + 'A' - 'a'));
-		for (final Integer number : numbers) {
-			sb.append(" ");
-			sb.append(number);
-		}
-		return sb.toString();
-	}
-
-	final InstrumentType type() {
-		return type;
-	}
-
-	boolean uniqueIdx() {
-		return numbers.size() < 2;
-	}
-}
-
-
-enum InstrumentType {
-	BAGPIPES("bagpipe"),
-	CLARINET("clarinets"),
-	COWBELL("cowbells", "bells"),
-	DRUMS("drum"),
-	FLUTE("flutes"),
-	HARP("harps"),
-	HORN("horns"),
-	LUTE("lutes"),
-	MOOR_COWBELL,
-	THEORBO,
-	PIBGORN;
-
-	private final String[] keys;
-	private static final Map<String, InstrumentType> map = buildMap();
-
-	private InstrumentType(final String... keys) {
-		this.keys = keys;
-	}
-
-	public final static InstrumentType get(final String string) {
-		return map.get(string);
-	}
-
-	private final static Map<String, InstrumentType> buildMap() {
-		final Map<String, InstrumentType> map = new HashMap<>();
-		try {
-			for (final Field f : InstrumentType.class.getFields()) {
-				final InstrumentType t = (InstrumentType) f.get(null);
-				for (final String key : t.keys)
-					map.put(key, t);
-				map.put(f.getName().toLowerCase(), t);
-			}
-		} catch (final Exception e) {
-			return null;
-		}
-		return map;
 	}
 }

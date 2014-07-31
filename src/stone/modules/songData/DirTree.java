@@ -11,13 +11,13 @@ import stone.util.Path;
 
 final class DirTree {
 
-	private final DirTree parent;
 	private final String name;
-	private final TreeMap<String, DirTree> directories = new TreeMap<>();
-	private final TreeMap<String, SongData> files = new TreeMap<>();
 	private final AtomicInteger size = new AtomicInteger(0);
-	private final Path base;
-
+	final Path base;
+	final TreeMap<String, DirTree> directories = new TreeMap<>();
+	final TreeMap<String, SongData> files = new TreeMap<>();
+	final DirTree parent;
+	
 	public DirTree(final Path base) {
 		parent = null;
 		name = null;
@@ -49,8 +49,8 @@ final class DirTree {
 					.getLastModification()) {
 				t.files.put(path.getFileName(), songdata);
 			} else {
-				synchronized (ABC_ERROR.messages) {
-					ABC_ERROR.messages.remove(path);
+				synchronized (AbtractEoWInAbc.messages) {
+					AbtractEoWInAbc.messages.remove(path);
 				}
 				return;
 			}
@@ -60,15 +60,14 @@ final class DirTree {
 		}
 	}
 
-	private final Path buildPath() {
+	final Path buildPath() {
 		if (parent == null) {
 			return base;
-		} else {
-			return parent.buildPath().resolve(name);
 		}
+		return parent.buildPath().resolve(name);
 	}
 
-	private final DirTree walkTo(final Path path) {
+	final DirTree walkTo(final Path path) {
 		DirTree t = this;
 		if (path == base) {
 			return t;
@@ -76,16 +75,16 @@ final class DirTree {
 		final String[] walkingPath = path.relativize(base).split("/");
 		int layer = 0;
 		while (layer < walkingPath.length) {
-			final String base = walkingPath[layer++];
+			final String base_ = walkingPath[layer++];
 			final DirTree last = t;
-			t = t.directories.get(base);
+			t = t.directories.get(base_);
 			if (t == null) {
 				t = last;
 				synchronized (t) {
-					t = t.directories.get(base);
+					t = t.directories.get(base_);
 					if (t == null) {
-						t = new DirTree(last, base);
-						last.directories.put(base, t);
+						t = new DirTree(last, base_);
+						last.directories.put(base_, t);
 					}
 				}
 			}

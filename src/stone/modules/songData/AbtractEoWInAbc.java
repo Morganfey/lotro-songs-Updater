@@ -6,26 +6,27 @@ import java.util.Map;
 import stone.util.Path;
 
 
-abstract class ABC_ERROR {
+abstract class AbtractEoWInAbc {
 
 	final Path song;
 	final int line;
-	final static Map<Path, ABC_ERROR> messages = new HashMap<>();
+	final static Map<Path, AbtractEoWInAbc> messages = new HashMap<>();
 
-	ABC_ERROR(final Path song, int line) {
+	AbtractEoWInAbc(final Path song, int line) {
 		this.song = song;
 		this.line = line;
 		synchronized (messages) {
-			ABC_ERROR.messages.put(song, this);
+			AbtractEoWInAbc.messages.put(song, this);
 		}
 	}
 
 	abstract String getDetail();
 
-	abstract Error_Type getType();
+	abstract WarnOrErrorInAbc getType();
 
 	String printMessage() {
 		return getType().toString() + " " + line + ":\n" + getDetail() + "\n"
 				+ song + "\n";
 	}
 }
+

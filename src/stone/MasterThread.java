@@ -41,8 +41,8 @@ public class MasterThread extends Thread {
 
 	final class ModuleInfo {
 
-		private Module instance;
-		private final String name;
+		Module instance;
+		final String name;
 
 		public ModuleInfo(final Class<Module> clazz, final String name) {
 			try {
@@ -57,11 +57,11 @@ public class MasterThread extends Thread {
 
 		}
 
-		private ModuleInfo() {
+		ModuleInfo() {
 			// cut here
 			this.name = "Main_band";
 			// cut here
-			instance = Main.getInstance();
+			instance = sc.getMain();
 		}
 
 		public Module clear() {
@@ -79,11 +79,11 @@ public class MasterThread extends Thread {
 
 	private final ThreadState state = new ThreadState();
 
-	private final Path tmp = Path.getTmpDir(Main.TOOLNAME);
+	final Path tmp = Path.getTmpDir(Main.TOOLNAME);
 	private final Map<String, ModuleInfo> modulesLocal = new HashMap<>();
 	private final List<String> possibleModules = new ArrayList<>();
 
-	private final StartupContainer sc;
+	final StartupContainer sc;
 	private final TaskPool taskPool;
 	private final UncaughtExceptionHandler exceptionHandler;
 
@@ -309,6 +309,7 @@ public class MasterThread extends Thread {
 			final InputStream in = connection.getInputStream();
 			final byte[] bytes = new byte[4];
 			final int versionRead = in.read(bytes);
+			in.close();
 			if (versionRead < 0) {
 				return false;
 			}
@@ -336,7 +337,7 @@ public class MasterThread extends Thread {
 
 	private final void die(final Path path) {
 		if (path != null) {
-						taskPool.close();
+			taskPool.close();
 			final boolean isFile = wd.toFile().isFile();
 			final String clazz = this.getClass().getCanonicalName();
 			
@@ -352,7 +353,7 @@ public class MasterThread extends Thread {
 			}
 			tmp.delete();
 			
-						new Thread() {
+			new Thread() {
 
 				@Override
 				final public void run() {
@@ -390,10 +391,9 @@ public class MasterThread extends Thread {
 					interrupt();
 					return;
 
-				} else {
-					System.err.println(e.getClass());
-					throw e;
 				}
+				System.err.println(e.getClass());
+				throw e;
 			}
 			io.setProgressSize(connection.getContentLength());
 			if (!tmp.exists()) {
@@ -401,6 +401,7 @@ public class MasterThread extends Thread {
 			}
 			target = tmp.resolve(module + ".jar");
 			final InputStream in = connection.getInputStream();
+			@SuppressWarnings("resource")
 			final OutputStream out = io.openOut(target.toFile());
 			final byte[] buffer = new byte[0x2000];
 			try {
@@ -461,13 +462,13 @@ public class MasterThread extends Thread {
 		}
 	}
 
-private final void loadModules() throws IOException {
+private final void loadModules() {
 		io.startProgress("Searching for modules", possibleModules.size());
 		for (final String module : possibleModules) {
 			if (isInterrupted()) {
 				return;
 			}
-			final Class<Module> clazz = sc.loadModule(module);
+			final Class<Module> clazz = StartupContainer.loadModule(module);
 			if (clazz != null)
 				modulesLocal.put(module, new ModuleInfo(clazz, module));
 			io.updateProgress();
@@ -475,6 +476,7 @@ private final void loadModules() throws IOException {
 		io.endProgress();
 	}
 	
+	@SuppressWarnings("resource")
 	private final Path repack() throws IOException {
 		if (isInterrupted()) {
 			return null;
@@ -559,22 +561,21 @@ private final void loadModules() throws IOException {
 			jarout.close();
 			io.close(out);
 			return target;
-		} else {
-			final Path tmp = this.tmp.resolve("stone/modules");
-			final Path modulesPath = wd.resolve("stone/modules");
-			final String[] dirs = tmp.toFile().list();
-			io.startProgress("Placing new class files", dirs.length);
-			boolean success = true;
-			for (final String dir : dirs) {
-				success &= tmp.resolve(dir).renameTo(modulesPath.resolve(dir));
-				io.updateProgress();
-			}
-			if (!success) {
-				io.printError("Update failed", false);
-				return null;
-			}
-			return wd;
 		}
+		final Path tmp_ = this.tmp.resolve("stone/modules");
+		final Path modulesPath = wd.resolve("stone/modules");
+		final String[] dirs = tmp_.toFile().list();
+		io.startProgress("Placing new class files", dirs.length);
+		boolean success = true;
+		for (final String dir : dirs) {
+			success &= tmp_.resolve(dir).renameTo(modulesPath.resolve(dir));
+			io.updateProgress();
+		}
+		if (!success) {
+			io.printError("Update failed", false);
+			return null;
+		}
+		return wd;
 	}
 	
 	private final void repair() {
@@ -650,7 +651,9 @@ private final void loadModules() throws IOException {
 					io.updateProgress();
 					continue;
 				}
+				@SuppressWarnings("resource")
 				final InputStream in = jar.getInputStream(e);
+				@SuppressWarnings("resource")
 				final OutputStream out = io.openOut(p.toFile());
 				io.write(in, out);
 				io.close(out);
@@ -662,36 +665,5 @@ private final void loadModules() throws IOException {
 			e.printStackTrace();
 			io.handleException(ExceptionHandle.TERMINATE, e);
 		}
-	}
-}
-
-enum Event {
-	INT, CLEAR_INT, LOCK_INT, UNLOCK_INT;
-}
-
-final class ThreadState {
-	private boolean interrupted = false, locked = true;
-
-	public final void handleEvent(final Event event) {
-		switch (event) {
-			case CLEAR_INT:
-				interrupted = false;
-				break;
-			case INT:
-				interrupted = true;
-				break;
-			case LOCK_INT:
-				locked = false;
-				break;
-			case UNLOCK_INT:
-				locked = true;
-				break;
-			default:
-				break;
-		}
-	}
-
-	public final boolean isInterrupted() {
-		return interrupted && locked;
 	}
 }

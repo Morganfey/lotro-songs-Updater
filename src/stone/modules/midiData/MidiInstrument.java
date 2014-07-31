@@ -3,12 +3,10 @@ package stone.modules.midiData;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.JPanel;
@@ -16,7 +14,6 @@ import javax.swing.JPanel;
 import stone.io.ExceptionHandle;
 import stone.io.IOHandler;
 import stone.io.InputStream;
-import stone.modules.abcCreator.DndPluginCaller;
 import stone.modules.abcCreator.DragObject;
 import stone.modules.abcCreator.DropTarget;
 import stone.modules.abcCreator.DropTargetContainer;
@@ -164,6 +161,7 @@ public class MidiInstrument implements
 	 * @param mapFile
 	 * @param io
 	 */
+	@SuppressWarnings("resource")
 	public final static void readMap(final Path mapFile, final IOHandler io) {
 		if (!mapFile.exists()) {
 			return;
@@ -600,152 +598,6 @@ public class MidiInstrument implements
 	@Override
 	public final String toString() {
 		return name;
-	}
-
-}
-
-class EmptyMidiInstrumentDropTarget implements
-		DropTarget<JPanel, JPanel, JPanel> {
-	final Set<DragObject<JPanel, JPanel, JPanel>> objects = new HashSet<>();
-	private final DropTargetContainer<JPanel, JPanel, JPanel> container;
-
-	EmptyMidiInstrumentDropTarget(
-			final DropTargetContainer<JPanel, JPanel, JPanel> container) {
-		this.container = container;
-	}
-
-	@Override
-	public final int compareTo(final DropTarget<?, ?, ?> o) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public final void displayParam(final String key, final JPanel container,
-			final JPanel menu,
-			final DndPluginCaller<JPanel, JPanel, JPanel> caller) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public final DropTargetContainer<JPanel, JPanel, JPanel> getContainer() {
-		return container;
-	}
-
-	@Override
-	public final JPanel getDisplayableComponent() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public final String getName() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public final Map<String, Integer> getParams() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public final Set<String> getParamsToSet() {
-		return Collections.emptySet();
-	}
-
-	@Override
-	public final Iterator<DragObject<JPanel, JPanel, JPanel>> iterator() {
-		return objects.iterator();
-	}
-
-	@Override
-	public final void link(final DragObject<JPanel, JPanel, JPanel> o) {
-		objects.add(o);
-	}
-
-	@Override
-	public final String printParam(final Entry<String, Integer> param) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public final void setParam(final String key, final Integer value) {
-		throw new UnsupportedOperationException();
-	}
-}
-
-class EmptyMidiInstrumentDropTargetContainer implements
-		DropTargetContainer<JPanel, JPanel, JPanel> {
-
-	private final EmptyMidiInstrumentDropTarget target =
-			new EmptyMidiInstrumentDropTarget(this);
-	private final JPanel panel = new JPanel();
-
-	@Override
-	public final void clearTargets() {
-		for (final DragObject<JPanel, JPanel, JPanel> d : target.objects) {
-			d.clearTargets();
-		}
-		target.objects.clear();
-	}
-
-	@Override
-	public final DropTarget<JPanel, JPanel, JPanel> createNewTarget() {
-		return target;
-	}
-
-	@Override
-	public final void delete(final DropTarget<JPanel, JPanel, JPanel> target) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public final JPanel getDisplayableComponent() {
-		return panel;
-	}
-
-	@Override
-	public final String getName() {
-		return " - NONE - ";
-	}
-
-	@Override
-	public final Iterator<DropTarget<JPanel, JPanel, JPanel>> iterator() {
-		if (target.objects.isEmpty()) {
-			return java.util.Collections.emptyIterator();
-		}
-		return new Iterator<DropTarget<JPanel, JPanel, JPanel>>() {
-
-			boolean hasNext = true;
-
-			@Override
-			public final boolean hasNext() {
-				return hasNext;
-			}
-
-			@Override
-			public final DropTarget<JPanel, JPanel, JPanel> next() {
-				hasNext = false;
-				return target;
-			}
-
-			@Override
-			public final void remove() {
-				throw new UnsupportedOperationException();
-			}
-
-		};
-	}
-
-
-	@Override
-	public Set<DropTarget<JPanel, JPanel, JPanel>> removeAllLinks(
-			final DragObject<JPanel, JPanel, JPanel> object) {
-		target.objects.remove(object);
-		if (target.objects.isEmpty()) {
-			final Set<DropTarget<JPanel, JPanel, JPanel>> s = new HashSet<>();
-			s.add(target);
-			return s;
-		}
-		return java.util.Collections.emptySet();
 	}
 
 }

@@ -1,6 +1,5 @@
 package stone.io;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,12 +15,12 @@ import java.util.Queue;
  * 
  * @author Nelphindal
  */
-public class InputStream extends java.io.InputStream implements Closeable {
+public class InputStream extends java.io.InputStream {
 
-	private final byte[] buffer;
+	private final byte[] _buffer;
 
-	private int offset = 0;
-	private int len = -1;
+	private int _offset = 0;
+	private int _length = -1;
 	private final ArrayDeque<Integer> marked = new ArrayDeque<>();
 	private FileInputStream stream;
 	private final Charset cs;
@@ -32,7 +31,7 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	 * Generates an empty InputStream
 	 */
 	public InputStream() {
-		buffer = null;
+		_buffer = null;
 		cs = null;
 		file = null;
 	}
@@ -51,7 +50,7 @@ public class InputStream extends java.io.InputStream implements Closeable {
 			throws FileNotFoundException {
 		this.cs = cs;
 		this.file = file;
-		buffer = new byte[16000];
+		_buffer = new byte[16000];
 	}
 
 	private final static byte[] merge(final Queue<byte[]> parts, int stackSize) {
@@ -192,13 +191,13 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	 * @throws IOException
 	 */
 	public final boolean EOFreached() throws IOException {
-		if (len < offset) {
-			offset = len;
+		if (_length < _offset) {
+			_offset = _length;
 		}
-		if (offset == len || len < 0) {
+		if (_offset == _length || _length < 0) {
 			fillBuff();
 		}
-		if (len == 0) {
+		if (_length == 0) {
 			if (io != null) {
 				io.endProgress();
 				io = null;
@@ -239,7 +238,7 @@ public class InputStream extends java.io.InputStream implements Closeable {
 		if (io != null) {
 			io.updateProgress();
 		}
-		return 0xff & buffer[offset++];
+		return 0xff & _buffer[_offset++];
 	}
 
 	/**
@@ -372,7 +371,7 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	 * 
 	 * @param io
 	 */
-	public final void registerProgressMonitor(final IOHandler io) {
+	public final void registerProgressMonitor(@SuppressWarnings("hiding") final IOHandler io) {
 		this.io = io;
 		io.startProgress("Reading file", (int) file.length());
 	}
@@ -382,7 +381,7 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	 */
 	@Override
 	public final void reset() {
-		len = -1;
+		_length = -1;
 		stream = null;
 	}
 
@@ -399,10 +398,10 @@ public class InputStream extends java.io.InputStream implements Closeable {
 	}
 
 	private final int addToStack(final Queue<byte[]> stack, int start) {
-		final int len = offset - start;
+		final int len = _offset - start;
 		final byte[] part = new byte[len];
 		stack.add(part);
-		System.arraycopy(buffer, start, part, 0, len);
+		System.arraycopy(_buffer, start, part, 0, len);
 		if (io != null) {
 			io.updateProgress(len);
 		}
@@ -413,44 +412,44 @@ public class InputStream extends java.io.InputStream implements Closeable {
 		final int buffered;
 		if (stream == null) {
 			if (!file.exists()) {
-				len = 0;
+				_length = 0;
 				return;
 			}
 			stream = new FileInputStream(file);
-			len = 0;
-			offset = 0;
+			_length = 0;
+			_offset = 0;
 			fillBuff();
 			// remove byte order mark
 			if (cs.toString().equals("UTF-16")) {
 				// FF FE
-				if (buffer[0] == -1 && buffer[1] == -2) {
-					offset += 2;
+				if (_buffer[0] == -1 && _buffer[1] == -2) {
+					_offset += 2;
 				}
 			} else if (cs.toString().equals("UTF-8")) {
 				// EF BB BF
-				if (buffer[0] == -17 && buffer[1] == -69 && buffer[2] == -65) {
-					offset += 3;
+				if (_buffer[0] == -17 && _buffer[1] == -69 && _buffer[2] == -65) {
+					_offset += 3;
 				}
 			}
 			return;
 		}
-		buffered = len - offset;
-		System.arraycopy(buffer, offset, buffer, 0, buffered);
-		offset = buffered;
-		len = buffered;
+		buffered = _length - _offset;
+		System.arraycopy(_buffer, _offset, _buffer, 0, buffered);
+		_offset = buffered;
+		_length = buffered;
 		if (stream.available() > 0) {
 			final int read =
-					stream.read(buffer, buffered, buffer.length - buffered);
-			len += read;
+					stream.read(_buffer, buffered, _buffer.length - buffered);
+			_length += read;
 		}
 	}
 
 	private final int fillExternalBuffer(final byte[] buffer, int offset,
-			int length) throws IOException {
-		final int remIntBuffer = len - this.offset;
+			int length) {
+		final int remIntBuffer = _length - this._offset;
 		final int lengthRet = Math.min(length, remIntBuffer);
-		System.arraycopy(this.buffer, this.offset, buffer, offset, lengthRet);
-		this.offset += lengthRet;
+		System.arraycopy(this._buffer, this._offset, buffer, offset, lengthRet);
+		this._offset += lengthRet;
 		if (io != null) {
 			io.updateProgress(lengthRet);
 		}
@@ -463,24 +462,24 @@ public class InputStream extends java.io.InputStream implements Closeable {
 			return null;
 		}
 		final Queue<byte[]> stack = new ArrayDeque<>();
-		int start = offset, length = 0;
+		int start = _offset, length = 0;
 		while (true) {
-			if (buffer[offset] == mark) {
-				marked.add(offset);
-			} else if (buffer[offset] == terminal) {
+			if (_buffer[_offset] == mark) {
+				marked.add(_offset);
+			} else if (_buffer[_offset] == terminal) {
 				length += addToStack(stack, start);
 				break;
 			}
-			if (++offset == len) {
+			if (++_offset == _length) {
 				length += addToStack(stack, start);
 				fillBuff();
 				start = 0;
-				if (len == 0) {
+				if (_length == 0) {
 					break;
 				}
 			}
 		}
-		++offset;
+		++_offset;
 		return InputStream.merge(stack, length);
 	}
 }

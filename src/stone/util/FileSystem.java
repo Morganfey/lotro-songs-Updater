@@ -1,10 +1,8 @@
 package stone.util;
 
-import stone.gui.GUI;
+import stone.io.GUI;
 
 import java.nio.charset.Charset;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import javax.swing.filechooser.FileFilter;
 
@@ -24,10 +22,10 @@ public abstract class FileSystem {
 		 * Any windows version between Windows XP and Windows 8
 		 */
 		WINDOWS("\\", "\r\n"),
-		/**
-		 * Any unix indicating itself as linux kernel
-		 */
-		LINUX("/", "\n"),
+//		/**
+//		 * Any unix indicating itself as linux kernel
+//		 */
+//		LINUX("/", "\n"),
 		/**
 		 * Any unix system, which is not sub-classified
 		 */
@@ -37,7 +35,7 @@ public abstract class FileSystem {
 		 */
 		UNKNOWN(null, null);
 
-		private String subtype;
+		String subtype;
 
 		private final String sepLine, sepFile;
 
@@ -75,7 +73,7 @@ public abstract class FileSystem {
 
 	private static final FileSystem instance = FileSystem.createInstance();
 
-	private final static Future<Path> home = FileSystem.getHome();
+	private final static Path home = FileSystem.getHome();
 
 	/**
 	 * Creates a new FileSystem
@@ -87,12 +85,7 @@ public abstract class FileSystem {
 	 * @return The path equivalent to ~ on linux, %HOME% on windows.
 	 */
 	public final static Path getBase() {
-		try {
-			return FileSystem.home.get();
-		} catch (final InterruptedException | ExecutionException e) {
-			e.printStackTrace();
-			return null;
-		}
+		return FileSystem.home;
 	}
 
 	/**
@@ -115,7 +108,7 @@ public abstract class FileSystem {
 		if (predefinedPath == null) {
 			switch (FileSystem.type) {
 				case UNIX:
-				case LINUX:
+//				case LINUX:
 					fullPath =
 							FileSystem.home + "/Documents/"
 									+ pathRelToDocuments;
@@ -126,16 +119,15 @@ public abstract class FileSystem {
 					if (versionNbr < 5.0) {
 						// Windows NT
 						return FileSystem.askForBase(gui, title, ff);
-					} else {
-						// 6.0: Windows Vista, Server 2008
-						// 6.1: Server 2008 R2, 7
-						// 6.2: 8, Server 2012
-						// 6.3: 8.1, Server 2012 R2
-						// %userProfile% = <root>/Users/<username>
-						final String relPath =
-								"\\Documents\\" + pathRelToDocuments;
-						fullPath = FileSystem.home + relPath;
 					}
+					// 6.0: Windows Vista, Server 2008
+					// 6.1: Server 2008 R2, 7
+					// 6.2: 8, Server 2012
+					// 6.3: 8.1, Server 2012 R2
+					// %userProfile% = <root>/Users/<username>
+					final String relPath =
+							"\\Documents\\" + pathRelToDocuments;
+					fullPath = FileSystem.home + relPath;
 					break;
 				default:
 					fullPath = null;
@@ -174,7 +166,7 @@ public abstract class FileSystem {
 	}
 
 	private final static Path askForBase(final GUI gui, final String title,
-			final FileFilter ff) throws InterruptedException {
+			final FileFilter ff) {
 		final Path path = gui.getPath(title, ff, null);
 		if (path == null) {
 			return null;
@@ -188,7 +180,7 @@ public abstract class FileSystem {
 	private final static FileSystem createInstance() {
 		switch (FileSystem.type) {
 			case UNIX:
-			case LINUX:
+//			case LINUX:
 				return new UnixFileSystem();
 			case WINDOWS:
 				return new WindowsFileSystem();
@@ -201,28 +193,29 @@ public abstract class FileSystem {
 		final String osName = System.getProperty("os.name");
 		if (osName.startsWith("Windows")) {
 			return OSType.WINDOWS.setSubtype(osName.substring(8));
-		} else if (osName.startsWith("Unix")) {
+		} else if (osName.startsWith("Unix") || osName.startsWith("Linux")) {
 			return OSType.UNIX;
-		} else if (osName.startsWith("Linux")) {
-			return OSType.LINUX;
+//		} else if (osName.startsWith("Linux")) {
+//			return OSType.LINUX;
 		}
 		throw new UnrecognizedOSException();
 	}
 
-	private final static Future<Path> getHome() {
-		final String home = System.getProperty("user.home");
+	private final static Path getHome() {
+		final String home_ = System.getProperty("user.home");
 		switch (FileSystem.type) {
 			case UNIX:
-			case LINUX:
-				return Path.getPathFSInit(home);
+//			case LINUX:
+				return Path.getPath(home_);
 			case WINDOWS:
 				if (FileSystem.type.subtype.equals("Windows Vista")) {
 					// workaround for bug on vista, see
 					// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6519127
 					final String user = System.getProperty("user.name");
-					return Path.getPathFSInit(home.substring(0, 9) + user);
+					return Path.getPath((home_.substring(0, 9) + user)
+							.split("\\" + getFileSeparator()));
 				}
-				return Path.getPathFSInit(home);
+				return Path.getPath(home_.split("\\" + getFileSeparator()));
 			default:
 		}
 		return null;

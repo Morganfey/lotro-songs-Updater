@@ -24,6 +24,8 @@ public class ModuleLoader extends ClassLoader {
 	private final boolean jar;
 	private final Path workingDirectory;
 
+	private byte[] buffer = new byte[0xc000];
+
 	private final Map<String, Class<?>> loadedClasses = new HashMap<>();
 
 
@@ -61,7 +63,7 @@ public class ModuleLoader extends ClassLoader {
 		try {
 			url =
 					new URL((jar ? "jar:" : "") + "file:/"
-							+ (workingDirectory.toString())
+							+ workingDirectory.toString()
 							+ (jar ? "!/" + s : ""));
 			return url;
 		} catch (final MalformedURLException e) {
@@ -78,8 +80,9 @@ public class ModuleLoader extends ClassLoader {
 		return workingDirectory;
 	}
 
+	@Override
 	public final Class<?> loadClass(final String name) {
-		if (name.startsWith("stone.")) {
+		if (name.startsWith("stone.") || name.startsWith("org.") || name.startsWith("com.")) {
 			return findClass(name);
 		}
 		try {
@@ -98,6 +101,7 @@ public class ModuleLoader extends ClassLoader {
 		return jar;
 	}
 
+	@SuppressWarnings("resource")
 	@Override
 	protected Class<?> findClass(final String name) {
 		java.io.File f = null;
@@ -105,31 +109,30 @@ public class ModuleLoader extends ClassLoader {
 		if (c == null) {
 			if (jar) {
 				try {
-					final JarFile jar = new JarFile(workingDirectory.toFile());
+					final JarFile jarFile = new JarFile(workingDirectory.toFile());
 					final java.util.zip.ZipEntry e =
-							jar.getEntry(name.replaceAll("\\.", "/") + ".class");
+							jarFile.getEntry(name.replaceAll("\\.", "/") + ".class");
 					if (e == null) {
-						jar.close();
+						jarFile.close();
 						return null;
 					}
-					final java.io.InputStream in = jar.getInputStream(e);
+					final java.io.InputStream in = jarFile.getInputStream(e);
 					final java.io.File g =
 							Path.getTmpDir("unpack_class").toFile();
 					final java.io.OutputStream o =
 							new java.io.FileOutputStream(g);
-					final byte[] b = new byte[400];
 					do {
 						int length;
-						if ((length = in.read(b)) < 0)
+						if ((length = in.read(buffer)) < 0)
 							break;
-						o.write(b, 0, length);
+						o.write(buffer, 0, length);
 					} while (true);
 					o.flush();
 					o.close();
 					in.close();
-					jar.close();
+					jarFile.close();
 					f = g;
-				} catch (IOException e) {
+				} catch (final IOException e) {
 					e.printStackTrace();
 				}
 			} else {
@@ -139,22 +142,30 @@ public class ModuleLoader extends ClassLoader {
 				path = path.getParent().resolve(path.getFileName() + ".class");
 				f = path.toFile();
 			}
-			final byte[] b = new byte[(int) f.length()];
+			assert f != null;
 			java.io.InputStream in;
+			final int size = (int) f.length();
+			if (buffer.length < size)
+				buffer = new byte[(size & ~0x3ff) + 0x400];
 			try {
 				in = new java.io.FileInputStream(f);
-				int offset = 0;
-				while (offset < b.length) {
-					offset += in.read(b, offset, b.length - offset);
+				try {
+					int offset = 0;
+					while (offset < size) {
+						offset += in.read(buffer, offset, size - offset);
+					}
+					in.close();
+					if (jar)
+						f.delete();
+					c = defineClass(null, buffer, 0, size);
+					loadedClasses.put(name, c);
+				} finally {
+					in.close();
 				}
-				in.close();
-				if (jar)
-					f.delete();
-				c = defineClass(null, b, 0, b.length);
-				loadedClasses.put(name, c);
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				e.printStackTrace();
 			}
+
 		}
 		return c;
 	}

@@ -162,36 +162,36 @@ public final class SongbookUpdater implements Module {
 						true);
 			}
 			return;
-		} else {
-			final File userIni =
-					pluginDataPath.getParent().resolve("UserPreferences.ini")
-							.toFile();
-			final InputStream in = io.openIn(userIni);
-			if (userIni.length() != 0) {
-				do {
-					try {
-						in.readTo((byte) '[');
-						final String line = in.readLine();
-						if (line == null) {
-							break;
-						}
-						if (line.startsWith("User_")) {
-							do {
-								final String userLine = in.readLine();
-								if (userLine.startsWith("UserName=")) {
-									profiles.add(userLine.substring(9));
-									break;
-								}
-							} while (true);
-						}
-					} catch (final IOException e) {
-						io.handleException(ExceptionHandle.CONTINUE, e);
+		}
+		final File userIni =
+				pluginDataPath.getParent().resolve("UserPreferences.ini")
+						.toFile();
+		@SuppressWarnings("resource")
+		final InputStream in = io.openIn(userIni);
+		if (userIni.length() != 0) {
+			do {
+				try {
+					in.readTo((byte) '[');
+					final String line = in.readLine();
+					if (line == null) {
 						break;
 					}
-				} while (true);
-			}
-			io.close(in);
+					if (line.startsWith("User_")) {
+						do {
+							final String userLine = in.readLine();
+							if (userLine.startsWith("UserName=")) {
+								profiles.add(userLine.substring(9));
+								break;
+							}
+						} while (true);
+					}
+				} catch (final IOException e) {
+					io.handleException(ExceptionHandle.CONTINUE, e);
+					break;
+				}
+			} while (true);
 		}
+		io.close(in);
 		container.fill();
 
 		final File masterPluginData = songbookPlugindataPath.toFile();
@@ -222,6 +222,7 @@ public final class SongbookUpdater implements Module {
 					continue;
 				}
 			}
+			@SuppressWarnings("resource")
 			final OutputStream out = io.openOut(target);
 			io.write(io.openIn(masterPluginData), out);
 			io.close(out);

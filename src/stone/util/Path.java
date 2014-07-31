@@ -9,10 +9,6 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 
 /**
@@ -21,7 +17,7 @@ import java.util.concurrent.TimeoutException;
  */
 public final class Path implements Comparable<Path> {
 
-	private static int nextHash = 0;
+	private static int nextHash;
 
 
 	private static final Map<String, Path> rootMap = buildRootMap();
@@ -43,7 +39,12 @@ public final class Path implements Comparable<Path> {
 	private final String str;
 
 	private final String pathStr;
+
+
+	private final static Object finalizerMonitor = new Object();
 	private final static StringBuilder relativizer = new StringBuilderPath();
+	private final static Path tmpRoot = getPath(System.getProperty(
+			"java.io.tmpdir").split("\\" + FileSystem.getFileSeparator()));
 
 	/**
 	 * creates new path with parent != root
@@ -66,14 +67,16 @@ public final class Path implements Comparable<Path> {
 			dirs[parent.dirs.length] = parent.filename;
 			System.arraycopy(parent.dirs, 0, dirs, 0, parent.dirs.length);
 		}
-
-		synchronized (Path.class) {
-			if (!Path.reusableHashes.isEmpty()) {
-				hash = Path.reusableHashes.remove();
-			} else {
-				hash = ++Path.nextHash;
-			}
+		if (rootMap == null) // Path.class not yet valid ...
+			hash = ++nextHash;
+		else
+//			 synchronized (finalizerMonitor) { object owned already by calling getPathFunc(String)
+		if (!Path.reusableHashes.isEmpty()) {
+			hash = Path.reusableHashes.remove();
+		} else {
+			hash = ++Path.nextHash;
 		}
+//			}
 	}
 
 	/**
@@ -108,26 +111,15 @@ public final class Path implements Comparable<Path> {
 		if (name.length == 0) {
 			throw new IllegalArgumentException();
 		}
-		if (name[0].contains("/")) {
-			return Path.getPath(name[0].split("/")).resolve(name, 1);
-		}
 		int idx = 0;
 		if (name[idx].isEmpty()) {
 			name[idx] = "/";
-		} else if (name[idx].contains(FileSystem.getFileSeparator())) {
-			return Path.getPath(
-					name[idx].split("\\" + FileSystem.getFileSeparator()))
-					.resolve(name, 1);
-		}
-		if (FileSystem.type == FileSystem.OSType.WINDOWS
-				&& name[0].startsWith("/")) {
-			name[idx] = name[idx].substring(1);
-			if (name[idx].isEmpty()) {
-				++idx;
-			}
 		}
 		final String base = name[idx];
-		p = Path.rootMap.get(base);
+		if (rootMap == null) {
+			p = new Path(base);
+		} else
+			p = Path.rootMap.get(base);
 		if (p == null) {
 			throw new RuntimeException("Invalid path: invalid root: " + base);
 		}
@@ -155,8 +147,7 @@ public final class Path implements Comparable<Path> {
 		}
 		if (FileSystem.type == FileSystem.OSType.WINDOWS)
 			sb.setHead(1);
-		else if (FileSystem.type == FileSystem.OSType.UNIX
-				|| FileSystem.type == FileSystem.OSType.LINUX) {
+		else if (FileSystem.type == FileSystem.OSType.UNIX) {
 			path = rootMap.get("/");
 			sb.setHead(1);
 		}
@@ -202,9 +193,7 @@ public final class Path implements Comparable<Path> {
 	public final static Path getTmpDir(final String prefix) {
 		while (true) {
 			final int rand = (int) (Math.random() * Integer.MAX_VALUE);
-			final Path tmp =
-					Path.getPath(System.getProperty("java.io.tmpdir")).resolve(
-							prefix + "_temp" + rand);
+			final Path tmp = tmpRoot.resolve(prefix + "_temp" + rand);
 			if (!tmp.exists()) {
 				return tmp;
 			}
@@ -215,15 +204,41 @@ public final class Path implements Comparable<Path> {
 	private final static Map<String, Path> buildRootMap() {
 		final String[] bases = FileSystem.getBases();
 		final Map<String, Path> map = new HashMap<>();
-		for (final String p : bases) {
-			final Path root = new Path(p);
-			if (!root.exists()) {
-				continue;
+		final String baseName;
+		Path base = FileSystem.getBase();
+		if (base != null) {
+			while (base.parent != null)
+				base = base.parent;
+			if (FileSystem.type == FileSystem.OSType.WINDOWS) {
+				baseName = base.str.substring(0, 2);
+			} else
+				baseName = "/";
+		} else
+			baseName = null;
+		if (baseName != null)
+			for (final String p : bases) {
+				final Path root;
+				if (baseName.equals(p)) {
+					root = base;
+				} else
+					root = new Path(p);
+				if (!root.exists()) {
+					continue;
+				}
+				map.put(root.str, root);
+				map.put(root.pathStr, root);
+				map.put(p, root);
 			}
-			map.put(root.str, root);
-			map.put(root.pathStr, root);
-			map.put(p, root);
-		}
+		else
+			for (final String p : bases) {
+				final Path root = new Path(p);
+				if (!root.exists()) {
+					continue;
+				}
+				map.put(root.str, root);
+				map.put(root.pathStr, root);
+				map.put(p, root);
+			}
 		return map;
 
 	}
@@ -238,44 +253,6 @@ public final class Path implements Comparable<Path> {
 			}
 		}
 		return file.delete();
-	}
-
-	final static Future<Path> getPathFSInit(final String name) {
-		return new Future<Path>() {
-
-			private Path path;
-
-			@Override
-			public final boolean cancel(boolean mayInterruptIfRunning) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public final Path get() throws InterruptedException,
-					ExecutionException {
-				if (path == null) {
-					path = Path.getPath(name);
-				}
-				return path;
-			}
-
-			@Override
-			public final Path get(long timeout, TimeUnit unit)
-					throws InterruptedException, ExecutionException,
-					TimeoutException {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public final boolean isCancelled() {
-				return false;
-			}
-
-			@Override
-			public final boolean isDone() {
-				return path != null;
-			}
-		};
 	}
 
 	/** */
@@ -326,9 +303,8 @@ public final class Path implements Comparable<Path> {
 			if (!newPath.exists()) {
 				if (renameTo(newPath)) {
 					return string.appendLast(end).toString();
-				} else {
-					return null;
 				}
+				return null;
 			}
 			string.appendLast(suffix);
 		}
@@ -536,9 +512,8 @@ public final class Path implements Comparable<Path> {
 			}
 			ret &= delete();
 			return ret;
-		} else {
-			return toFile().renameTo(pathNew.toFile());
 		}
+		return toFile().renameTo(pathNew.toFile());
 	}
 
 	/**
@@ -558,12 +533,8 @@ public final class Path implements Comparable<Path> {
 			return Path.getPath(name);
 		}
 		Path p = this;
-		for (final String element : name) {
-			p =
-					p.resolve(
-							element.split("\\" + FileSystem.getFileSeparator()),
-							0);
-		}
+		for (final String s : name)
+			p = p.getPathFunc(s);
 		return p;
 	}
 
@@ -583,13 +554,7 @@ public final class Path implements Comparable<Path> {
 		if (other.startsWith(FileSystem.getFileSeparator())) {
 			return resolve(other.substring(1));
 		}
-		final String[] names;
-		names = other.split("[\\" + FileSystem.getFileSeparator() + "]");
-		Path p = this;
-		for (final String name : names) {
-			p = p.getPathFunc(name);
-		}
-		return p;
+		return getPathFunc(other);
 	}
 
 	/**
@@ -636,7 +601,10 @@ public final class Path implements Comparable<Path> {
 				return parent;
 			}
 		}
-		synchronized (Path.class) {
+		if (rootMap == null) { // Path.class not yet valid ...
+			return new Path(this, name);
+		}
+		synchronized (finalizerMonitor) {
 			p = successors.get(name);
 			if (p == null || p.isEnqueued()) {
 				return new Path(this, name);
@@ -659,7 +627,7 @@ public final class Path implements Comparable<Path> {
 	/** */
 	@Override
 	protected final void finalize() throws Throwable {
-		synchronized (Path.class) {
+		synchronized (finalizerMonitor) {
 			if (parent == null) {
 				Path.rootMap.remove(str);
 				Path.rootMap.remove("/" + str);

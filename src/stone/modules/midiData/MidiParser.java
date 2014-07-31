@@ -34,6 +34,10 @@ public abstract class MidiParser {
 		/** */
 		private static final long serialVersionUID = 1L;
 
+		public InvalidMidiTrackHeader() {
+		}
+		
+
 		@Override
 		public final String toString() {
 			return "Invalid track-header";
@@ -44,6 +48,10 @@ public abstract class MidiParser {
 
 		/** */
 		private static final long serialVersionUID = 1L;
+
+		public MissingBytesAtEOT() {
+		}
+		
 
 		@Override
 		public final String toString() {
@@ -56,6 +64,10 @@ public abstract class MidiParser {
 
 		/** */
 		private static final long serialVersionUID = 1L;
+
+		public NoEOT() {
+		}
+		
 
 		@Override
 		public final String toString() {
@@ -85,7 +97,10 @@ public abstract class MidiParser {
 
 	private final class ParseState_Delta extends ParseState {
 
-		private int delta;
+		int delta;
+
+		public ParseState_Delta() {
+		}
 
 		@Override
 		final ParseState getNext(byte read) {
@@ -105,6 +120,9 @@ public abstract class MidiParser {
 
 	private final class ParseState_EOT extends ParseState {
 
+		public ParseState_EOT() {
+		}
+
 		@Override
 		final ParseState getNext(byte read) throws ParsingException {
 			if (read != 0) {
@@ -113,11 +131,11 @@ public abstract class MidiParser {
 			if (trackLen != 0) {
 				throw new MissingBytesAtEOT();
 			}
-			if (channel >= 0) {
-				tracksToChannel.put(n, (byte) (0xff & channel));
+			if (activeChannel >= 0) {
+				tracksToChannel.put(activeTrack, (byte) (0xff & activeChannel));
 			}
-			++n;
-			channel = -1;
+			++activeTrack;
+			activeChannel = -1;
 			return HEADER;
 		}
 
@@ -130,7 +148,7 @@ public abstract class MidiParser {
 
 	private final class ParseState_Header extends ParseState {
 
-		private ParseState_Header() {
+		ParseState_Header() {
 		}
 
 		@Override
@@ -157,7 +175,7 @@ public abstract class MidiParser {
 					trackLen += 0xff & bytes.remove();
 				}
 				state = DELTA;
-				eventsEncoded.put(n, new ArrayList<MidiEvent>());
+				eventsEncoded.put(activeTrack, new ArrayList<MidiEvent>());
 			}
 		}
 
@@ -168,6 +186,10 @@ public abstract class MidiParser {
 	}
 
 	private final class ParseState_Meta extends ParseState {
+
+		public ParseState_Meta() {
+		}
+		
 
 		@Override
 		final ParseState getNext(byte read) {
@@ -200,7 +222,12 @@ public abstract class MidiParser {
 
 	private final class ParseState_NoteOff extends ParseState {
 
-		private int k, v, channel;
+		int k;
+		int v;
+		int channel;
+
+		public ParseState_NoteOff() {
+		}
 
 		@Override
 		final ParseState getNext(byte read) {
@@ -209,8 +236,8 @@ public abstract class MidiParser {
 				return this;
 			} else if (v < 0) {
 				v = 0xff & read;
-				if (MidiParser.this.channel >= 0) {
-					channel = MidiParser.this.channel;
+				if (MidiParser.this.activeChannel >= 0) {
+					channel = MidiParser.this.activeChannel;
 				}
 				lastEvent =
 						new NoteOffEvent((byte) k, (byte) v, (byte) channel,
@@ -230,14 +257,20 @@ public abstract class MidiParser {
 
 	private final class ParseState_NoteOn extends ParseState {
 
-		private int k, v, channel;
+		int k;
+		int v;
+		int channel;
+
+		public ParseState_NoteOn() {
+		}
+		
 
 		@Override
 		final ParseState getNext(byte read) {
-			if (MidiParser.this.channel == -1) {
-				MidiParser.this.channel = channel;
-			} else if (MidiParser.this.channel != channel) {
-				MidiParser.this.channel = -2;
+			if (MidiParser.this.activeChannel == -1) {
+				MidiParser.this.activeChannel = channel;
+			} else if (MidiParser.this.activeChannel != channel) {
+				MidiParser.this.activeChannel = -2;
 			}
 			if (k < 0) {
 				k = 0xff & read;
@@ -269,6 +302,10 @@ public abstract class MidiParser {
 	private final class ParseState_ProgramChange extends ParseState {
 		byte channel;
 
+		public ParseState_ProgramChange() {
+		}
+		
+
 		@Override
 		final ParseState getNext(byte read) {
 			channelsToInstrument.put(channel, read);
@@ -282,7 +319,7 @@ public abstract class MidiParser {
 	}
 
 	private abstract class ParseState_ReadN extends ParseState {
-		private int len;
+		int len;
 		private boolean check;
 		private final boolean firstByteIsLen;
 
@@ -340,7 +377,7 @@ public abstract class MidiParser {
 
 	private final class ParseState_Tempo extends ParseState_ReadN {
 
-		private ParseState_Tempo() {
+		ParseState_Tempo() {
 			super();
 		}
 
@@ -357,6 +394,9 @@ public abstract class MidiParser {
 
 	private final class ParseState_Time extends ParseState_ReadN {
 
+		public ParseState_Time() {
+		}
+
 		@Override
 		final void end() {
 			final byte n = bytes.remove().byteValue();
@@ -369,6 +409,10 @@ public abstract class MidiParser {
 
 	private final class ParseState_Type extends ParseState {
 		int lastStatus;
+
+		public ParseState_Type() {
+		}
+		
 
 		@Override
 		final ParseState getNext(byte read) throws ParsingException {
@@ -470,38 +514,6 @@ public abstract class MidiParser {
 		}
 	}
 
-	/**
-	 * Exception indicating that an error occurred while decoding previously
-	 * parsed midi-events
-	 * 
-	 * @author Nelphindal
-	 */
-	protected abstract class DecodingException extends Exception {
-
-		/** */
-		private static final long serialVersionUID = 1L;
-
-		/** */
-		@Override
-		public abstract String toString();
-	}
-
-	/**
-	 * Exception indicating that an error occured while parsing selected file
-	 * and generating the midi-events
-	 * 
-	 * @author Nelphindal
-	 */
-	protected abstract class ParsingException extends Exception {
-
-		/** */
-		private static final long serialVersionUID = 1L;
-
-		/** */
-		@Override
-		public abstract String toString();
-	}
-
 	/** Header of a midi file */
 	protected static final String MIDI_HEADER = "MThd";
 	/** Header of a midi file, byte equivalent */
@@ -511,7 +523,7 @@ public abstract class MidiParser {
 	/** Header of a track within a midi file, byte equivalent */
 	protected static final int TRACK_HEADER_INT = 0x4d54726b;
 
-	private final static Set<ParseState> instancesOfParseState =
+	final static Set<ParseState> instancesOfParseState =
 			new HashSet<>();
 
 	/** The master thread, to check for interruption */
@@ -541,23 +553,23 @@ public abstract class MidiParser {
 	protected int ntracks;
 
 	/** Number of track currently parsed */
-	protected int n;
+	protected int activeTrack;
 
 	/** Format of this midi */
 	protected int format;
 
-	private final ParseState CHANNEL = new ParseState_ReadN(1) {
+	final ParseState CHANNEL = new ParseState_ReadN(1) {
 
 		@Override
 		final void end() {
 			final byte c = bytes.remove();
-			tracksToChannel.put(n, c);
-			channel = 0xff & c;
+			tracksToChannel.put(activeTrack, c);
+			activeChannel = 0xff & c;
 		}
 	};
 
-	private final ParseState_Delta DELTA = new ParseState_Delta();
-	private final ParseState DISCARD_UNTIL_EOX = new ParseState() {
+	final ParseState_Delta DELTA = new ParseState_Delta();
+	final ParseState DISCARD_UNTIL_EOX = new ParseState() {
 
 		@Override
 		final ParseState getNext(byte read) {
@@ -573,7 +585,7 @@ public abstract class MidiParser {
 		}
 
 	};
-	private final ParseState_ReadN DISCARD_N = new ParseState_ReadN() {
+	final ParseState_ReadN DISCARD_N = new ParseState_ReadN() {
 
 		@Override
 		final void end() {
@@ -584,11 +596,11 @@ public abstract class MidiParser {
 		}
 	};
 
-	private final ParseState EOT = new ParseState_EOT();
-	private final ParseState_Header HEADER = new ParseState_Header();
-	private final ParseState_Type TYPE = new ParseState_Type();
-	private final ParseState META = new ParseState_Meta();
-	private final ParseState NAME = new ParseState_ReadN() {
+	final ParseState EOT = new ParseState_EOT();
+	final ParseState_Header HEADER = new ParseState_Header();
+	final ParseState_Type TYPE = new ParseState_Type();
+	final ParseState META = new ParseState_Meta();
+	final ParseState NAME = new ParseState_ReadN() {
 
 		@Override
 		final void end() {
@@ -599,37 +611,37 @@ public abstract class MidiParser {
 			if (sb.length() > 60) {
 				sb.setLength(60);
 			}
-			titles.put(n, sb.toString().trim());
+			titles.put(activeTrack, sb.toString().trim());
 		}
 
 	};
-	private final ParseState_NoteOn NOTE_ON = new ParseState_NoteOn();
-	private final ParseState_NoteOff NOTE_OFF = new ParseState_NoteOff();
-	private final ParseState_ProgramChange PROGRAM_CHANGE =
+	final ParseState_NoteOn NOTE_ON = new ParseState_NoteOn();
+	final ParseState_NoteOff NOTE_OFF = new ParseState_NoteOff();
+	final ParseState_ProgramChange PROGRAM_CHANGE =
 			new ParseState_ProgramChange();
-	private final ParseState TEMPO = new ParseState_Tempo();
+	final ParseState TEMPO = new ParseState_Tempo();
 
-	private final ParseState TIME = new ParseState_Time();
+	final ParseState TIME = new ParseState_Time();
 
 	/** A map mapping channels to instruments */
-	private final Map<Byte, Byte> channelsToInstrument = new HashMap<>();
+	final Map<Byte, Byte> channelsToInstrument = new HashMap<>();
 
 	/** A map holding the instruments */
 	private final Map<Integer, MidiInstrument> instruments = new HashMap<>();
 	/** A map holding the titles */
-	private final Map<Integer, String> titles = new HashMap<>();
+	final Map<Integer, String> titles = new HashMap<>();
 	/** A map mapping tracks to channels */
-	private final Map<Integer, Byte> tracksToChannel = new HashMap<>();
-	private final ArrayDeque<Byte> bytes = new ArrayDeque<>();
+	final Map<Integer, Byte> tracksToChannel = new HashMap<>();
+	final ArrayDeque<Byte> bytes = new ArrayDeque<>();
 	/** Number of channel currently parsed */
-	private int channel = -1;
-	private MidiEvent lastEvent;
+	int activeChannel = -1;
+	MidiEvent lastEvent;
 	private Path lastParsedMidi = null;
 	private int lock = 0;
 	private int lockRead = 0;
 	private long mod;
-	private ParseState state = HEADER;
-	private int trackLen;
+	ParseState state = HEADER;
+	int trackLen;
 
 	/**
 	 * @param io
@@ -780,8 +792,8 @@ public abstract class MidiParser {
 			if (lastParsedMidi == null) {
 				return null;
 			}
-			final MidiMap eventsDecoded = this.eventsDecoded.clone();
-			return eventsDecoded;
+			final MidiMap eventsDecoded_ = this.eventsDecoded.clone();
+			return eventsDecoded_;
 		} catch (final FileNotFoundException e) {
 			io.printError("Selected midi does not exist", true);
 			return null;
@@ -846,8 +858,8 @@ public abstract class MidiParser {
 			ps.reset();
 		}
 		state = HEADER;
-		n = 0;
-		channel = -1;
+		activeTrack = 0;
+		activeChannel = -1;
 		ntracks = -1;
 		try {
 			prepareMidi(midi);
@@ -1023,8 +1035,8 @@ public abstract class MidiParser {
 	 * Requests to delete and clear all cached data to prepare next parsing
 	 * routine
 	 * 
-	 * @param midi
+	 * @param newMidi
 	 * @throws Exception
 	 */
-	protected abstract void prepareMidi(final Path midi) throws Exception;
+	protected abstract void prepareMidi(final Path newMidi) throws Exception;
 }

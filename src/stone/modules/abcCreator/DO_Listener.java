@@ -21,7 +21,7 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 	private final DragObject<C, D, T> object;
 	private final DndPluginCaller<C, D, T> caller;
 	private final BruteParams[] params;
-	private BruteParams param;
+	BruteParams param;
 
 	private JPanel panelOption;
 	private static final Font font = Font.decode("Arial bold 9");
@@ -36,7 +36,7 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 		object.getDisplayableComponent().setBackground(DNDListener.C_INACTIVE);
 	}
 
-	private final void displayParam() {
+	final void displayParam() {
 		panelOption.removeAll();
 		final Iterator<DropTarget<C, D, T>> targets = object.iterator();
 		param.display(panelOption, object, targets);

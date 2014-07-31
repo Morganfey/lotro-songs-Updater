@@ -1,14 +1,12 @@
 package stone.io;
 
-import stone.gui.GUI;
-import stone.gui.GUIPlugin;
-
 import java.io.File;
 
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 
+import stone.util.FileSystem;
 import stone.util.Path;
 
 
@@ -45,7 +43,7 @@ public class FileSelectionGUIPlugin extends GUIPlugin {
 		if (selected == null) {
 			return null;
 		}
-		return Path.getPath(selected.toString());
+		return Path.getPath(selected.toString().split("\\" + FileSystem.getFileSeparator()));
 	}
 
 	/** */

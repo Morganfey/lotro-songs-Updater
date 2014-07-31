@@ -17,7 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import stone.gui.GUIPlugin;
+import stone.io.GUIPlugin;
 import stone.io.IOHandler;
 import stone.modules.midiData.MidiMap;
 import stone.modules.midiData.MidiParser;
@@ -58,7 +58,7 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 		final DragAndDropPlugin<C, D, T> plugin = DragAndDropPlugin.this;
 
 
-		private State(final IOHandler io,
+		State(final IOHandler io,
 				final List<DropTargetContainer<C, D, T>> targets) {
 			this.io = io;
 			emptyTarget = targets.get(targets.size() - 1).createNewTarget();

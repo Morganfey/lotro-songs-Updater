@@ -1,4 +1,4 @@
-package stone.gui;
+package stone.io;
 
 import java.awt.Component;
 import java.util.Collection;

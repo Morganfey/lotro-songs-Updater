@@ -16,9 +16,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import stone.gui.GUIInterface.Button;
-import stone.gui.GUIPlugin;
+import stone.io.GUIPlugin;
 import stone.io.IOHandler;
+import stone.io.GUIInterface.Button;
 
 
 /**
@@ -121,12 +121,12 @@ public class NumberingGUI extends GUIPlugin {
 			final JCheckBox optBox = new JCheckBox();
 			final String title;
 			{
-				final Set<?> instruments = this.instruments.get(key);
+				final Set<?> instruments_ = this.instruments.get(key);
 				final String titleString = titles.get(key);
 				title =
 						(titleString == null ? "<No title>" : titleString)
 								+ " "
-								+ (instruments == null ? "[?]" : instruments
+								+ (instruments_ == null ? "[?]" : instruments_
 										.toString());
 			}
 			trackPanel.setLayout(new BorderLayout());

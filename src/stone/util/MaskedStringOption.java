@@ -21,8 +21,11 @@ import javax.swing.event.ChangeListener;
  */
 public final class MaskedStringOption extends Option {
 
-	private boolean save, show, initialValue = true;
-	private final StringBuilder content, sb;
+	final StringBuilder content;
+	boolean initialValue = true;
+	boolean save;
+	boolean show;
+	private final StringBuilder sb;
 
 	/**
 	 * Creates a new MaskedStringOption.
@@ -202,7 +205,7 @@ public final class MaskedStringOption extends Option {
 		content.set(s);
 	}
 
-	private final void printValue(final JTextField textField) {
+	final void printValue(final JTextField textField) {
 		if (content.isEmpty()) {
 			textField.setText(getTooltip());
 			textField.setForeground(Color.GRAY);

@@ -33,9 +33,12 @@ public class Flag {
 	private final Map<String, String> longToId = new HashMap<>();
 	private final Collection<String> registeredFlags = new ArrayDeque<>();
 	private final Map<Integer, String> shortToId = new HashMap<>();
-	private final Map<String, Integer> status = new HashMap<>();
+	private final Map<String, Integer> state = new HashMap<>();
 	private final Map<String, String> values = new HashMap<>();
 
+	/**
+	 * Creates a new instance
+	 */
 	public Flag() {
 	}
 
@@ -95,7 +98,7 @@ public class Flag {
 				return false;
 			}
 			final String value;
-			if ((status.get(id) & Flag.PRIMITIVE) == 0) {
+			if ((state.get(id) & Flag.PRIMITIVE) == 0) {
 				if (args[i].length() > ci + 1) {
 					System.err.println("unknown option " + args[i]);
 					System.err.println(printHelp());
@@ -131,8 +134,8 @@ public class Flag {
 		for (final String fOption : registeredFlags) {
 			final char shortF = (char) idToShort.get(fOption).intValue();
 			final String longF = idToLong.get(fOption);
-			final int status = this.status.get(fOption);
-			final boolean primi = (status & Flag.PRIMITIVE) != 0;
+			final int state_ = this.state.get(fOption);
+			final boolean primi = (state_ & Flag.PRIMITIVE) != 0;
 			outPart1 += " [";
 			if (shortF != Flag.NoShortFlag) {
 				outPart1 += " -" + shortF;
@@ -199,7 +202,7 @@ public class Flag {
 		if (!argExpected) {
 			s |= Flag.PRIMITIVE;
 		}
-		status.put(flagId, s);
+		state.put(flagId, s);
 	}
 
 	/**

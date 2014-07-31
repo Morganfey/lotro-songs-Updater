@@ -23,76 +23,6 @@ import stone.util.Path;
  */
 public final class Scanner implements Runnable {
 
-	private final class LONG_TITLE extends ABC_ERROR {
-
-		public LONG_TITLE(final Path song, int line) {
-			super(song, line);
-		}
-
-		@Override
-		final String getDetail() {
-			return "Title is to long";
-		}
-
-		@Override
-		final Error_Type getType() {
-			return Error_Type.WARN;
-		}
-	}
-
-	private final class MULTIPLE_T extends ABC_ERROR {
-
-		MULTIPLE_T(int line, final Path path) {
-			super(path, line);
-		}
-
-		@Override
-		final String getDetail() {
-			return "Has succeeding T: line";
-		}
-
-		@Override
-		final Error_Type getType() {
-			return Error_Type.WARN;
-		}
-	}
-
-	private final class NO_T extends ABC_ERROR {
-
-		NO_T(final Path song, int line) {
-			super(song, line);
-		}
-
-		@Override
-		final String getDetail() {
-			return "Missing T: line";
-		}
-
-		@Override
-		final Error_Type getType() {
-			return Error_Type.ERROR;
-		}
-
-	}
-
-	private final class NO_X extends ABC_ERROR {
-
-		public NO_X(final Path song, int line) {
-			super(song, line);
-		}
-
-		@Override
-		final String getDetail() {
-			return "Missing X: line";
-		}
-
-		@Override
-		final Error_Type getType() {
-			return Error_Type.ERROR;
-		}
-
-	}
-
 	private final ArrayDeque<ModEntry> queue;
 
 	private final IOHandler io;
@@ -154,14 +84,6 @@ public final class Scanner implements Runnable {
 	/** */
 	@Override
 	public final void run() {
-		try {
-			doScan();
-		} catch (final InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private final void doScan() throws InterruptedException {
 		while (true) {
 			final ModEntry song;
 			synchronized (queue) {
@@ -201,6 +123,7 @@ public final class Scanner implements Runnable {
 		}
 	}
 
+	@SuppressWarnings("resource")
 	private final SongData getVoices(final ModEntry song) {
 		final SongData songdata = tree.get(song.getKey());
 		if (songdata == null
@@ -211,88 +134,91 @@ public final class Scanner implements Runnable {
 			final InputStream songContent =
 					io.openIn(songFile.toFile(), FileSystem.DEFAULT_CHARSET);
 
-			// you can expect T: after X: line, if enforcing abc-syntax
-			String line;
 			try {
-				line = songContent.readLine();
-			} catch (final IOException e) {
-				io.handleException(ExceptionHandle.TERMINATE, e);
-				return null;
-			}
-			boolean error = false;
-			int lineNumber = 1;
+				// you can expect T: after X: line, if enforcing abc-syntax
+				String line;
+				try {
+					line = songContent.readLine();
+				} catch (final IOException e) {
+					io.handleException(ExceptionHandle.TERMINATE, e);
+					return null;
+				}
+				boolean error = false;
+				int lineNumber = 1;
 
-			while (line != null) {
-				// search for important lines
-				if (line.startsWith("X:")) {
-					final int lineNumberOfX = lineNumber;
-					final String voiceId =
-							line.substring(line.indexOf(":") + 1).trim();
-					try {
-						line = songContent.readLine();
-						++lineNumber;
-					} catch (final IOException e) {
-						io.handleException(ExceptionHandle.TERMINATE, e);
-					}
-					if (line == null || !line.startsWith("T:")) {
-						new NO_T(song.getKey(), lineNumber);
-						error = true;
-						if (line == null) {
-							break;
-						}
-					}
-					final StringBuilder desc = new StringBuilder();
-					do {
-						desc.append(line.substring(line.indexOf(":") + 1)
-								.trim());
+				while (line != null) {
+					// search for important lines
+					if (line.startsWith("X:")) {
+						final int lineNumberOfX = lineNumber;
+						final String voiceId =
+								line.substring(line.indexOf(":") + 1).trim();
 						try {
 							line = songContent.readLine();
 							++lineNumber;
 						} catch (final IOException e) {
 							io.handleException(ExceptionHandle.TERMINATE, e);
 						}
-						if (line == null) {
-							break;
+						if (line == null || !line.startsWith("T:")) {
+							new MissingTLineInAbc(song.getKey(), lineNumber);
+							error = true;
+							if (line == null) {
+								break;
+							}
 						}
-						if (line.startsWith("T:")) {
-							desc.append(" ");
-							new MULTIPLE_T(lineNumber, song.getKey());
-						} else {
-							break;
+						final StringBuilder desc = new StringBuilder();
+						do {
+							desc.append(line.substring(line.indexOf(":") + 1)
+									.trim());
+							try {
+								line = songContent.readLine();
+								++lineNumber;
+							} catch (final IOException e) {
+								io.handleException(ExceptionHandle.TERMINATE, e);
+							}
+							if (line == null) {
+								break;
+							}
+							if (line.startsWith("T:")) {
+								desc.append(" ");
+								new MultipleTLinesInAbc(lineNumber,
+										song.getKey());
+							} else {
+								break;
+							}
+						} while (true);
+						if (desc.length() >= 65) {
+							new LongTitleInAbc(song.getKey(), lineNumberOfX);
 						}
-					} while (true);
-					if (desc.length() >= 65) {
-						new LONG_TITLE(song.getKey(), lineNumberOfX);
+						voices.put(voiceId, Scanner.clean(desc.toString()));
+						continue;
+					} else if (line.startsWith("T:")) {
+						new NoXLineInAbc(song.getKey(), lineNumber);
+						error = true;
 					}
-					voices.put(voiceId, Scanner.clean(desc.toString()));
-					continue;
-				} else if (line.startsWith("T:")) {
-					new NO_X(song.getKey(), lineNumber);
-					error = true;
+					try {
+						line = songContent.readLine();
+						++lineNumber;
+					} catch (final IOException e) {
+						io.handleException(ExceptionHandle.TERMINATE, e);
+					}
 				}
-				try {
-					line = songContent.readLine();
-					++lineNumber;
-				} catch (final IOException e) {
-					io.handleException(ExceptionHandle.TERMINATE, e);
+				if (error) {
+					return null;
 				}
-			}
-			io.close(songContent);
-			if (error) {
-				return null;
-			}
-			if (voices.isEmpty()) {
-				io.printError(String.format("Warning: %-50s %s", song.getKey()
-						.toString(), "has no voices"), true);
-			}
-			final SongData sd = SongData.create(song, voices);
-			synchronized (song) {
-				tree.put(sd);
-			}
+				if (voices.isEmpty()) {
+					io.printError(String.format("Warning: %-50s %s", song
+							.getKey().toString(), "has no voices"), true);
+				}
+				final SongData sd = SongData.create(song, voices);
+				synchronized (song) {
+					tree.put(sd);
+				}
 
-			return sd;
-		} else {
-			return songdata;
+				return sd;
+			} finally {
+				io.close(songContent);
+			}
 		}
+		return songdata;
 	}
 }
