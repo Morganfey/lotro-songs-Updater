@@ -120,37 +120,33 @@ public class SongDataContainer implements Container {
 					}
 
 					out = io.openOut(songDataUpdatePath.toFile());
+					io.write(out, SongDataDeserializer_3.getHeader());
+					crawler =
+							new Crawler(io, tree.getRoot(),
+									new ArrayDeque<Path>(), queue);
+					scanner =
+							new Scanner(io, queue, master, out, tree,
+									songsFound);
+					taskPool.addTaskForAll(crawler, scanner);
+					in.registerProgressMonitor(io);
+					io.setProgressTitle("Reading data base of previous run");
 					try {
-						io.write(out, SongDataDeserializer_3.getHeader());
-						crawler =
-								new Crawler(io, tree.getRoot(),
-										new ArrayDeque<Path>(), queue);
-						scanner =
-								new Scanner(io, queue, master, out, tree,
-										songsFound);
-						taskPool.addTaskForAll(crawler, scanner);
-						in.registerProgressMonitor(io);
-						io.setProgressTitle("Reading data base of previous run");
-						try {
-							SongDataDeserializer.deserialize(in, this,
-									tree.getRoot());
-							io.startProgress("Parsing songs", -1);
-							synchronized (io) {
-								crawler.historySolved();
-								if (crawler.terminated()) {
-									io.setProgressSize(crawler.getProgress());
-								}
+						SongDataDeserializer.deserialize(in, this,
+								tree.getRoot());
+						io.startProgress("Parsing songs", -1);
+						synchronized (io) {
+							crawler.historySolved();
+							if (crawler.terminated()) {
+								io.setProgressSize(crawler.getProgress());
 							}
-							io.close(in);
-							in.deleteFile();
-						} catch (final IOException e) {
-							io.close(in);
-							songDataPath.delete();
-							zippedSongDataPath.delete();
-							io.handleException(ExceptionHandle.SUPPRESS, e);
 						}
-					} finally {
-						io.close(out);
+						io.close(in);
+						in.deleteFile();
+					} catch (final IOException e) {
+						io.close(in);
+						songDataPath.delete();
+						zippedSongDataPath.delete();
+						io.handleException(ExceptionHandle.SUPPRESS, e);
 					}
 				} finally {
 					io.close(in);
