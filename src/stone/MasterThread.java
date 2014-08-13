@@ -74,16 +74,21 @@ public class MasterThread extends Thread {
 			return instance == null ? -1 : instance.getVersion();
 		}
 	}
+
+	final Path tmp = Path.getTmpDir(Main.TOOLNAME);
 	
-	private static final String repo = "https://raw.githubusercontent.com/Greonyral/stone/master/";
+	final StartupContainer sc;
+	
+	private static final String repo =
+	  "https://raw.githubusercontent.com/Greonyral/stone/master/";
+	  //"file:/D:/Freigabe/Programmierung/arbeitsplatz/Songbook/"; 
 
 	private final ThreadState state = new ThreadState();
 
-	final Path tmp = Path.getTmpDir(Main.TOOLNAME);
+	
 	private final Map<String, ModuleInfo> modulesLocal = new HashMap<>();
 	private final List<String> possibleModules = new ArrayList<>();
 
-	final StartupContainer sc;
 	private final TaskPool taskPool;
 	private final UncaughtExceptionHandler exceptionHandler;
 
@@ -339,9 +344,7 @@ public class MasterThread extends Thread {
 		if (path != null) {
 			taskPool.close();
 			final boolean isFile = wd.toFile().isFile();
-			final String clazz = this.getClass().getCanonicalName();
-			
-			System.out.println("loading class " + clazz);
+
 			io.printMessage(
 					"Update complete",
 					"The update completed successfully.\nThe program will restart now.",
@@ -363,7 +366,7 @@ public class MasterThread extends Thread {
 								null, (Object) new String[0]);
 					} catch (final IllegalAccessException | IllegalArgumentException
 							| InvocationTargetException | NoSuchMethodException
-							| SecurityException e) {
+							| SecurityException | ClassNotFoundException e) {
 						e.printStackTrace();
 					}
 				}
@@ -517,25 +520,11 @@ private final void loadModules() {
 				io.updateProgress();
 			}
 			jar.close();
-			class Task {
-				final String name;
-				final Path source;
-
-				Task(final String s) {
-					name = s;
-					source = tmp.resolve(s);
-				}
-
-				Task(final Task t, final String s) {
-					name = t.name + "/" + s;
-					source = t.source.resolve(s);
-				}
-			}
 			final String[] f = tmp.toFile().list();
 			io.startProgress("Packing new archive", f.length);
 			final ArrayDeque<Task> worklist = new ArrayDeque<>();
 			for (final String s : f) {
-				worklist.add(new Task(s));
+				worklist.add(new Task(s, tmp));
 			}
 			final Path target = tmp.resolve("new.jar");
 			final OutputStream out = io.openOut(target.toFile());
@@ -637,19 +626,11 @@ private final void loadModules() {
 			}) {
 				final Path p = tmp.resolve(e.getName().split("/"));
 				if (e.isDirectory()) {
-					final String rootDir = p.getComponentAt(tmp.getNameCount());
-					if (rootDir.equals("META-INF")) {
-						io.updateProgress();
-						continue;
-					}
-					p.toFile().mkdirs();
 					io.updateProgress();
 					continue;
 				}
 				if (!p.getParent().exists()) {
-					System.out.println("omitting " + e);
-					io.updateProgress();
-					continue;
+					p.getParent().toFile().mkdirs();
 				}
 				@SuppressWarnings("resource")
 				final InputStream in = jar.getInputStream(e);

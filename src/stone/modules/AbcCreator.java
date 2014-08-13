@@ -88,7 +88,6 @@ public class AbcCreator implements Module,
 		static final Object READ_JAR = new Object();
 		static final Object INSTRUMENT_MAP = new Object();
 		static final Object DRUM_MAP = new Object();
-		static final Object COPY = new Object();
 		static final Object UNPACK_JAR = new Object();
 
 		private IOHandler io;
@@ -103,9 +102,6 @@ public class AbcCreator implements Module,
 			}
 			if (state == InitState.UNPACK_JAR) {
 				return "Unpacking BruTE";
-			}
-			if (state == InitState.COPY) {
-				return "Copying BruTE";
 			}
 			if (state == InitState.INIT) {
 				return "Init";
@@ -407,6 +403,7 @@ public class AbcCreator implements Module,
 			copy(map, brutesMap);
 			io.startProgress("Waiting for BruTE to finish", abcTracks + 1);
 			final int remap = call("remap.exe", bruteDir);
+			io.endProgress();
 			if (remap != 0) {
 				io.printError("Unable to execute BRuTE", false);
 				return false;
@@ -427,12 +424,14 @@ public class AbcCreator implements Module,
 			try {
 				final Path abcPlayer = ABC_PLAYER.getValue();
 				if (abcPlayer != null) {
+					io.startProgress("Starting AbcPlayer", -1);
 					if (abcPlayer.getFileName().endsWith(".exe")) {
 						call(abcPlayer, CallType.EXE, abcPlayer.getParent());
 					} else {
 						call(abcPlayer, CallType.JAR, abcPlayer.getParent(),
 								abc.toString());
 					}
+					io.endProgress();
 				}
 			} catch (final IOException | InterruptedException e) {
 				e.printStackTrace();
@@ -691,7 +690,6 @@ public class AbcCreator implements Module,
 		if (master.isInterrupted()) {
 			return -127;
 		}
-		final Runtime runtime = Runtime.getRuntime();
 		if (Thread.currentThread().isInterrupted()) {
 			return -1;
 		}
@@ -729,7 +727,7 @@ public class AbcCreator implements Module,
 				break;
 			case EXE:
 			case EXE_WAIT:
-				p = runtime.exec(location.toString(), null, wd.toFile());
+				p = Runtime.getRuntime().exec(location.toString(), null, wd.toFile());
 				break;
 			default:
 				return -1;
@@ -909,6 +907,10 @@ public class AbcCreator implements Module,
 		initState.startPhase(InitState.UNPACK_JAR);
 		unpack(jarFile, jarEntry);
 		final Path jar = bruteDir.resolve(string);
+		extract(jar);
+	}
+	
+	private final void extract(final Path jar) throws IOException {
 		final Set<JarEntry> entries = new HashSet<>();
 		final JarFile jarFile1 = new JarFile(jar.toFile());
 		final Enumeration<JarEntry> ee = jarFile1.entries();
@@ -999,15 +1001,15 @@ public class AbcCreator implements Module,
 	 */
 	final boolean init() throws IOException {
 		if (wdDir.toFile().isDirectory()) {
-			final Path workingBrute = wdDir.resolve("Brute");
-			if (!workingBrute.exists()) {
-				System.err.println("Unable to find Brute\n" + workingBrute
+			final Path bruteArchive = wdDir.resolve("Brute.jar");
+			if (!bruteArchive.exists()) {
+				System.err.println("Unable to find Brute\n" + bruteArchive
 						+ " does not exist.");
 				return false;
 			}
-			initState.startPhase(InitState.COPY);
-			initState.setSize(InitState.COPY, copy(workingBrute, this.bruteDir)
-					.size());
+			initState.startPhase(InitState.UNPACK_JAR);
+			extract(bruteArchive);
+			io.endProgress();
 		} else {
 			final JarFile jarFile;
 			jarFile = new JarFile(wdDir.toFile());

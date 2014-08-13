@@ -2,6 +2,7 @@ package stone;
 
 import stone.modules.Main;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarFile;
 
+import stone.util.FileSystem;
 import stone.util.Path;
 
 
@@ -28,28 +30,39 @@ public class ModuleLoader extends ClassLoader {
 
 	private final Map<String, Class<?>> loadedClasses = new HashMap<>();
 
+	private final Path[] cp;
+	
+	private static final ClassLoader sysCll = getSystemClassLoader();
+
 
 	private ModuleLoader() {
+		super(null);
 		final String className =
 				this.getClass().getCanonicalName().replace('.', '/') + ".class";
 		final URL url = Main.class.getClassLoader().getResource(className);
 		if (url.getProtocol().equals("file")) {
 			final Path classPath = Path.getPath(url);
 			jar = false;
-			if (Main.class.getClassLoader().getClass().getCanonicalName()
-					.equals(getClass().getCanonicalName()))
-				// TODO test
-				workingDirectory = classPath.getParent();
-			else
-				workingDirectory = classPath.getParent().getParent();
+			workingDirectory = classPath.getParent().getParent();
 		} else if (url.getProtocol().equals("jar")) {
 			jar = true;
 			workingDirectory = Path.getPath(url);
 		} else {
 			jar = false;
 			workingDirectory = null;
-			return;
 		}
+		@SuppressWarnings("hiding") final String[] cp =
+				System.getProperty("java.class.path").split(";");
+		this.cp = new Path[Math.max(1, cp.length)];
+		if (cp.length == 0) {
+			this.cp[0] = workingDirectory;
+		} else
+			for (int i = 0; i < cp.length; i++) {
+				this.cp[i] =
+						workingDirectory.getParent().resolve(
+								cp[i].split("\\"
+										+ FileSystem.getFileSeparator()));
+			}
 	}
 
 	static final ModuleLoader createLoader() {
@@ -81,16 +94,15 @@ public class ModuleLoader extends ClassLoader {
 	}
 
 	@Override
-	public final Class<?> loadClass(final String name) {
-		if (name.startsWith("stone.") || name.startsWith("org.") || name.startsWith("com.")) {
-			return findClass(name);
-		}
-		try {
-			return getSystemClassLoader().loadClass(name);
-		} catch (final ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return null;
+	public final Class<?> loadClass(final String name)
+			throws ClassNotFoundException {
+		final Class<?> c;
+		if (name.startsWith("java.") || name.startsWith("javax.")
+				|| name.startsWith("sun."))
+			c = sysCll.loadClass(name);
+		else
+			c = findClass(name);
+		return c;
 	}
 
 	/**
@@ -104,66 +116,86 @@ public class ModuleLoader extends ClassLoader {
 	@SuppressWarnings("resource")
 	@Override
 	protected Class<?> findClass(final String name) {
-		java.io.File f = null;
 		Class<?> c = loadedClasses.get(name);
 		if (c == null) {
-			if (jar) {
-				try {
-					final JarFile jarFile = new JarFile(workingDirectory.toFile());
-					final java.util.zip.ZipEntry e =
-							jarFile.getEntry(name.replaceAll("\\.", "/") + ".class");
-					if (e == null) {
-						jarFile.close();
+			java.io.InputStream in = null;
+			JarFile jarFile = null;
+			Path path;
+			int i = 0;
+			int size = 0;
+			assert cp.length >= 1;
+			for (; i <= cp.length; i++) {
+				if (i == cp.length)
+					return null;
+				path = cp[i];
+				if (path.getFileName().endsWith(".jar")) {
+					try {
+						jarFile = new JarFile(path.toFile());
+						final java.util.zip.ZipEntry e =
+								jarFile.getEntry(name.replaceAll("\\.", "/")
+										+ ".class");
+						if (e == null) {
+							jarFile.close();
+							jarFile = null;
+							continue;
+						}
+						size = (int) e.getSize();
+						in = jarFile.getInputStream(e);
+						break;
+					} catch (final IOException e) {
+						e.printStackTrace();
 						return null;
 					}
-					final java.io.InputStream in = jarFile.getInputStream(e);
-					final java.io.File g =
-							Path.getTmpDir("unpack_class").toFile();
-					final java.io.OutputStream o =
-							new java.io.FileOutputStream(g);
-					do {
-						int length;
-						if ((length = in.read(buffer)) < 0)
-							break;
-						o.write(buffer, 0, length);
-					} while (true);
-					o.flush();
-					o.close();
-					in.close();
-					jarFile.close();
-					f = g;
-				} catch (final IOException e) {
-					e.printStackTrace();
 				}
-			} else {
-				Path path = this.workingDirectory;
-				for (final String p : name.split("\\."))
+				for (final String p : name.split("\\.")) {
 					path = path.resolve(p);
+				}
 				path = path.getParent().resolve(path.getFileName() + ".class");
-				f = path.toFile();
-			}
-			assert f != null;
-			java.io.InputStream in;
-			final int size = (int) f.length();
-			if (buffer.length < size)
-				buffer = new byte[(size & ~0x3ff) + 0x400];
-			try {
-				in = new java.io.FileInputStream(f);
+				if (!path.exists())
+					continue;
+				size = (int) path.toFile().length();
+
 				try {
-					int offset = 0;
-					while (offset < size) {
-						offset += in.read(buffer, offset, size - offset);
-					}
-					in.close();
-					if (jar)
-						f.delete();
-					c = defineClass(null, buffer, 0, size);
-					loadedClasses.put(name, c);
-				} finally {
-					in.close();
+					in = new java.io.FileInputStream(path.toFile());
+					break;
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+					return null;
+				}
+			}
+			assert in != null;
+			if (buffer.length < size) {
+				buffer = new byte[(size & 0xffff_ff00) + 0x100];
+			}
+			size = 0;
+			try {
+				while (true) {
+					int read = in.read(buffer, size, buffer.length - size);
+					if (read < 0)
+						break;
+					size += read;
 				}
 			} catch (final IOException e) {
 				e.printStackTrace();
+				return null;
+			}
+			try {
+				in.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+			if (jarFile != null)
+				try {
+					jarFile.close();
+				} catch (final IOException e) {
+					e.printStackTrace();
+				}
+			c = defineClass(name, buffer, 0, size);
+			loadedClasses.put(name, c);
+			if (i != 0) {
+				path = cp[i];
+				cp[i] = cp[0];
+				cp[0] = path;
 			}
 
 		}

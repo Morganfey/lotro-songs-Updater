@@ -98,7 +98,6 @@ public class GUI implements GUIInterface {
 	private final JTextArea text;
 
 	private final JLabel wait;
-
 	private final JProgressBar bar;
 
 	Button pressed;
@@ -122,6 +121,7 @@ public class GUI implements GUIInterface {
 		text.setEditable(false);
 		text.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
 		wait = gui.wait;
+
 		mainFrame = gui.mainFrame;
 		final boolean aot = gui.mainFrame.isAlwaysOnTop();
 		mainFrame.setVisible(false);
@@ -288,6 +288,7 @@ public class GUI implements GUIInterface {
 			mainFrame.add(wait);
 			revalidate(true, false);
 		} else {
+			wait.setText("");
 			mainFrame.getContentPane().remove(
 					mainFrame.getContentPane().getComponentCount() - 1);
 			mainFrame.add(wait, BorderLayout.NORTH);
@@ -560,9 +561,7 @@ public class GUI implements GUIInterface {
 	/** */
 	@Override
 	public final void setProgressSize(int size, final String action) {
-		if (Thread.currentThread() == master) {
-			wait.setText(action);
-		}
+		wait.setText(action);
 		bar.setValue(0);
 		if (size <= 0) {
 			bar.setStringPainted(false);

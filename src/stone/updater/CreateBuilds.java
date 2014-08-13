@@ -34,7 +34,6 @@ public class CreateBuilds {
 		final Path p = root.resolve("modules");
 		final Path info = root.getParent().getParent().resolve("moduleInfo");
 
-		info.delete();
 		info.toFile().mkdirs();
 
 		for (final String s : p.toFile().list()) {

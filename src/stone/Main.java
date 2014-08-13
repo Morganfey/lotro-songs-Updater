@@ -1,6 +1,7 @@
 package stone;
 
 import java.lang.reflect.InvocationTargetException;
+
 import stone.util.Flag;
 
 
@@ -17,11 +18,12 @@ public class Main {
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
 	 * @throws InstantiationException
+	 * @throws ClassNotFoundException 
 	 */
 	public final static void main(final String[] args)
 			throws IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, NoSuchMethodException,
-			SecurityException, InstantiationException {
+			SecurityException, InstantiationException, ClassNotFoundException {
 		final ModuleLoader loader = ModuleLoader.createLoader();
 		final Class<?> scClass =
 				loader.loadClass(StartupContainer.class.getCanonicalName());
