@@ -42,7 +42,7 @@ public final class Path implements Comparable<Path> {
 
 
 	private final static Object finalizerMonitor = new Object();
-	private final static StringBuilder relativizer = new StringBuilderPath();
+	private final static StringBuilder relativizer = new StringBuilder();
 	private final static Path tmpRoot = getPath(System.getProperty(
 			"java.io.tmpdir").split("\\" + FileSystem.getFileSeparator()));
 
@@ -444,6 +444,7 @@ public final class Path implements Comparable<Path> {
 				Path.relativizer.appendLast(getComponentAt(same++));
 				Path.relativizer.appendLast("/");
 			}
+			Path.relativizer.removeLast();
 			return Path.relativizer.toString();
 		}
 	}
@@ -636,19 +637,5 @@ public final class Path implements Comparable<Path> {
 			}
 			Path.reusableHashes.push(hash);
 		}
-	}
-}
-
-class StringBuilderPath extends StringBuilder {
-
-	@Override
-	public String toString() {
-		final int c = removeLast();
-		final String s = super.toString();
-		if (c < 0) {
-			return s;
-		}
-		appendLast((char) c);
-		return s;
 	}
 }

@@ -132,7 +132,7 @@ public class StringBuilder {
 					StringBuilder.PATTERN_SIZE, length);
 			switchBuffer();
 			head = StringBuilder.PATTERN_SIZE;
-			tail = length;
+			tail = length + head;
 		}
 		System.arraycopy(array, 0, content[cIdx], tail, array.length);
 		tail += array.length;
@@ -554,5 +554,13 @@ public class StringBuilder {
 
 	final void setHead(int offset) {
 		head += offset;
+	}
+	
+	final protected int getLast() {
+		if (tail == head) {
+			return -1;
+		}
+		final char c = content[cIdx][tail];
+		return c;
 	}
 }

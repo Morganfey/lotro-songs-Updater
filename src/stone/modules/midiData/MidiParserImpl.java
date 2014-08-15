@@ -131,11 +131,9 @@ final class MidiParserImpl extends MidiParser {
 	@Override
 	protected final void decodeMidiMap() {
 		io.startProgress("Decoding midi", eventCount);
+		eventsEncoded.remove(0);
 		for (final Integer track : new java.util.TreeSet<>(
 				eventsEncoded.keySet())) {
-			if (track.intValue() == 0) {
-				continue;
-			}
 			final ArrayDeque<MidiEvent> eventList =
 					new ArrayDeque<>(eventsEncoded.get(track));
 			int deltaAbs = 0;
