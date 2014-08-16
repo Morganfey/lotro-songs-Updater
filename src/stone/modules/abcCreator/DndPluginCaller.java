@@ -61,7 +61,7 @@ public interface DndPluginCaller<C extends Container, D extends Container, T ext
 	 * @param abcTracks
 	 * @return <i>true</i> on success
 	 */
-	boolean call_back(Object object0, Object object1, int abcTracks);
+	Object call_back(Object object0, Object object1, int abcTracks);
 
 	/**
 	 * Links object with target.

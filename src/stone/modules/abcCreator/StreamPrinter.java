@@ -16,7 +16,6 @@ public class StreamPrinter implements Runnable {
 	/** String builder to fill */
 	protected final StringBuilder builder;
 	private final boolean stdErr;
-
 	/**
 	 * @param stream
 	 *            the InputStream to print
@@ -25,8 +24,8 @@ public class StreamPrinter implements Runnable {
 	 * @param stdErr
 	 *            <i>true</i> if the output shall be printed to stdout
 	 */
-	public StreamPrinter(final InputStream stream, final StringBuilder builder,
-			boolean stdErr) {
+	public StreamPrinter(final InputStream stream,
+			final StringBuilder builder, boolean stdErr) {
 		this.stream = stream;
 		this.builder = builder;
 		this.stdErr = stdErr;
@@ -37,7 +36,7 @@ public class StreamPrinter implements Runnable {
 	 * on the screen
 	 */
 	@Override
-	public void run() {
+	public final void run() {
 		do {
 			int read;
 			try {
@@ -51,10 +50,15 @@ public class StreamPrinter implements Runnable {
 			}
 			builder.append((char) read);
 			if (read == '\n') {
-				(stdErr ? System.err : System.out).print(builder.toString());
+				action();
 				builder.setLength(0);
 			}
 		} while (true);
+	}
+	
+	protected void action() {
+		(stdErr ? System.err : System.out).print(builder
+				.toString());
 	}
 
 }

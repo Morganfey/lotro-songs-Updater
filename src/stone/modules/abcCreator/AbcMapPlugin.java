@@ -378,8 +378,9 @@ public final class AbcMapPlugin extends
 
 					@Override
 					public void run() {
-						final boolean success =
+						final Object result =
 								caller.call_back(null, null, size());
+						final boolean success = result != null;
 						synchronized (state) {
 							state.notifyAll();
 							state.upToDate = success;
@@ -387,7 +388,7 @@ public final class AbcMapPlugin extends
 							if (!success) {
 								state.label.setText("Creating abc failed");
 							} else {
-								state.label.setText("The abc is up-to-date");
+								state.label.setText("The abc is up-to-date - " + result.toString().substring(0,  result.toString().indexOf("%") + 1));
 							}
 						}
 					}

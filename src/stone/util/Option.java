@@ -9,7 +9,6 @@ import java.util.Map;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
-
 /**
  * Superclass for all Options
  * 
@@ -24,7 +23,8 @@ public abstract class Option {
 	private final String desc, toolTip, section;
 	private final String defaultValue;
 	/**
-	 * The key identifier for {@link stone.modules.Main#setConfigValue(String, String, String)} and
+	 * The key identifier for
+	 * {@link stone.modules.Main#setConfigValue(String, String, String)} and
 	 * {@link stone.modules.Main#getConfigValue(String, String, String)}
 	 */
 	protected final String key;
@@ -40,6 +40,7 @@ public abstract class Option {
 
 	private final Map<JTextArea, ColorEntry> colorsTextArea = new HashMap<>();
 	private final OptionContainer optionContainer;
+	private String value;
 
 	/**
 	 * Creates a new option and registers it at the OptionContainer
@@ -54,9 +55,11 @@ public abstract class Option {
 	 * @param guiDescription
 	 *            a short string usable to label <i>this</i> option
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or {@link stone.util.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or
+	 *            {@link stone.util.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or {@link stone.util.Flag#NoLongFlag} to enable this option@see
+	 *            a unique printable string to register at flags or
+	 *            {@link stone.util.Flag#NoLongFlag} to enable this option@see
 	 *            util.OptionContainer#addOption(String, String, char, String,
 	 *            boolean, Option)
 	 * @param argExpected
@@ -81,20 +84,27 @@ public abstract class Option {
 	 * @param guiDescription
 	 *            a short string usable to label <i>this</i> option
 	 * @param shortFlag
-	 *            a unique printable char to register at flags or {@link stone.util.Flag#NoShortFlag} to enable this option
+	 *            a unique printable char to register at flags or
+	 *            {@link stone.util.Flag#NoShortFlag} to enable this option
 	 * @param longFlag
-	 *            a unique printable string to register at flags or {@link stone.util.Flag#NoLongFlag} to enable this option
+	 *            a unique printable string to register at flags or
+	 *            {@link stone.util.Flag#NoLongFlag} to enable this option
 	 * @param argExpected
 	 * @param section
-	 *            the section identifier for this option, to access by {@link stone.modules.Main#getConfigValue(String, String, String)} and
+	 *            the section identifier for this option, to access by
+	 *            {@link stone.modules.Main#getConfigValue(String, String, String)}
+	 *            and
 	 *            {@link stone.modules.Main#setConfigValue(String, String, String)}
 	 * @param key
-	 *            the key identifier for this option, to access by {@link stone.modules.Main#getConfigValue(String, String, String)} and
+	 *            the key identifier for this option, to access by
+	 *            {@link stone.modules.Main#getConfigValue(String, String, String)}
+	 *            and
 	 *            {@link stone.modules.Main#setConfigValue(String, String, String)}
 	 * @param defaultValue
-	 *            the default value for {@link stone.modules.Main#getConfigValue(String, String, String)} * @see
-	 *            util.OptionContainer#addOption(String, String, char, String,
-	 *            boolean, Option)
+	 *            the default value for
+	 *            {@link stone.modules.Main#getConfigValue(String, String, String)}
+	 *            * @see util.OptionContainer#addOption(String, String, char,
+	 *            String, boolean, Option)
 	 */
 	protected Option(final OptionContainer optionContainer, final String name,
 			final String toolTip, final String guiDescription, char shortFlag,
@@ -136,7 +146,8 @@ public abstract class Option {
 	}
 
 	/**
-	 * Releases all resources allocated by {@link #displayWithGUI(JPanel, stone.io.GUIInterface)}
+	 * Releases all resources allocated by
+	 * {@link #displayWithGUI(JPanel, stone.io.GUIInterface)}
 	 */
 	public void endDisplay() {
 		panel = null;
@@ -188,7 +199,8 @@ public abstract class Option {
 	 * 
 	 * @return identifier registered at OptionContainer
 	 * @see stone.util.OptionContainer
-	 * @see #Option(OptionContainer, String, String, String, char, String, boolean, String, String, String)
+	 * @see #Option(OptionContainer, String, String, String, char, String,
+	 *      boolean, String, String, String)
 	 */
 	public final String name() {
 		return name;
@@ -198,6 +210,8 @@ public abstract class Option {
 	 * @return a string representing the value of <i>this</i> option
 	 */
 	public String value() {
+		if (optionContainer == null)
+			return value;
 		return optionContainer.getConfigValue(section, key, defaultValue);
 	}
 
@@ -208,7 +222,10 @@ public abstract class Option {
 	 *            new value
 	 */
 	public void value(final String value) {
-		optionContainer.setConfigValue(section, key, value);
+		if (optionContainer == null)
+			this.value = value;
+		else
+			optionContainer.setConfigValue(section, key, value);
 	}
 
 	abstract void display(final JPanel rootPanel);

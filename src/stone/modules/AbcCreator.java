@@ -52,6 +52,7 @@ import stone.util.PathOptionFileFilter;
 import stone.util.StringOption;
 import stone.util.TaskPool;
 
+
 /**
  * @author Nelphindal
  */
@@ -195,13 +196,16 @@ public class AbcCreator implements Module,
 	 * The maximum id of included drum-map
 	 */
 	public static final int DRUM_MAPS_COUNT = 6;
-	private static final PathOptionFileFilter EXEC_FILTER = new ExecutableFileFilter();
+	private static final PathOptionFileFilter EXEC_FILTER =
+			new ExecutableFileFilter();
 
-	private static final PathOptionFileFilter DRUM_MAP_FILTER = new DrumMapFileFilter();
+	private static final PathOptionFileFilter DRUM_MAP_FILTER =
+			new DrumMapFileFilter();
 
-	private static final PathOptionFileFilter INSTR_MAP_FILTER = new InstrumentMapFileFilter();
+	private static final PathOptionFileFilter INSTR_MAP_FILTER =
+			new InstrumentMapFileFilter();
 
-	private final static int VERSION = 2;
+	private final static int VERSION = 3;
 
 	private static final FileFilter midiFilter = new MidiFileFilter();
 
@@ -246,6 +250,8 @@ public class AbcCreator implements Module,
 
 	private final ArrayDeque<Process> processList = new ArrayDeque<>();
 
+	private StreamPrinter callResultOut;
+
 	/**
 	 * Constructor for building versionInfo
 	 */
@@ -270,14 +276,18 @@ public class AbcCreator implements Module,
 	 * @param sc
 	 * @throws InterruptedException
 	 */
-	public AbcCreator(final StartupContainer sc) throws InterruptedException {
-		ABC_PLAYER = AbcCreator.createPathToAbcPlayer(sc.getOptionContainer(),
-				sc.getTaskPool());
-		INSTRUMENT_MAP = AbcCreator.createInstrMap(sc.getOptionContainer(),
-				sc.getTaskPool());
+	public AbcCreator(final StartupContainer sc)
+			throws InterruptedException {
+		ABC_PLAYER =
+				AbcCreator.createPathToAbcPlayer(sc.getOptionContainer(),
+						sc.getTaskPool());
+		INSTRUMENT_MAP =
+				AbcCreator.createInstrMap(sc.getOptionContainer(), sc
+						.getTaskPool());
 		STYLE = AbcCreator.createStyle(sc.getOptionContainer());
-		DRUM_MAPS = AbcCreator.createDrumMaps(sc.getOptionContainer(),
-				sc.getTaskPool());
+		DRUM_MAPS =
+				AbcCreator.createDrumMaps(sc.getOptionContainer(), sc
+						.getTaskPool());
 		wdDir = sc.getWorkingDir();
 		io = sc.getIO();
 		master = sc.getMaster();
@@ -306,24 +316,26 @@ public class AbcCreator implements Module,
 		brutesMidi = bruteDir.resolve("mid.mid");
 		brutesMap = bruteDir.resolve("out.config");
 		brutesAbc = bruteDir.resolve("new.abc");
-		dragAndDropPlugin = new AbcMapPlugin(this, taskPool, parser, targets,
-				io);
+		dragAndDropPlugin =
+				new AbcMapPlugin(this, taskPool, parser, targets, io);
 		initState = abc.initState;
 		main = abc.main;
 	}
 
-	private final static PathOption createDrumMaps(
-			final OptionContainer optionContainer, final TaskPool taskPool) {
+	private final static PathOption
+			createDrumMaps(final OptionContainer optionContainer,
+					final TaskPool taskPool) {
 		final PathOptionFileFilter ff = AbcCreator.DRUM_MAP_FILTER;
 		return new PathOption(optionContainer, taskPool, "drumMapsDir",
-				"Select a directory containing default drum maps", "Drum Maps",
-				Flag.NoShortFlag, "drums", ff,
+				"Select a directory containing default drum maps",
+				"Drum Maps", Flag.NoShortFlag, "drums", ff,
 				JFileChooser.FILES_AND_DIRECTORIES, AbcCreator.SECTION,
 				AbcCreator.DRUM_MAP_KEY, null);
 	}
 
-	private final static PathOption createInstrMap(
-			final OptionContainer optionContainer, final TaskPool taskPool) {
+	private final static PathOption
+			createInstrMap(final OptionContainer optionContainer,
+					final TaskPool taskPool) {
 		final PathOptionFileFilter ff = AbcCreator.INSTR_MAP_FILTER;
 		return new PathOption(
 				optionContainer,
@@ -331,20 +343,22 @@ public class AbcCreator implements Module,
 				"midi2abcMap",
 				"Select a custom map, to map midi-instruments on the isntruments used in LoTRO",
 				"Instrument Map", Flag.NoShortFlag, "mapping", ff,
-				JFileChooser.FILES_ONLY, AbcCreator.SECTION, "instrumentMap",
-				null);
+				JFileChooser.FILES_ONLY, AbcCreator.SECTION,
+				"instrumentMap", null);
 	}
 
-	private final static PathOption createPathToAbcPlayer(
-			final OptionContainer optionContainer, final TaskPool taskPool) {
+	private final static PathOption
+			createPathToAbcPlayer(final OptionContainer optionContainer,
+					final TaskPool taskPool) {
 		final PathOptionFileFilter ff = AbcCreator.EXEC_FILTER;
 		return new PathOption(
 				optionContainer,
 				taskPool,
 				"abcPlayer",
 				"The path to the abc-player. Leave it blank if you dont have an abc-player or you do not want to play songs to test",
-				"Abc-Player", 'a', "abc-player", ff, JFileChooser.FILES_ONLY,
-				AbcCreator.SECTION, "player", null);
+				"Abc-Player", 'a', "abc-player", ff,
+				JFileChooser.FILES_ONLY, AbcCreator.SECTION, "player",
+				null);
 	}
 
 	private final static StringOption createStyle(
@@ -358,9 +372,11 @@ public class AbcCreator implements Module,
 	}
 
 	private final static Path getJavaPath() {
-		final Path javaBin = Path.getPath(
-				System.getProperty("java.home").split(
-						"\\" + FileSystem.getFileSeparator())).resolve("bin");
+		final Path javaBin =
+				Path.getPath(
+						System.getProperty("java.home").split(
+								"\\" + FileSystem.getFileSeparator()))
+						.resolve("bin");
 		final Path javaPath_;
 		if (FileSystem.type == FileSystem.OSType.WINDOWS) {
 			javaPath_ = javaBin.resolve("java.exe");
@@ -379,15 +395,21 @@ public class AbcCreator implements Module,
 	 * @return <i>true</i> on success
 	 */
 	@Override
-	public final boolean call_back(final Object name, final Object title,
+	public final Object call_back(final Object name, final Object title,
 			int abcTracks) {
 		io.startProgress("Creating map", abcTracks + 1);
-		final Path map = generateMap(name == null ? "<insert your name here>"
-				: name, title == null ? abc.getFileName() : title);
+		final Path map =
+				generateMap(name == null ? "<insert your name here>"
+						: name, title == null ? abc.getFileName() : title);
 		io.endProgress();
 		if (map == null) {
 			// no abc-tracks
-			return true;
+			return new Object() {
+				@Override
+				public final String toString() {
+					return "empty file";
+				}
+			};
 		}
 		System.out.println("generated map " + map);
 		try {
@@ -397,18 +419,18 @@ public class AbcCreator implements Module,
 			io.endProgress();
 			if (remap != 0) {
 				io.printError("Unable to execute BRuTE", false);
-				return false;
+				return null;
 			}
 		} catch (final Exception e) {
 			io.handleException(ExceptionHandle.CONTINUE, e);
-			return false;
+			return null;
 		}
 		abc.delete();
 		brutesAbc.renameTo(abc);
 		brutesMidi.delete();
 		brutesMap.delete();
 		if (master.isInterrupted()) {
-			return false;
+			return null;
 		}
 		if (name == null) {
 			// test
@@ -417,19 +439,20 @@ public class AbcCreator implements Module,
 				if (abcPlayer != null) {
 					io.startProgress("Starting AbcPlayer", -1);
 					if (abcPlayer.getFileName().endsWith(".exe")) {
-						call(abcPlayer, CallType.EXE, abcPlayer.getParent());
+						call(abcPlayer, CallType.EXE, abcPlayer
+								.getParent());
 					} else {
-						call(abcPlayer, CallType.JAR, abcPlayer.getParent(),
-								abc.toString());
+						call(abcPlayer, CallType.JAR, abcPlayer
+								.getParent(), abc.toString());
 					}
 					io.endProgress();
 				}
 			} catch (final IOException | InterruptedException e) {
 				e.printStackTrace();
-				return false;
+				return null;
 			}
 		}
-		return true;
+		return this.callResultOut;
 	}
 
 	@Override
@@ -485,7 +508,8 @@ public class AbcCreator implements Module,
 
 	/** */
 	@Override
-	public final void link(final DragObject<JPanel, JPanel, JPanel> object,
+	public final void link(
+			final DragObject<JPanel, JPanel, JPanel> object,
 			final DropTarget<JPanel, JPanel, JPanel> target) {
 		dragAndDropPlugin.link(object, target);
 	}
@@ -505,66 +529,66 @@ public class AbcCreator implements Module,
 
 			final void parseLine(final String line) {
 				switch (state) {
-				case 0x7000_0000:
-					return;
-				case 0:
-					if (line.startsWith("Speedup: ")) {
-						// TODO implement setting of global speed-up
-					} else if (line.startsWith("Pitch: ")) {
-						// TODO implement setting of global pitch
-					} else if (line.startsWith("Style: ")) {
-						// TODO implement setting of style
-					} else if (line.startsWith("Volume: ")) {
-						// TODO implement setting of global volume
-					} else if (line.startsWith("Compress: ")) {
-						// TODO implement setting of global volume
-					} else if (line.startsWith("abctrack begin")) {
-						++state;
-						// } else if (line.startsWith("fadeout length")) {
-						// TODO add support when needed
-					} else {
+					case 0x7000_0000:
 						return;
-					}
-					break;
-				case 1:
-					if (line.startsWith("duration ")) {
-						// TODO support of duration
-						break;
-					} else if (line.startsWith("polyphony ")) {
-						// TODO support of polyphony
-						break;
-					} else {
-						if (line.startsWith("instrument ")) {
-							state = 2;
-							parseLine(line);
+					case 0:
+						if (line.startsWith("Speedup: ")) {
+							// TODO implement setting of global speed-up
+						} else if (line.startsWith("Pitch: ")) {
+							// TODO implement setting of global pitch
+						} else if (line.startsWith("Style: ")) {
+							// TODO implement setting of style
+						} else if (line.startsWith("Volume: ")) {
+							// TODO implement setting of global volume
+						} else if (line.startsWith("Compress: ")) {
+							// TODO implement setting of global volume
+						} else if (line.startsWith("abctrack begin")) {
+							++state;
+							// } else if (line.startsWith("fadeout length")) {
+							// TODO add support when needed
+						} else {
+							return;
 						}
-						return;
-					}
-				case 2:
-					if (!line.startsWith("instrument ")) {
-						state = 0x7000_0000;
-						return;
-					}
-					final String s0 = line.substring(11).trim();
+						break;
+					case 1:
+						if (line.startsWith("duration ")) {
+							// TODO support of duration
+							break;
+						} else if (line.startsWith("polyphony ")) {
+							// TODO support of polyphony
+							break;
+						} else {
+							if (line.startsWith("instrument ")) {
+								state = 2;
+								parseLine(line);
+							}
+							return;
+						}
+					case 2:
+						if (!line.startsWith("instrument ")) {
+							state = 0x7000_0000;
+							return;
+						}
+						final String s0 = line.substring(11).trim();
 
-					c.addPart(s0);
+						c.addPart(s0);
 
-					state = 3;
-					break;
-				case 3:
-					if (line.startsWith("miditrack")) {
-						c.addEntry(line.substring(10));
-					} else if (line.startsWith("abctrack end"))
-						state = 7;
-					else
-						return;
-					break;
-				case 7:
-					if (line.startsWith("abctrack begin")) {
-						state = 1;
-					} else
-						return;
-					break;
+						state = 3;
+						break;
+					case 3:
+						if (line.startsWith("miditrack")) {
+							c.addEntry(line.substring(10));
+						} else if (line.startsWith("abctrack end"))
+							state = 7;
+						else
+							return;
+						break;
+					case 7:
+						if (line.startsWith("abctrack begin")) {
+							state = 1;
+						} else
+							return;
+						break;
 				}
 				System.out.println(". " + line);
 			}
@@ -657,7 +681,8 @@ public class AbcCreator implements Module,
 	}
 
 	@Override
-	public final TreeSet<DropTarget<JPanel, JPanel, JPanel>> sortedTargets() {
+	public final TreeSet<DropTarget<JPanel, JPanel, JPanel>>
+			sortedTargets() {
 		return dragAndDropPlugin.targets();
 	}
 
@@ -686,42 +711,46 @@ public class AbcCreator implements Module,
 		}
 		final Process p;
 		switch (type) {
-		case JAR:
-		case JAR_WAIT:
-			final ProcessBuilder pb;
-			final String player;
-			if (location.toString().contains(" ")) {
-				if (FileSystem.type == FileSystem.OSType.WINDOWS) {
-					player = "\"" + location.toString() + "\"";
-				} else {
-					player = location.toString().replaceAll(" ", "\\\\ ");
-				}
-			} else {
-				player = location.toString();
-			}
-			pb = new ProcessBuilder(AbcCreator.javaPath.toString(), "-jar",
-					player);
-			for (final String c : cmd) {
-				if (c.contains(" ")) {
+			case JAR:
+			case JAR_WAIT:
+				final ProcessBuilder pb;
+				final String player;
+				if (location.toString().contains(" ")) {
 					if (FileSystem.type == FileSystem.OSType.WINDOWS) {
-						pb.command().add("\"" + c + "\"");
+						player = "\"" + location.toString() + "\"";
 					} else {
-						pb.command().add(c.replaceAll(" ", "\\ "));
+						player =
+								location.toString().replaceAll(" ",
+										"\\\\ ");
 					}
 				} else {
-					pb.command().add(c);
+					player = location.toString();
 				}
-			}
-			pb.directory(location.getParent().toFile());
-			p = pb.start();
-			break;
-		case EXE:
-		case EXE_WAIT:
-			p = Runtime.getRuntime().exec(location.toString(), null,
-					wd.toFile());
-			break;
-		default:
-			return -1;
+				pb =
+						new ProcessBuilder(AbcCreator.javaPath.toString(),
+								"-jar", player);
+				for (final String c : cmd) {
+					if (c.contains(" ")) {
+						if (FileSystem.type == FileSystem.OSType.WINDOWS) {
+							pb.command().add("\"" + c + "\"");
+						} else {
+							pb.command().add(c.replaceAll(" ", "\\ "));
+						}
+					} else {
+						pb.command().add(c);
+					}
+				}
+				pb.directory(location.getParent().toFile());
+				p = pb.start();
+				break;
+			case EXE:
+			case EXE_WAIT:
+				p =
+						Runtime.getRuntime().exec(location.toString(),
+								null, wd.toFile());
+				break;
+			default:
+				return -1;
 		}
 		final java.io.InputStream is = p.getInputStream();
 		final java.io.InputStream es = p.getErrorStream();
@@ -729,66 +758,64 @@ public class AbcCreator implements Module,
 		final StringBuilder outStd = new StringBuilder();
 
 		processList.add(p);
+
 		final StreamPrinter pE = new StreamPrinter(es, outErr, true);
 		final StreamPrinter pS;
 		switch (type) {
-		case JAR:
-		case EXE:
-			pS = new StreamPrinter(is, outStd, false);
-			new Thread() {
+			case JAR:
+			case EXE:
+				pS = new StreamPrinter(is, outStd, false);
+				new Thread() {
 
-				@Override
-				public void run() {
-					pE.run();
-				}
-			}.start();
-			new Thread() {
+					@Override
+					public void run() {
+						pE.run();
+					}
 
-				@Override
-				public void run() {
-					pS.run();
-				}
-			}.start();
-			return 0;
-		default:
+				}.start();
+				new Thread() {
+
+					@Override
+					public void run() {
+						pS.run();
+					}
+				}.start();
+				return 0;
+			default:
 
 		}
 		pS = new StreamPrinter(is, outStd, false) {
 
+			private boolean first = true;
+			private final String[] lines = new String[2];
+			
 			@Override
-			public void run() {
-				boolean first = true;
+			public final String toString() {
+				return lines[0];
+			}
 
-				do {
-					int read;
-					try {
-						read = stream.read();
-					} catch (final IOException e) {
-						e.printStackTrace();
-						return;
+			@Override
+			protected final void action() {
+				final String line = builder.toString();
+				if (!line.isEmpty()) {
+					for (int i = lines.length - 2; i >= 0; i--) {
+						lines[i + 1] = lines[i];
 					}
-					if (read < 0) {
-						io.updateProgress();
-						return;
+					lines[0] = line.substring(0, line.length() - 2);
+				}
+				if (line.contains("/")) {
+					final String[] s =
+							line.replaceFirst("\r\n", "").split("/");
+					if (first) {
+						first = false;
+						io.setProgressSize(Integer.parseInt(s[1]) + 1);
 					}
-					builder.append((char) read);
-					if (read == '\n') {
-						final String line = builder.toString();
-						if (line.contains("/")) {
-							final String[] s = line.replaceFirst("\r\n", "")
-									.split("/");
-							if (first) {
-								first = false;
-								io.setProgressSize(Integer.parseInt(s[1]) + 1);
-							}
-							io.updateProgress();
-						}
-						System.out.print(line);
-						builder.setLength(0);
-					}
-				} while (true);
+					io.updateProgress();
+				}
+				System.out.print(line);
 			}
 		};
+		callResultOut = pS;
 		taskPool.addTask(pE);
 		taskPool.addTask(pS);
 		final int exit = p.waitFor();
@@ -818,8 +845,9 @@ public class AbcCreator implements Module,
 			for (final String s : source.toFile().list()) {
 				if (!destination.toFile().exists()) {
 					if (!destination.toFile().mkdir()) {
-						throw new IOException("Unable to create directory "
-								+ destination);
+						throw new IOException(
+								"Unable to create directory "
+										+ destination);
 					}
 				}
 				filesAndDirs.add(destination.resolve(s));
@@ -830,7 +858,8 @@ public class AbcCreator implements Module,
 							return;
 						}
 						try {
-							copyRek(source.resolve(s), destination.resolve(s));
+							copyRek(source.resolve(s), destination
+									.resolve(s));
 						} catch (final IOException e) {
 							e.printStackTrace();
 						}
@@ -861,8 +890,9 @@ public class AbcCreator implements Module,
 			for (final String s : files) {
 				if (!destination.toFile().exists()) {
 					if (!destination.toFile().mkdir()) {
-						throw new IOException("Unable to create directory "
-								+ destination);
+						throw new IOException(
+								"Unable to create directory "
+										+ destination);
 					}
 				}
 				taskPool.addTask(new Runnable() {
@@ -873,7 +903,8 @@ public class AbcCreator implements Module,
 							return;
 						}
 						try {
-							copyRek(source.resolve(s), destination.resolve(s));
+							copyRek(source.resolve(s), destination
+									.resolve(s));
 						} catch (final IOException e) {
 							e.printStackTrace();
 						}
@@ -922,7 +953,8 @@ public class AbcCreator implements Module,
 
 	@SuppressWarnings("resource")
 	private final Path generateMap(final Object name, final Object title) {
-		final Path map = midi.getParent().resolve(midi.getFileName() + ".map");
+		final Path map =
+				midi.getParent().resolve(midi.getFileName() + ".map");
 		final OutputStream out = io.openOut(map.toFile());
 		final String style = STYLE.value();
 
@@ -932,28 +964,30 @@ public class AbcCreator implements Module,
 		io.writeln(out, "Style: " + style);
 		io.writeln(out, "Volume: " + BruteParams.VOLUME.value());
 		io.writeln(out, "Compress: " + BruteParams.DYNAMIC.value());
-		io.writeln(out,
+		io.writeln(
+				out,
 				"%no pitch guessing   %uncomment to switch off guessing of default octaves");
 		io.writeln(
 				out,
 				"%no back folding     %uncomment to switch off folding of tone-pitches inside the playable region");
 		io.writeln(out, "fadeout length 0    %unoperational still!!!!");
 		io.writeln(out, String.format("Transcriber : %s", name));
-		final Map<DragObject<JPanel, JPanel, JPanel>, Integer> abcPartMap = new HashMap<>();
+		final Map<DragObject<JPanel, JPanel, JPanel>, Integer> abcPartMap =
+				new HashMap<>();
 		boolean empty = true;
 		io.updateProgress();
 
-		for (final Iterator<DropTargetContainer<JPanel, JPanel, JPanel>> targetIter = this.targets
-				.iterator();;) {
-			final DropTargetContainer<JPanel, JPanel, JPanel> target = targetIter
-					.next();
+		for (final Iterator<DropTargetContainer<JPanel, JPanel, JPanel>> targetIter =
+				this.targets.iterator();;) {
+			final DropTargetContainer<JPanel, JPanel, JPanel> target =
+					targetIter.next();
 			if (!targetIter.hasNext())
 				break;
 			for (final DropTarget<JPanel, JPanel, JPanel> t : target) {
 				empty = false;
 				final StringBuilder params = new StringBuilder();
-				for (final Map.Entry<String, Integer> param : t.getParams()
-						.entrySet()) {
+				for (final Map.Entry<String, Integer> param : t
+						.getParams().entrySet()) {
 					params.append(" ");
 					params.append(t.printParam(param));
 				}
@@ -961,8 +995,8 @@ public class AbcCreator implements Module,
 				io.writeln(out, "abctrack begin");
 				io.writeln(out, "polyphony 6 top");
 				io.writeln(out, "duration 2");
-				io.writeln(out, String.format("instrument %s%s",
-						target.toString(), params.toString()));
+				io.writeln(out, String.format("instrument %s%s", target
+						.toString(), params.toString()));
 				writeAbcTrack(out, t, abcPartMap);
 				io.writeln(out, "abctrack end");
 				io.updateProgress();
@@ -975,7 +1009,8 @@ public class AbcCreator implements Module,
 		io.writeln(
 				out,
 				"% Polyphony sets the maximal number of simultanious tones for this instrument (6 is max)");
-		io.writeln(out,
+		io.writeln(
+				out,
 				"% Pitch is in semitones, to shift an octave up : pitch 12 or down  pitch -12");
 		io.writeln(
 				out,
@@ -992,11 +1027,12 @@ public class AbcCreator implements Module,
 			final Path bruteArchive = wdDir.resolve("BruTE.jar");
 			initState.startPhase(InitState.UNPACK_JAR);
 			if (!bruteArchive.exists()) {
-				final Path bruteArchive2 = bruteArchive.getParent().resolve(
-						"..", bruteArchive.getFileName());
+				final Path bruteArchive2 =
+						bruteArchive.getParent().resolve("..",
+								bruteArchive.getFileName());
 				if (!bruteArchive2.exists()) {
-					System.err.println("Unable to find Brute\n" + bruteArchive
-							+ " does not exist.");
+					System.err.println("Unable to find Brute\n"
+							+ bruteArchive + " does not exist.");
 					return false;
 				}
 				extract(bruteArchive2);
@@ -1023,7 +1059,8 @@ public class AbcCreator implements Module,
 			initState.setSize(InitState.DRUM_MAP, files.length);
 			for (final String f : files) {
 				if (f.startsWith("drum") && f.endsWith(".drummap.txt")) {
-					final String idString = f.substring(4, f.length() - 12);
+					final String idString =
+							f.substring(4, f.length() - 12);
 					final int id;
 					try {
 						id = Integer.parseInt(idString);
@@ -1036,7 +1073,8 @@ public class AbcCreator implements Module,
 						@Override
 						public final void run() {
 							try {
-								copy(drumMaps.resolve(f), bruteDir.resolve(f));
+								copy(drumMaps.resolve(f), bruteDir
+										.resolve(f));
 
 								initState.progress();
 							} catch (final IOException e) {
@@ -1060,19 +1098,24 @@ public class AbcCreator implements Module,
 		if (bruteDir == null) {
 			return;
 		}
-		final StringOption TITLE = new StringOption(null, null,
-				"Title displayed in the abc", "Title", Flag.NoShortFlag,
-				Flag.NoLongFlag, AbcCreator.SECTION, "title", null);
+		final StringOption TITLE =
+				new StringOption(null, null, "Title displayed in the abc",
+						"Title", Flag.NoShortFlag, Flag.NoLongFlag,
+						AbcCreator.SECTION, "title", null);
 		while (true) {
 			if (master.isInterrupted()) {
 				return;
 			}
-			midi = io.selectFile(
-					"Which midi do you want to transcribe to abc?",
-					midi == null ? Path.getPath(
-							main.getConfigValue(Main.GLOBAL_SECTION,
-									Main.PATH_KEY, null).split("/")).toFile()
-							: midi.getParent().toFile(), AbcCreator.midiFilter);
+			midi =
+					io.selectFile(
+							"Which midi do you want to transcribe to abc?",
+							midi == null ? Path.getPath(
+									main.getConfigValue(
+											Main.GLOBAL_SECTION,
+											Main.PATH_KEY, null)
+											.split("/")).toFile() : midi
+									.getParent().toFile(),
+							AbcCreator.midiFilter);
 			if (midi == null) {
 				break;
 			}
@@ -1132,14 +1175,18 @@ public class AbcCreator implements Module,
 			if (master.isInterrupted()) {
 				return;
 			}
-			final String name = main.getConfigValue(Main.GLOBAL_SECTION,
-					Main.NAME_KEY, null);
+			final String name =
+					main.getConfigValue(Main.GLOBAL_SECTION,
+							Main.NAME_KEY, null);
 			if (name == null) {
 				return;
 			}
-			if (call_back(name, TITLE.value(), dragAndDropPlugin.size())) {
-				io.printMessage(null, "transcribed\n" + midi + "\nto\n" + abc,
-						true);
+			final Object result =
+					call_back(name, TITLE.value(), dragAndDropPlugin
+							.size());
+			if (result != null) {
+				io.printMessage(null, "transcribed\n" + midi + "\nto\n"
+						+ abc + "\n\n" + result.toString(), true);
 			}
 			dragAndDropPlugin.reset();
 		}
@@ -1158,8 +1205,9 @@ public class AbcCreator implements Module,
 			if (jarEntries.length == 1) {
 				file = bruteDir.resolve(jarEntry.getName()).toFile();
 			} else {
-				file = bruteDir.resolve(jarEntry.getName().substring(6))
-						.toFile();
+				file =
+						bruteDir.resolve(jarEntry.getName().substring(6))
+								.toFile();
 			}
 			if (!file.getParentFile().exists()) {
 				if (!file.getParentFile().mkdirs()) {
@@ -1184,17 +1232,23 @@ public class AbcCreator implements Module,
 		}
 	}
 
-	private final void writeAbcTrack(final OutputStream out,
-			final DropTarget<JPanel, JPanel, JPanel> abcTrack,
-			final Map<DragObject<JPanel, JPanel, JPanel>, Integer> abcPartMap) {
+	private final
+			void
+			writeAbcTrack(
+					final OutputStream out,
+					final DropTarget<JPanel, JPanel, JPanel> abcTrack,
+					final Map<DragObject<JPanel, JPanel, JPanel>, Integer> abcPartMap) {
 
 		for (final DragObject<JPanel, JPanel, JPanel> midiTrack : abcTrack) {
-			final int pitch = midiTrack.getParam(BruteParams.PITCH, abcTrack);
-			final int volume = midiTrack.getParam(BruteParams.VOLUME, abcTrack);
-			final int delay = midiTrack.getParam(BruteParams.DELAY, abcTrack);
+			final int pitch =
+					midiTrack.getParam(BruteParams.PITCH, abcTrack);
+			final int volume =
+					midiTrack.getParam(BruteParams.VOLUME, abcTrack);
+			final int delay =
+					midiTrack.getParam(BruteParams.DELAY, abcTrack);
 			io.write(out, String.format(
-					"miditrack %d pitch %d volume %d delay %d",
-					midiTrack.getId(), pitch, volume, delay));
+					"miditrack %d pitch %d volume %d delay %d", midiTrack
+							.getId(), pitch, volume, delay));
 			final int total = midiTrack.getTargets();
 			if (total > 1) {
 				int part = 0;
@@ -1202,8 +1256,8 @@ public class AbcCreator implements Module,
 					part = abcPartMap.get(midiTrack);
 				}
 				abcPartMap.put(midiTrack, part + 1);
-				io.writeln(out, String.format(" prio 100 " + "split %d %d",
-						total, part));
+				io.writeln(out, String.format(
+						" prio 100 " + "split %d %d", total, part));
 			} else {
 				io.write(out, "\r\n");
 			}
