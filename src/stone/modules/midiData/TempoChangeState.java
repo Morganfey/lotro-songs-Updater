@@ -32,7 +32,7 @@ final class TempoChangeState {
 
 	final double getMinutes(int deltaTicks) {
 		final double quarters =
-				(double) deltaTicks / (double) this.midiParser.deltaTicksPerQuarter;
-		return quarters * microsPerQuarter / 6e7;
+				(double) deltaTicks / (double) midiParser.deltaTicksPerQuarter;
+		return (quarters * microsPerQuarter) / 6e7;
 	}
 }

@@ -26,259 +26,27 @@ import stone.util.Path;
  * @author Nelphindal
  */
 public class MidiInstrument implements
-		DropTargetContainer<JPanel, JPanel, JPanel> {
-
-	private final String name;
-	private final String name0;
-
-	private static int counter = 0;
-
-	private final Set<DropTarget<JPanel, JPanel, JPanel>> parts =
-			new HashSet<>();
-
-	private final static Map<String, MidiInstrument> nameToInstrumentMap =
-			new HashMap<>();
-
-	/** */
-	public static final MidiInstrument FLUTE = new MidiInstrument("flute");
-
-	/** */
-	public static final MidiInstrument CLARINET =
-			new MidiInstrument("clarinet");
-
-	/** */
-	public static final MidiInstrument HARP = new MidiInstrument("harp");
-
-	/** */
-	public static final MidiInstrument HORN = new MidiInstrument("horn");
-
-	/** */
-	public static final MidiInstrument LUTE = new MidiInstrument("lute");
-
-	/** */
-	public static final MidiInstrument THEORBO = new MidiInstrument("theorbo");
-
-	/** */
-	public static final MidiInstrument DRUMS =
-			new MidiInstrument("drum", "map");
-
-	/** */
-	public static final MidiInstrument BAGPIPES = new MidiInstrument("bagpipe");
-
-	/** */
-	public static final MidiInstrument PIBGORN = new MidiInstrument("pibgorn");
-
-	/** */
-	public static final MidiInstrument COWBELL = new MidiInstrument("cowbell");
-
-	/** */
-	public static final MidiInstrument MOOR_COWBELL = new MidiInstrument(
-			"moor-cowbell");
-
-	/*
-	 * to make createTargets() to work:
-	 * no field except instruments may be public
-	 */
-
-	final int id;
-	final Set<String> paramKeys = new HashSet<>();
-	private final JPanel panel = new JPanel();
-
-	private static final Map<Byte, MidiInstrument> idToInstrument =
-			MidiInstrument.buildInstrumentMap();
-
-	/**
-	 * Creates a new instrument
-	 * 
-	 * @param name
-	 */
-	protected MidiInstrument(final String name) {
-		this(name, new String[0]);
-	}
-
-	/**
-	 * Creates a new instrument
-	 * 
-	 * @param name
-	 * @param params
-	 */
-	protected MidiInstrument(final String name, final String... params) {
-		this.name = name;
-		name0 = name.substring(0, 1).toUpperCase() + name.substring(1);
-		id = ++MidiInstrument.counter;
-		for (final String p : params) {
-			paramKeys.add(p);
-		}
-		nameToInstrumentMap.put(name, this);
-		nameToInstrumentMap.put(name + "s", this);
-	}
-
-	/**
-	 * Returns an array containing each instrument.
-	 * 
-	 * @return an array containing each instrument.
-	 */
-	public final static ArrayList<DropTargetContainer<JPanel, JPanel, JPanel>>
-			createTargets() {
-		final Field[] instrumentFields = MidiInstrument.class.getFields();
-		final ArrayList<DropTargetContainer<JPanel, JPanel, JPanel>> instruments =
-				new ArrayList<>(instrumentFields.length + 1);
-		final Class<MidiInstrument> fieldClass = MidiInstrument.class;
-		try {
-			for (int i = 0; i < instrumentFields.length; i++) {
-				final Class<?> clazz = instrumentFields[i].getType();
-				if (clazz == fieldClass) {
-					final MidiInstrument instrument =
-							fieldClass.cast(instrumentFields[i].get(null));
-					instruments.add(instrument);
-				}
-
-			}
-		} catch (final IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-			return null;
-		}
-		instruments.add(new EmptyMidiInstrumentDropTargetContainer());
-		return instruments;
-	}
-
-	/**
-	 * Returns the instrument matching best to given encoding of midi
-	 * instrument. <i>null</i> may be returned, if no general matching
-	 * is made.
-	 * 
-	 * @param instrument
-	 * @return the instrument encoded by instrument
-	 */
-	public final static MidiInstrument get(final Byte instrument) {
-		return MidiInstrument.idToInstrument.get(instrument);
-	}
-
-	/**
-	 * Reads given map and sets the midi to abc map for instruments according to
-	 * the map.
-	 * 
-	 * @param mapFile
-	 * @param io
-	 */
-	@SuppressWarnings("resource")
-	public final static void readMap(final Path mapFile, final IOHandler io) {
-		if (!mapFile.exists()) {
-			return;
-		}
-		final InputStream in = io.openIn(mapFile.toFile());
-		final Map<Byte, MidiInstrument> newMap = new HashMap<>();
-		in.registerProgressMonitor(io);
-		try {
-			while (true) {
-				final String line = in.readLine();
-				if (line == null) {
-					break;
-				}
-				for (final String split : line.trim().split("[ ,\t]")) {
-					if (split.startsWith("%")) {
-						break;
-					}
-					if (split.isEmpty()) {
-						continue;
-					}
-					final int abcInstrument_0;
-					try {
-						abcInstrument_0 = Integer.parseInt(split);
-					} catch (final Exception e) {
-						io.printError("Error reading instrument map", false);
-						return;
-					}
-					final MidiInstrument abcInstrument_1;
-					// using same encoding like in BruTE
-					// lute, harp, theorbo, horn, clarinet, flute, bagpipes,
-					// pipgorn, drums, cowbell, moor cowbell
-					switch (abcInstrument_0) {
-						case 0:
-							abcInstrument_1 = MidiInstrument.LUTE;
-							break;
-						case 1:
-							abcInstrument_1 = MidiInstrument.HARP;
-							break;
-						case 2:
-							abcInstrument_1 = MidiInstrument.THEORBO;
-							break;
-						case 3:
-							abcInstrument_1 = MidiInstrument.HORN;
-							break;
-						case 4:
-							abcInstrument_1 = MidiInstrument.CLARINET;
-							break;
-						case 5:
-							abcInstrument_1 = MidiInstrument.FLUTE;
-							break;
-						case 6:
-							abcInstrument_1 = MidiInstrument.BAGPIPES;
-							break;
-						case 7:
-							abcInstrument_1 = MidiInstrument.PIBGORN;
-							break;
-						case 8:
-							abcInstrument_1 = MidiInstrument.DRUMS;
-							break;
-						case 9:
-							abcInstrument_1 = MidiInstrument.COWBELL;
-							break;
-						case 10:
-							abcInstrument_1 = MOOR_COWBELL;
-							break;
-						default:
-							abcInstrument_1 = null;
-					}
-					newMap.put((byte) newMap.size(), abcInstrument_1);
-				}
-			}
-		} catch (final IOException e) {
-			io.handleException(ExceptionHandle.CONTINUE, e);
-			return;
-		} finally {
-			io.close(in);
-			io.endProgress();
-		}
-		if (newMap.size() != 128) {
-			io.printError("the given map has not exact 128 instruments to map",
-					false);
-		} else {
-			MidiInstrument.idToInstrument.clear();
-			MidiInstrument.idToInstrument.putAll(newMap);
-		}
-		System.out.println("replaced default map by "
-				+ MidiInstrument.idToInstrument);
-	}
-
-	/**
-	 * @param s
-	 *            name of an instrument in lower case characters
-	 * @return the equivalent instrument
-	 */
-	public final static MidiInstrument valueOf(final String s) {
-		return nameToInstrumentMap.get(s);
-	}
+DropTargetContainer<JPanel, JPanel, JPanel> {
 
 	private final static Map<Byte, MidiInstrument> buildInstrumentMap() {
 		final Map<Byte, MidiInstrument> map = new HashMap<>(128);
-// 'lute', 'harp', 'theorbo', 'horn', 'clarinet', 'flute', 'bagpipes', 'pipgorn', 'drums', 'cowbell', 'moor cowbell'}
-//				0,1,0,1,0,0,1,1,
-//				1,1,1,1,1,1,1,1,
-//				4,4,4,6,6,6,6,6,
-//				0,0,0,0,1,4,6,0,
-//				2,2,2,2,2,2,2,2,
-//				5,4,3,3,4,1,1,2,
-//				5,4,5,4,4,3,6,0,
-//				3,3,3,4,4,3,3,3,
-//				3,3,3,3,4,4,4,4,
-//				5,5,5,5,5,5,5,5,
-//				4,3,4,4,4,4,4,0,
-//				5,5,5,5,5,4,5,5,
-//				1,0,1,1,1,1,1,1,
-//				1,0,0,0,1,6,6,6,
-//				0,0,0,0,2,2,2,1,
-//				9,9,10,9,9,9,9,9
+		// 'lute', 'harp', 'theorbo', 'horn', 'clarinet', 'flute', 'bagpipes', 'pipgorn', 'drums', 'cowbell', 'moor cowbell'}
+		//				0,1,0,1,0,0,1,1,
+		//				1,1,1,1,1,1,1,1,
+		//				4,4,4,6,6,6,6,6,
+		//				0,0,0,0,1,4,6,0,
+		//				2,2,2,2,2,2,2,2,
+		//				5,4,3,3,4,1,1,2,
+		//				5,4,5,4,4,3,6,0,
+		//				3,3,3,4,4,3,3,3,
+		//				3,3,3,3,4,4,4,4,
+		//				5,5,5,5,5,5,5,5,
+		//				4,3,4,4,4,4,4,0,
+		//				5,5,5,5,5,4,5,5,
+		//				1,0,1,1,1,1,1,1,
+		//				1,0,0,0,1,6,6,6,
+		//				0,0,0,0,2,2,2,1,
+		//				9,9,10,9,9,9,9,9
 
 		/*
 		 * Piano Family
@@ -538,66 +306,297 @@ public class MidiInstrument implements
 		}
 		return map;
 	}
+	private final String name;
 
-	/** */
-	@Override
-	public final void clearTargets() {
-		for (final DropTarget<?, ?, ?> part : parts) {
-			part.getDisplayableComponent().getParent()
-					.remove(part.getDisplayableComponent());
-		}
-		parts.clear();
-	}
+	private final String name0;
 
-	/** */
-	@Override
-	public final MidiInstrumentDropTarget createNewTarget() {
-		final MidiInstrumentDropTarget t =
-				new MidiInstrumentDropTarget(this, ++MidiInstrument.counter);
-		parts.add(t);
-		return t;
-	}
+	private static int counter = 0;
 
-	@Override
-	public void delete(final DropTarget<JPanel, JPanel, JPanel> target) {
-		parts.remove(target);
-	}
+	private final Set<DropTarget<JPanel, JPanel, JPanel>> parts =
+			new HashSet<>();
 
-	/** */
-	@Override
-	public final JPanel getDisplayableComponent() {
-		return panel;
-	}
+			private final static Map<String, MidiInstrument> nameToInstrumentMap =
+					new HashMap<>();
 
-	/** */
-	@Override
-	public final String getName() {
-		return name0;
-	}
+					/** */
+					public static final MidiInstrument FLUTE = new MidiInstrument("flute");
 
-	/** */
-	@Override
-	public final Iterator<DropTarget<JPanel, JPanel, JPanel>> iterator() {
-		return parts.iterator();
-	}
+					/** */
+					public static final MidiInstrument CLARINET =
+							new MidiInstrument("clarinet");
 
-	/** */
-	@Override
-	public final Set<DropTarget<JPanel, JPanel, JPanel>> removeAllLinks(
-			final DragObject<JPanel, JPanel, JPanel> object) {
-		final Set<DropTarget<JPanel, JPanel, JPanel>> empty = new HashSet<>();
-		for (final DropTarget<JPanel, JPanel, JPanel> m : parts) {
-			((MidiInstrumentDropTarget) m).clearTargets(object, empty);
-		}
-		parts.removeAll(empty);
-		return empty;
-	}
+					/** */
+					public static final MidiInstrument HARP = new MidiInstrument("harp");
+
+					/** */
+					public static final MidiInstrument HORN = new MidiInstrument("horn");
+
+					/** */
+					public static final MidiInstrument LUTE = new MidiInstrument("lute");
+
+					/** */
+					public static final MidiInstrument THEORBO = new MidiInstrument("theorbo");
+
+					/** */
+					public static final MidiInstrument DRUMS =
+							new MidiInstrument("drum", "map");
+
+					/** */
+					public static final MidiInstrument BAGPIPES = new MidiInstrument("bagpipe");
+
+					/** */
+					public static final MidiInstrument PIBGORN = new MidiInstrument("pibgorn");
+
+					/** */
+					public static final MidiInstrument COWBELL = new MidiInstrument("cowbell");
+
+					/*
+					 * to make createTargets() to work:
+					 * no field except instruments may be public
+					 */
+
+					/** */
+					public static final MidiInstrument MOOR_COWBELL = new MidiInstrument(
+							"moor-cowbell");
+					final int id;
+					final Set<String> paramKeys = new HashSet<>();
+
+					private final JPanel panel = new JPanel();
+
+					private static final Map<Byte, MidiInstrument> idToInstrument =
+							MidiInstrument.buildInstrumentMap();
+
+					/**
+					 * Returns an array containing each instrument.
+					 * 
+					 * @return an array containing each instrument.
+					 */
+					public final static ArrayList<DropTargetContainer<JPanel, JPanel, JPanel>>
+					createTargets() {
+						final Field[] instrumentFields = MidiInstrument.class.getFields();
+						final ArrayList<DropTargetContainer<JPanel, JPanel, JPanel>> instruments =
+								new ArrayList<>(instrumentFields.length + 1);
+								final Class<MidiInstrument> fieldClass = MidiInstrument.class;
+								try {
+									for (final Field instrumentField : instrumentFields) {
+										final Class<?> clazz = instrumentField.getType();
+										if (clazz == fieldClass) {
+											final MidiInstrument instrument =
+													fieldClass.cast(instrumentField.get(null));
+											instruments.add(instrument);
+										}
+
+									}
+								} catch (final IllegalArgumentException | IllegalAccessException e) {
+									e.printStackTrace();
+									return null;
+								}
+								instruments.add(new EmptyMidiInstrumentDropTargetContainer());
+								return instruments;
+					}
+
+					/**
+					 * Returns the instrument matching best to given encoding of midi
+					 * instrument. <i>null</i> may be returned, if no general matching
+					 * is made.
+					 * 
+					 * @param instrument
+					 * @return the instrument encoded by instrument
+					 */
+					public final static MidiInstrument get(final Byte instrument) {
+						return MidiInstrument.idToInstrument.get(instrument);
+					}
+
+					/**
+					 * Reads given map and sets the midi to abc map for instruments according to
+					 * the map.
+					 * 
+					 * @param mapFile
+					 * @param io
+					 */
+					@SuppressWarnings("resource")
+					public final static void readMap(final Path mapFile, final IOHandler io) {
+						if (!mapFile.exists())
+							return;
+						final InputStream in = io.openIn(mapFile.toFile());
+						final Map<Byte, MidiInstrument> newMap = new HashMap<>();
+						in.registerProgressMonitor(io);
+						try {
+							while (true) {
+								final String line = in.readLine();
+								if (line == null) {
+									break;
+								}
+								for (final String split : line.trim().split("[ ,\t]")) {
+									if (split.startsWith("%")) {
+										break;
+									}
+									if (split.isEmpty()) {
+										continue;
+									}
+									final int abcInstrument_0;
+									try {
+										abcInstrument_0 = Integer.parseInt(split);
+									} catch (final Exception e) {
+										io.printError("Error reading instrument map", false);
+										return;
+									}
+									final MidiInstrument abcInstrument_1;
+									// using same encoding like in BruTE
+									// lute, harp, theorbo, horn, clarinet, flute, bagpipes,
+									// pipgorn, drums, cowbell, moor cowbell
+									switch (abcInstrument_0) {
+										case 0:
+											abcInstrument_1 = MidiInstrument.LUTE;
+											break;
+										case 1:
+											abcInstrument_1 = MidiInstrument.HARP;
+											break;
+										case 2:
+											abcInstrument_1 = MidiInstrument.THEORBO;
+											break;
+										case 3:
+											abcInstrument_1 = MidiInstrument.HORN;
+											break;
+										case 4:
+											abcInstrument_1 = MidiInstrument.CLARINET;
+											break;
+										case 5:
+											abcInstrument_1 = MidiInstrument.FLUTE;
+											break;
+										case 6:
+											abcInstrument_1 = MidiInstrument.BAGPIPES;
+											break;
+										case 7:
+											abcInstrument_1 = MidiInstrument.PIBGORN;
+											break;
+										case 8:
+											abcInstrument_1 = MidiInstrument.DRUMS;
+											break;
+										case 9:
+											abcInstrument_1 = MidiInstrument.COWBELL;
+											break;
+										case 10:
+											abcInstrument_1 = MidiInstrument.MOOR_COWBELL;
+											break;
+										default:
+											abcInstrument_1 = null;
+									}
+									newMap.put((byte) newMap.size(), abcInstrument_1);
+								}
+							}
+						} catch (final IOException e) {
+							io.handleException(ExceptionHandle.CONTINUE, e);
+							return;
+						} finally {
+							io.close(in);
+							io.endProgress();
+						}
+						if (newMap.size() != 128) {
+							io.printError("the given map has not exact 128 instruments to map",
+									false);
+						} else {
+							MidiInstrument.idToInstrument.clear();
+							MidiInstrument.idToInstrument.putAll(newMap);
+						}
+						System.out.println("replaced default map by "
+								+ MidiInstrument.idToInstrument);
+					}
+
+					/**
+					 * @param s
+					 *            name of an instrument in lower case characters
+					 * @return the equivalent instrument
+					 */
+					public final static MidiInstrument valueOf(final String s) {
+						return MidiInstrument.nameToInstrumentMap.get(s);
+					}
+
+					/**
+					 * Creates a new instrument
+					 * 
+					 * @param name
+					 */
+					protected MidiInstrument(final String name) {
+						this(name, new String[0]);
+					}
+
+					/**
+					 * Creates a new instrument
+					 * 
+					 * @param name
+					 * @param params
+					 */
+					protected MidiInstrument(final String name, final String... params) {
+						this.name = name;
+						name0 = name.substring(0, 1).toUpperCase() + name.substring(1);
+						id = ++MidiInstrument.counter;
+						for (final String p : params) {
+							paramKeys.add(p);
+						}
+						MidiInstrument.nameToInstrumentMap.put(name, this);
+						MidiInstrument.nameToInstrumentMap.put(name + "s", this);
+					}
+
+					/** */
+					@Override
+					public final void clearTargets() {
+						for (final DropTarget<?, ?, ?> part : parts) {
+							part.getDisplayableComponent().getParent()
+							.remove(part.getDisplayableComponent());
+						}
+						parts.clear();
+					}
+
+					/** */
+					@Override
+					public final MidiInstrumentDropTarget createNewTarget() {
+						final MidiInstrumentDropTarget t =
+								new MidiInstrumentDropTarget(this, ++MidiInstrument.counter);
+						parts.add(t);
+						return t;
+					}
+
+					@Override
+					public void delete(final DropTarget<JPanel, JPanel, JPanel> target) {
+						parts.remove(target);
+					}
+
+					/** */
+					@Override
+					public final JPanel getDisplayableComponent() {
+						return panel;
+					}
+
+					/** */
+					@Override
+					public final String getName() {
+						return name0;
+					}
+
+					/** */
+					@Override
+					public final Iterator<DropTarget<JPanel, JPanel, JPanel>> iterator() {
+						return parts.iterator();
+					}
+
+					/** */
+					@Override
+					public final Set<DropTarget<JPanel, JPanel, JPanel>> removeAllLinks(
+							final DragObject<JPanel, JPanel, JPanel> object) {
+						final Set<DropTarget<JPanel, JPanel, JPanel>> empty = new HashSet<>();
+						for (final DropTarget<JPanel, JPanel, JPanel> m : parts) {
+							((MidiInstrumentDropTarget) m).clearTargets(object, empty);
+						}
+						parts.removeAll(empty);
+						return empty;
+					}
 
 
-	/** */
-	@Override
-	public final String toString() {
-		return name;
-	}
+					/** */
+					@Override
+					public final String toString() {
+						return name;
+					}
 
 }

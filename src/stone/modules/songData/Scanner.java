@@ -23,6 +23,33 @@ import stone.util.Path;
  */
 public final class Scanner implements Runnable {
 
+	private static final String clean(final String desc) {
+		final StringBuilder result = new StringBuilder();
+		int pos = 0;
+		for (int i = 0; i < desc.length(); i++) {
+			final char c = desc.charAt(i);
+			if (c == '\\') {
+				result.append(desc.substring(pos, i));
+				pos = i += 2;
+			} else if (c == '"') {
+				result.append(desc.substring(pos, i));
+				result.append("\\\"");
+				pos = i + 1;
+			} else if (((c >= ' ') && (c <= ']' /*
+			 * including uppercased chars and
+			 * digits
+			 */))
+			 || ((c >= 'a') && (c <= 'z')) || ((c > (char) 127) && (c < (char) 256))) {
+				continue;
+			} else {
+				result.append(desc.substring(pos, i));
+				pos = i + 1;
+			}
+		}
+		result.append(desc.substring(pos));
+		return result.toString();
+	}
+
 	private final ArrayDeque<ModEntry> queue;
 
 	private final IOHandler io;
@@ -54,42 +81,14 @@ public final class Scanner implements Runnable {
 		this.master = master;
 	}
 
-	private static final String clean(final String desc) {
-		final StringBuilder result = new StringBuilder();
-		int pos = 0;
-		for (int i = 0; i < desc.length(); i++) {
-			final char c = desc.charAt(i);
-			if (c == '\\') {
-				result.append(desc.substring(pos, i));
-				pos = i += 2;
-			} else if (c == '"') {
-				result.append(desc.substring(pos, i));
-				result.append("\\\"");
-				pos = i + 1;
-			} else if (c >= ' ' && c <= ']' /*
-											 * including uppercased chars and
-											 * digits
-											 */
-					|| c >= 'a' && c <= 'z' || c > (char) 127 && c < (char) 256) {
-				continue;
-			} else {
-				result.append(desc.substring(pos, i));
-				pos = i + 1;
-			}
-		}
-		result.append(desc.substring(pos));
-		return result.toString();
-	}
-
 	/** */
 	@Override
 	public final void run() {
 		while (true) {
 			final ModEntry song;
 			synchronized (queue) {
-				if (queue.isEmpty()) {
+				if (queue.isEmpty())
 					return;
-				}
 				song = queue.remove();
 			}
 			if (song == ModEntry.TERMINATE) {
@@ -102,9 +101,8 @@ public final class Scanner implements Runnable {
 
 			final SongData data = getVoices(song);
 			if (data == null) {
-				if (master.isInterrupted()) {
+				if (master.isInterrupted())
 					return;
-				}
 				synchronized (songsFound) {
 					songsFound.remove(song.getKey());
 				}
@@ -115,9 +113,8 @@ public final class Scanner implements Runnable {
 					io.write(out, bytes.array(), 0, bytes.position());
 				}
 				tree.put(data);
-				if (master.isInterrupted()) {
+				if (master.isInterrupted())
 					return;
-				}
 			}
 			io.updateProgress();
 		}
@@ -126,8 +123,8 @@ public final class Scanner implements Runnable {
 	@SuppressWarnings("resource")
 	private final SongData getVoices(final ModEntry song) {
 		final SongData songdata = tree.get(song.getKey());
-		if (songdata == null
-				|| songdata.getLastModification() != song.getValue()) {
+		if ((songdata == null)
+				|| (songdata.getLastModification() != song.getValue())) {
 			final Path songFile = song.getKey();
 
 			final Map<String, String> voices = new HashMap<>();
@@ -158,7 +155,7 @@ public final class Scanner implements Runnable {
 						} catch (final IOException e) {
 							io.handleException(ExceptionHandle.TERMINATE, e);
 						}
-						if (line == null || !line.startsWith("T:")) {
+						if ((line == null) || !line.startsWith("T:")) {
 							new MissingTLineInAbc(song.getKey(), lineNumber);
 							error = true;
 							if (line == null) {
@@ -202,9 +199,8 @@ public final class Scanner implements Runnable {
 						io.handleException(ExceptionHandle.TERMINATE, e);
 					}
 				}
-				if (error) {
+				if (error)
 					return null;
-				}
 				if (voices.isEmpty()) {
 					io.printError(String.format("Warning: %-50s %s", song
 							.getKey().toString(), "has no voices"), true);

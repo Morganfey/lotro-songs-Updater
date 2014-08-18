@@ -6,7 +6,7 @@ import java.util.Set;
 
 
 final class DT_Listener<C extends Container, D extends Container, T extends Container>
-		extends DNDListener<C, D, T> {
+extends DNDListener<C, D, T> {
 
 	private final DropTarget<C, D, T> target;
 
@@ -22,19 +22,20 @@ final class DT_Listener<C extends Container, D extends Container, T extends Cont
 		final Set<DragObject<?, ?, ?>> objects = new HashSet<>();
 		for (final DragObject<?, ?, ?> o : target) {
 			objects.add(o);
-			if (!active || state.dragging == null) {
-				if (o.isAlias())
+			if (!active || (state.dragging == null)) {
+				if (o.isAlias()) {
 					markAlias(active, o.getOriginal());
+				}
 				markAlias(active, o.getAliases());
 			}
 			o.getDisplayableComponent().setBackground(
 					active ? DNDListener.C_SELECTED0 : DNDListener.C_INACTIVE);
 		}
 		target.getContainer()
-				.getDisplayableComponent()
-				.setBackground(
-						active ? DNDListener.C_SELECTED0
-								: DNDListener.C_INACTIVE_TARGET);
+		.getDisplayableComponent()
+		.setBackground(
+				active ? DNDListener.C_SELECTED0
+						: DNDListener.C_INACTIVE_TARGET);
 		target.getDisplayableComponent().setBackground(
 				active ? DNDListener.C_ACTIVE : DNDListener.C_INACTIVE_TARGET);
 		for (final DropTarget<?, ?, ?> t : target.getContainer()) {
@@ -58,24 +59,27 @@ final class DT_Listener<C extends Container, D extends Container, T extends Cont
 			final DragObject<?, ?, ?>... objects) {
 		for (final DragObject<?, ?, ?> o : objects) {
 			o.getDisplayableComponent().setBackground(
-					active ? C_CLONE : C_INACTIVE);
+					active ? DNDListener.C_CLONE : DNDListener.C_INACTIVE);
 			for (final DropTarget<?, ?, ?> t : o) {
-				if (t != target && t != state.emptyTarget)
+				if ((t != target) && (t != state.emptyTarget)) {
 					t.getDisplayableComponent().setBackground(
-							active ? C_CLONE : C_INACTIVE_TARGET);
+							active ? DNDListener.C_CLONE : DNDListener.C_INACTIVE_TARGET);
+				}
 			}
-			if (o.getTargetContainer() != target.getContainer())
+			if (o.getTargetContainer() != target.getContainer()) {
 				o.getTargetContainer().getDisplayableComponent()
-						.setBackground(active ? C_CLONE : C_INACTIVE_TARGET);
+				.setBackground(active ? DNDListener.C_CLONE : DNDListener.C_INACTIVE_TARGET);
+			}
 		}
 	}
 
 	@Override
 	protected final void enter(boolean enter) {
-		if (enter)
+		if (enter) {
 			state.target = target;
-		else
+		} else {
 			state.target = null;
+		}
 		mark(enter);
 	}
 

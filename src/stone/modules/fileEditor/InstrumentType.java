@@ -20,25 +20,26 @@ enum InstrumentType {
 	private final String[] keys;
 	private static final Map<String, InstrumentType> map = buildMap();
 
-	private InstrumentType(final String... keys) {
-		this.keys = keys;
+	public final static InstrumentType get(final String string) {
+		return InstrumentType.map.get(string);
 	}
 
-	public final static InstrumentType get(final String string) {
-		return map.get(string);
-	}
 	private final static Map<String, InstrumentType> buildMap() {
 		final Map<String, InstrumentType> map_ = new HashMap<>();
 		try {
 			for (final Field f : InstrumentType.class.getFields()) {
 				final InstrumentType t = (InstrumentType) f.get(null);
-				for (final String key : t.keys)
+				for (final String key : t.keys) {
 					map_.put(key, t);
+				}
 				map_.put(f.getName().toLowerCase(), t);
 			}
 		} catch (final Exception e) {
 			return null;
 		}
 		return map_;
+	}
+	private InstrumentType(final String... keys) {
+		this.keys = keys;
 	}
 }

@@ -50,13 +50,41 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 		return selection;
 	}
 
+	@Override
+	protected final boolean display(final JPanel panel) {
+		final JPanel panelSelection = new JPanel();
+		final JPanel panelButton = new JPanel();
+		final JScrollPane scroll = new JScrollPane(panelSelection);
+
+		scroll.setSize(400, 400);
+		scroll.setPreferredSize(scroll.getSize());
+
+		panelButton.setLayout(new BorderLayout());
+		panelSelection.setLayout(new GridLayout(0, 1));
+		panel.setLayout(new BorderLayout());
+		panel.add(scroll);
+		panel.add(pathLabel, BorderLayout.NORTH);
+		panel.add(panelButton, BorderLayout.SOUTH);
+		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
+		panelButton.add(GUIInterface.Button.ABORT.getButton(),
+				BorderLayout.WEST);
+		displayDir(panelSelection, scroll);
+		return false;
+	}
+
+	@Override
+	protected void repack() {
+		super.repack();
+	}
+
 	final void displayDir(final JPanel panel, final JScrollPane scroll) {
 		final String[] dirs = fileEditor.getDirs(currentDir);
 		final String[] songs = fileEditor.getFiles(currentDir);
-		if (base == currentDir)
+		if (base == currentDir) {
 			pathLabel.setText("/");
-		else
+		} else {
 			pathLabel.setText(currentDir.relativize(base));
+		}
 		for (final String dir : dirs) {
 			final JPanel contentPanel = new JPanel();
 			final Path p = currentDir.resolve(dir);
@@ -85,8 +113,9 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 			}
 			contentPanel.setLayout(new BorderLayout());
 			contentPanel.add(label);
-			if (box != null)
+			if (box != null) {
 				contentPanel.add(box, BorderLayout.WEST);
+			}
 
 			contentPanel.addMouseListener(new DirMouseListener(this, dirs, p,
 					songs, panel, scroll));
@@ -123,32 +152,5 @@ public abstract class FileEditorPlugin extends GUIPlugin {
 
 			panel.add(contentPanel);
 		}
-	}
-
-	@Override
-	protected final boolean display(final JPanel panel) {
-		final JPanel panelSelection = new JPanel();
-		final JPanel panelButton = new JPanel();
-		final JScrollPane scroll = new JScrollPane(panelSelection);
-
-		scroll.setSize(400, 400);
-		scroll.setPreferredSize(scroll.getSize());
-
-		panelButton.setLayout(new BorderLayout());
-		panelSelection.setLayout(new GridLayout(0, 1));
-		panel.setLayout(new BorderLayout());
-		panel.add(scroll);
-		panel.add(pathLabel, BorderLayout.NORTH);
-		panel.add(panelButton, BorderLayout.SOUTH);
-		panelButton.add(GUIInterface.Button.OK.getButton(), BorderLayout.EAST);
-		panelButton.add(GUIInterface.Button.ABORT.getButton(),
-				BorderLayout.WEST);
-		displayDir(panelSelection, scroll);
-		return false;
-	}
-
-	@Override
-	protected void repack() {
-		super.repack();
 	}
 }

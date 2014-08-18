@@ -59,7 +59,7 @@ public class MasterThread extends Thread {
 
 		ModuleInfo() {
 			// cut here
-			this.name = "Main_band";
+			name = "Main_band";
 			// cut here
 			instance = sc.getMain();
 		}
@@ -75,21 +75,65 @@ public class MasterThread extends Thread {
 		}
 	}
 
+	/**
+	 * Returns a path for hosting temporarily files and directories. It will be deleted <i>this</i> thread has been terminated. If the
+	 * invoking thread is not an instance of MasterThread <i>null</i> is returned.
+	 * 
+	 * @return a path located in (one of the) system's temporarily directory or <i>null</i> if the invoking thread is no instance of
+	 *         MasterThread.
+	 */
+	public final static Path tmp() {
+		if (MasterThread.class.isInstance(Thread.currentThread())) {
+			final MasterThread master =
+					MasterThread.class.cast(Thread.currentThread());
+			return master.tmp;
+		}
+		return null;
+	}
+
 	final Path tmp = Path.getTmpDir(Main.TOOLNAME);
-	
+
 	final StartupContainer sc;
-	
+
 	private static final String repo =
-	  "https://raw.githubusercontent.com/Greonyral/stone/master/";
-	  //"file:/D:/Freigabe/Programmierung/arbeitsplatz/Songbook/"; 
+			"https://raw.githubusercontent.com/Greonyral/stone/master/";
+	//"file:/D:/Freigabe/Programmierung/arbeitsplatz/Songbook/";
+
+
+	public static boolean interrupted() {
+		final boolean interrupted = Thread.interrupted();
+		if (MasterThread.class.isInstance(Thread.currentThread())) {
+			final MasterThread master =
+					MasterThread.class.cast(Thread.currentThread());
+			master.state.handleEvent(Event.CLEAR_INT);
+		}
+		return interrupted;
+	}
+	public static void sleep(long millis) {
+
+		MasterThread master = null;
+		if (MasterThread.class.isInstance(Thread.currentThread())) {
+			master = MasterThread.class.cast(Thread.currentThread());
+			master.state.handleEvent(Event.LOCK_INT);
+		}
+		try {
+			Thread.sleep(millis);
+		} catch (final InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			if (master != null) {
+				master.state.handleEvent(Event.UNLOCK_INT);
+			}
+		}
+	}
 
 	private final ThreadState state = new ThreadState();
-
-	
 	private final Map<String, ModuleInfo> modulesLocal = new HashMap<>();
+
 	private final List<String> possibleModules = new ArrayList<>();
 
 	private final TaskPool taskPool;
+
 	private final UncaughtExceptionHandler exceptionHandler;
 
 	private Event event;
@@ -128,49 +172,6 @@ public class MasterThread extends Thread {
 
 		};
 		setUncaughtExceptionHandler(exceptionHandler);
-	}
-
-	public static boolean interrupted() {
-		final boolean interrupted = Thread.interrupted();
-		if (MasterThread.class.isInstance(Thread.currentThread())) {
-			final MasterThread master =
-					MasterThread.class.cast(Thread.currentThread());
-			master.state.handleEvent(Event.CLEAR_INT);
-		}
-		return interrupted;
-	}
-
-	public static void sleep(long millis) {
-
-		MasterThread master = null;
-		if (MasterThread.class.isInstance(Thread.currentThread())) {
-			master = MasterThread.class.cast(Thread.currentThread());
-			master.state.handleEvent(Event.LOCK_INT);
-		}
-		try {
-			Thread.sleep(millis);
-		} catch (final InterruptedException e) {
-			e.printStackTrace();
-		} finally {
-			if (master != null)
-				master.state.handleEvent(Event.UNLOCK_INT);
-		}
-	}
-
-	/**
-	 * Returns a path for hosting temporarily files and directories. It will be deleted <i>this</i> thread has been terminated. If the
-	 * invoking thread is not an instance of MasterThread <i>null</i> is returned.
-	 * 
-	 * @return a path located in (one of the) system's temporarily directory or <i>null</i> if the invoking thread is no instance of
-	 *         MasterThread.
-	 */
-	public final static Path tmp() {
-		if (MasterThread.class.isInstance(Thread.currentThread())) {
-			final MasterThread master =
-					MasterThread.class.cast(Thread.currentThread());
-			return master.tmp;
-		}
-		return null;
 	}
 
 	/** */
@@ -223,16 +224,16 @@ public class MasterThread extends Thread {
 		}
 		io.endProgress();
 		sc.waitForInit();
-	
+
 		if (sc.getMain().getConfigValue(Main.GLOBAL_SECTION,
 				Main.PATH_KEY, null) == null) {
 			sc.getMain().setConfigValue(
 					Main.GLOBAL_SECTION,
 					Main.PATH_KEY,
 					FileSystem
-							.getBase()
-							.resolve("Documents",
-									"The Lord of The Rings Online").toString());
+					.getBase()
+					.resolve("Documents",
+							"The Lord of The Rings Online").toString());
 		}
 		try {
 			final Set<String> moduleSelection = init();
@@ -241,9 +242,8 @@ public class MasterThread extends Thread {
 				return;
 			}
 			checkAvailibility(moduleSelection);
-			if (isInterrupted()) {
+			if (isInterrupted())
 				return;
-			}
 			final ArrayDeque<Option> options = new ArrayDeque<>();
 			for (final String module : possibleModules) {
 				if (moduleSelection.contains(module)) {
@@ -256,11 +256,12 @@ public class MasterThread extends Thread {
 						"Your name. Will be used to identify you."
 								+ "Several operations will use it"
 								+ " for more information, read the manual",
-						"Name", Flag.NoShortFlag, "name", Main.GLOBAL_SECTION,
-						Main.NAME_KEY));
+								"Name", Flag.NoShortFlag, "name", Main.GLOBAL_SECTION,
+								Main.NAME_KEY));
 				io.getOptions(options);
-				if (!isInterrupted())
+				if (!isInterrupted()) {
 					sc.getMain().flushConfig();
+				}
 			}
 			for (final String module : possibleModules) {
 				if (moduleSelection.contains(module)) {
@@ -281,23 +282,20 @@ public class MasterThread extends Thread {
 	 */
 	private final void checkAvailibility(final Set<String> moduleSelection) {
 		try {
-			if (isInterrupted()) {
+			if (isInterrupted())
 				return;
-			}
 			final Set<String> changedModules = new HashSet<>();
 			for (final String m : moduleSelection) {
 				final ModuleInfo info = modulesLocal.get(m);
-				if (info == null || checkModule(info)) {
+				if ((info == null) || checkModule(info)) {
 					changedModules.add(m);
 					downloadModule(m);
 				}
-				if (isInterrupted()) {
+				if (isInterrupted())
 					return;
-				}
 			}
-			if (changedModules.isEmpty()) {
+			if (changedModules.isEmpty())
 				return;
-			}
 			die(repack());
 		} catch (final Exception e) {
 			io.handleException(ExceptionHandle.TERMINATE, e);
@@ -308,16 +306,15 @@ public class MasterThread extends Thread {
 	private final boolean checkModule(final ModuleInfo info) {
 		try {
 			final URL url =
-					new URL(repo + "moduleInfo/" + info.name);
+					new URL(MasterThread.repo + "moduleInfo/" + info.name);
 			final URLConnection connection = url.openConnection();
 			connection.connect();
 			final InputStream in = connection.getInputStream();
 			final byte[] bytes = new byte[4];
 			final int versionRead = in.read(bytes);
 			in.close();
-			if (versionRead < 0) {
+			if (versionRead < 0)
 				return false;
-			}
 			final int versionNew = ByteBuffer.wrap(bytes).getInt();
 			return versionNew != info.getVersion();
 		} catch (final MalformedURLException e) {
@@ -325,9 +322,8 @@ public class MasterThread extends Thread {
 			return false;
 		} catch (final IOException e) {
 			if (e.getClass() == java.net.UnknownHostException.class) {
-				if (suppressUnknownHost) {
+				if (suppressUnknownHost)
 					return false;
-				}
 				System.err.println("connection to " + e.getMessage()
 						+ " failed");
 				suppressUnknownHost = true;
@@ -352,10 +348,10 @@ public class MasterThread extends Thread {
 			interrupt();
 			io.close();
 			if (isFile) {
-				path.renameTo(this.wd);
+				path.renameTo(wd);
 			}
 			tmp.delete();
-			
+
 			new Thread() {
 
 				@Override
@@ -383,7 +379,7 @@ public class MasterThread extends Thread {
 		io.startProgress("Donwloading module " + module, -1);
 		try {
 			final URL url =
-					new URL(repo  + "modules/" + module + ".jar");
+					new URL(MasterThread.repo  + "modules/" + module + ".jar");
 			final URLConnection connection = url.openConnection();
 			final Path target;
 			try {
@@ -431,12 +427,10 @@ public class MasterThread extends Thread {
 	}
 
 	private synchronized final void handleEvents() {
-		if (state.isInterrupted()) {
+		if (state.isInterrupted())
 			return;
-		}
-		if (event == null) {
+		if (event == null)
 			return;
-		}
 		state.handleEvent(event);
 		event = null;
 	}
@@ -454,9 +448,8 @@ public class MasterThread extends Thread {
 			io.handleException(ExceptionHandle.TERMINATE, e);
 			return null;
 		}
-		if (isInterrupted()) {
+		if (isInterrupted())
 			return null;
-		}
 		try {
 			return io.selectModules(possibleModules);
 		} catch (final InterruptedException e1) {
@@ -465,25 +458,24 @@ public class MasterThread extends Thread {
 		}
 	}
 
-private final void loadModules() {
+	private final void loadModules() {
 		io.startProgress("Searching for modules", possibleModules.size());
 		for (final String module : possibleModules) {
-			if (isInterrupted()) {
+			if (isInterrupted())
 				return;
-			}
 			final Class<Module> clazz = StartupContainer.loadModule(module);
-			if (clazz != null)
+			if (clazz != null) {
 				modulesLocal.put(module, new ModuleInfo(clazz, module));
+			}
 			io.updateProgress();
 		}
 		io.endProgress();
 	}
-	
+
 	@SuppressWarnings("resource")
 	private final Path repack() throws IOException {
-		if (isInterrupted()) {
+		if (isInterrupted())
 			return null;
-		}
 		if (sc.jar) {
 			final JarFile jar = new JarFile(wd.toFile());
 			io.startProgress("Unpacking running archive", jar.size());
@@ -551,7 +543,7 @@ private final void loadModules() {
 			io.close(out);
 			return target;
 		}
-		final Path tmp_ = this.tmp.resolve("stone/modules");
+		final Path tmp_ = tmp.resolve("stone/modules");
 		final Path modulesPath = wd.resolve("stone/modules");
 		final String[] dirs = tmp_.toFile().list();
 		io.startProgress("Placing new class files", dirs.length);
@@ -566,7 +558,7 @@ private final void loadModules() {
 		}
 		return wd;
 	}
-	
+
 	private final void repair() {
 		taskPool.addTask(new Runnable() {
 			@Override

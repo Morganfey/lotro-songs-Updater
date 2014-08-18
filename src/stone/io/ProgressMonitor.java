@@ -95,9 +95,8 @@ public class ProgressMonitor {
 	 *            units to add
 	 */
 	public final synchronized void update(int paramInt) {
-		if (!init || progress < 0) {
+		if (!init || (progress < 0))
 			return;
-		}
 		gui.setProgress(progress += paramInt);
 	}
 

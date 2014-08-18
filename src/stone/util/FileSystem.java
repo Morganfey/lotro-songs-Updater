@@ -1,10 +1,10 @@
 package stone.util;
 
-import stone.io.GUI;
-
 import java.nio.charset.Charset;
 
 import javax.swing.filechooser.FileFilter;
+
+import stone.io.GUI;
 
 
 /**
@@ -22,10 +22,10 @@ public abstract class FileSystem {
 		 * Any windows version between Windows XP and Windows 8
 		 */
 		WINDOWS("\\", "\r\n"),
-//		/**
-//		 * Any unix indicating itself as linux kernel
-//		 */
-//		LINUX("/", "\n"),
+		//		/**
+		//		 * Any unix indicating itself as linux kernel
+		//		 */
+		//		LINUX("/", "\n"),
 		/**
 		 * Any unix system, which is not sub-classified
 		 */
@@ -76,12 +76,6 @@ public abstract class FileSystem {
 	private final static Path home = FileSystem.getHome();
 
 	/**
-	 * Creates a new FileSystem
-	 */
-	protected FileSystem() {
-	}
-
-	/**
 	 * @return The path equivalent to ~ on linux, %HOME% on windows.
 	 */
 	public final static Path getBase() {
@@ -103,23 +97,22 @@ public abstract class FileSystem {
 	public final static Path getBase(final GUI gui,
 			final String predefinedPath, final String pathRelToDocuments,
 			final String title, final FileFilter ff)
-			throws InterruptedException {
+					throws InterruptedException {
 		final String fullPath;
 		if (predefinedPath == null) {
 			switch (FileSystem.type) {
 				case UNIX:
-//				case LINUX:
+					//				case LINUX:
 					fullPath =
-							FileSystem.home + "/Documents/"
-									+ pathRelToDocuments;
+					FileSystem.home + "/Documents/"
+							+ pathRelToDocuments;
 					break;
 				case WINDOWS:
 					final String version = System.getProperty("os.version");
 					final float versionNbr = Float.parseFloat(version);
-					if (versionNbr < 5.0) {
+					if (versionNbr < 5.0)
 						// Windows NT
 						return FileSystem.askForBase(gui, title, ff);
-					}
 					// 6.0: Windows Vista, Server 2008
 					// 6.1: Server 2008 R2, 7
 					// 6.2: 8, Server 2012
@@ -137,9 +130,8 @@ public abstract class FileSystem {
 		}
 		final Path path = Path.getPath(fullPath);
 		if (!path.exists()) {
-			if (predefinedPath == null) {
+			if (predefinedPath == null)
 				return FileSystem.askForBase(gui, title, ff);
-			}
 		}
 		return path;
 	}
@@ -168,19 +160,17 @@ public abstract class FileSystem {
 	private final static Path askForBase(final GUI gui, final String title,
 			final FileFilter ff) {
 		final Path path = gui.getPath(title, ff, null);
-		if (path == null) {
+		if (path == null)
 			return null;
-		}
-		if (!path.exists()) {
+		if (!path.exists())
 			return null;
-		}
 		return path;
 	}
 
 	private final static FileSystem createInstance() {
 		switch (FileSystem.type) {
 			case UNIX:
-//			case LINUX:
+				//			case LINUX:
 				return new UnixFileSystem();
 			case WINDOWS:
 				return new WindowsFileSystem();
@@ -191,13 +181,12 @@ public abstract class FileSystem {
 
 	private final static OSType determineOSType() {
 		final String osName = System.getProperty("os.name");
-		if (osName.startsWith("Windows")) {
+		if (osName.startsWith("Windows"))
 			return OSType.WINDOWS.setSubtype(osName.substring(8));
-		} else if (osName.startsWith("Unix") || osName.startsWith("Linux")) {
+		else if (osName.startsWith("Unix") || osName.startsWith("Linux"))
 			return OSType.UNIX;
-//		} else if (osName.startsWith("Linux")) {
-//			return OSType.LINUX;
-		}
+		//		} else if (osName.startsWith("Linux")) {
+		//			return OSType.LINUX;
 		throw new UnrecognizedOSException();
 	}
 
@@ -205,8 +194,8 @@ public abstract class FileSystem {
 		final String home_ = System.getProperty("user.home");
 		switch (FileSystem.type) {
 			case UNIX:
-//			case LINUX:
-				return Path.getPath(home_);
+				//			case LINUX:
+				return Path.getPath(home_.split(FileSystem.OSType.UNIX.sepFile));
 			case WINDOWS:
 				if (FileSystem.type.subtype.equals("Windows Vista")) {
 					// workaround for bug on vista, see
@@ -219,6 +208,12 @@ public abstract class FileSystem {
 			default:
 		}
 		return null;
+	}
+
+	/**
+	 * Creates a new FileSystem
+	 */
+	protected FileSystem() {
 	}
 
 	/**

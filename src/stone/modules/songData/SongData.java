@@ -12,9 +12,18 @@ import stone.util.Path;
  */
 public class SongData {
 
-	private final TreeMap<Integer, String> sortedVoices;
+	final static SongData create(final ModEntry song,
+			final Map<String, String> voices) {
+		final TreeMap<Integer, String> voicesMap = new TreeMap<>();
+		for (final Map.Entry<String, String> v : voices.entrySet()) {
+			voicesMap.put(Integer.parseInt(v.getKey()), v.getValue());
+		}
+		return new SongData(song.getKey(), voicesMap, song.getValue());
+	}
 
+	private final TreeMap<Integer, String> sortedVoices;
 	private final Path song;
+
 	private long mod;
 
 	SongData(final Path song, final Map<Integer, String> voices, long mod) {
@@ -25,15 +34,6 @@ public class SongData {
 		this.song = song;
 		sortedVoices = voices;
 		this.mod = mod;
-	}
-
-	final static SongData create(final ModEntry song,
-			final Map<String, String> voices) {
-		final TreeMap<Integer, String> voicesMap = new TreeMap<>();
-		for (final Map.Entry<String, String> v : voices.entrySet()) {
-			voicesMap.put(Integer.parseInt(v.getKey()), v.getValue());
-		}
-		return new SongData(song.getKey(), voicesMap, song.getValue());
 	}
 
 	/**

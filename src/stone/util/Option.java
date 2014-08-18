@@ -1,13 +1,13 @@
 package stone.util;
 
-import stone.io.GUI;
-
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+
+import stone.io.GUI;
 
 /**
  * Superclass for all Options
@@ -131,8 +131,8 @@ public abstract class Option {
 	 */
 	public final void displayWithGUI(final JPanel rootPanel,
 			final stone.io.GUIInterface activeGui) {
-		this.panel = rootPanel;
-		this.gui = activeGui;
+		panel = rootPanel;
+		gui = activeGui;
 		display(rootPanel);
 	}
 
@@ -222,10 +222,11 @@ public abstract class Option {
 	 *            new value
 	 */
 	public void value(final String value) {
-		if (optionContainer == null)
+		if (optionContainer == null) {
 			this.value = value;
-		else
+		} else {
 			optionContainer.setConfigValue(section, key, value);
+		}
 	}
 
 	abstract void display(final JPanel rootPanel);

@@ -31,38 +31,61 @@ public class NameScheme {
 		}
 	}
 
-	final Map<Integer, Set<Instrument>> map = new HashMap<>();
+	final static void printIdx(final StringBuilder sb, final String idcs) {
+		sb.append(idcs);
+	}
 
+	final static StringBuilder printInstrumentName(final InstrumentType type) {
+		final StringBuilder name = new StringBuilder(type.name().toLowerCase());
+		name.setCharAt(0, name.substring(0, 1).toUpperCase().charAt(0));
+		return name;
+	}
+
+
+	final static void printInstrumentNumbers(final StringBuilder sb,
+			final Set<Integer> numbers) {
+		if (numbers.isEmpty())
+			return;
+		final Iterator<Integer> i = numbers.iterator();
+		sb.append(" ");
+		sb.append(i.next());
+		while (i.hasNext()) {
+			sb.append(",");
+			sb.append(i.next());
+		}
+	}
+	final Map<Integer, Set<Instrument>> map = new HashMap<>();
 	private final Variable DURATION = new Variable("DURATION"),
 			PART_NUM = new Variable("PART_NUM") {
 
-				@Override
-				final void print(final StringBuilder sb, int track) {
-					NameScheme.printIdx(sb, indices.get(track));
-				}
+		@Override
+		final void print(final StringBuilder sb, int track) {
+			NameScheme.printIdx(sb, indices.get(track));
+		}
 
-			}, TOTAL_NUM = new Variable("TOTAL_NUM"), TITLE = new Variable(
-					"TITLE"), MOD_DATE = new Variable("MOD_DATE"),
+	}, TOTAL_NUM = new Variable("TOTAL_NUM"), TITLE = new Variable(
+			"TITLE"), MOD_DATE = new Variable("MOD_DATE"),
 			INSTRUMENT = new Variable("INSTRUMENT") {
 
-				@Override
-				final void print(final StringBuilder sb, int track) {
-					boolean first = true;
-					for (final Instrument i : map.get(track)) {
-						if (!first) {
-							sb.append(", ");
-						} else {
-							first = false;
-						}
-						i.print(sb);
-					}
+		@Override
+		final void print(final StringBuilder sb, int track) {
+			boolean first = true;
+			for (final Instrument i : map.get(track)) {
+				if (!first) {
+					sb.append(", ");
+				} else {
+					first = false;
 				}
-			};
-
-
+				i.print(sb);
+			}
+		}
+	};
 	private final Map<String, Variable> variables = buildVariableMap();
+
 	private final ArrayDeque<NameSchemeElement> elements = new ArrayDeque<>();
+
 	private final Map<InstrumentType, Integer> countMap = new HashMap<>();
+
 	final Map<Integer, String> indices = new HashMap<>();
 
 	/**
@@ -112,17 +135,19 @@ public class NameScheme {
 			}
 			final int[] ends =
 					new int[] { string.indexOf('%', pos),
-							string.indexOf('$', pos), string.indexOf('}', pos) };
+					string.indexOf('$', pos), string.indexOf('}', pos) };
 			int end = string.length();
 			for (final int endI : ends) {
-				if (endI >= 0)
+				if (endI >= 0) {
 					end = Math.min(end, endI);
+				}
 			}
 			final String constant;
-			if (end < 0)
+			if (end < 0) {
 				constant = string.substring(pos);
-			else
+			} else {
 				constant = string.substring(pos, end);
+			}
 			pos += constant.length();
 			elements.add(new Constant(constant, idcs));
 		}
@@ -148,23 +173,26 @@ public class NameScheme {
 		return map_;
 	}
 
+
 	final void duration(final String duration) {
 		DURATION.value(duration);
 	}
 
 	final void instrument(final Map<Integer, Set<Instrument>> instruments) {
 		int countTotal = 0;
-		for (final Set<Instrument> is : instruments.values())
+		for (final Set<Instrument> is : instruments.values()) {
 			for (final Instrument i : is) {
 				if (i.uniqueIdx()) {
 					final Integer countOld = countMap.get(i.type());
-					if (countOld == null)
+					if (countOld == null) {
 						countMap.put(i.type(), 1);
-					else
+					} else {
 						countMap.put(i.type(), countOld.intValue() + 1);
+					}
 					++countTotal;
 				}
 			}
+		}
 		TOTAL_NUM.value(String.valueOf(countTotal));
 		map.putAll(instruments);
 	}
@@ -172,7 +200,6 @@ public class NameScheme {
 	final void mod(final String mod) {
 		MOD_DATE.value(mod);
 	}
-
 
 	final boolean needsDuration() {
 		return elements.contains(DURATION);
@@ -186,10 +213,11 @@ public class NameScheme {
 		int seq = 1;
 		for (final Map.Entry<Integer, String> entry : newIndices.entrySet()) {
 			if (entry.getValue().isEmpty()) {
-				this.indices.put(entry.getKey(), Integer.valueOf(seq)
+				indices.put(entry.getKey(), Integer.valueOf(seq)
 						.toString());
-			} else
-				this.indices.put(entry.getKey(), entry.getValue());
+			} else {
+				indices.put(entry.getKey(), entry.getValue());
+			}
 			seq++;
 		}
 
@@ -201,29 +229,6 @@ public class NameScheme {
 			e.print(sb, track);
 		}
 		return sb.toString();
-	}
-
-	final static void printIdx(final StringBuilder sb, final String idcs) {
-		sb.append(idcs);
-	}
-
-	final static StringBuilder printInstrumentName(final InstrumentType type) {
-		final StringBuilder name = new StringBuilder(type.name().toLowerCase());
-		name.setCharAt(0, name.substring(0, 1).toUpperCase().charAt(0));
-		return name;
-	}
-
-	final static void printInstrumentNumbers(final StringBuilder sb,
-			final Set<Integer> numbers) {
-		if (numbers.isEmpty())
-			return;
-		final Iterator<Integer> i = numbers.iterator();
-		sb.append(" ");
-		sb.append(i.next());
-		while (i.hasNext()) {
-			sb.append(",");
-			sb.append(i.next());
-		}
 	}
 
 	final void reset() {

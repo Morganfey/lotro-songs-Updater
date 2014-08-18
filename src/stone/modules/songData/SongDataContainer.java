@@ -26,15 +26,32 @@ import stone.util.TaskPool;
  */
 public class SongDataContainer implements Container {
 
+	/**
+	 * @param sc
+	 * @return the created new instance
+	 */
+	public final static Container create(final StartupContainer sc) {
+		return new SongDataContainer(sc);
+	}
+
+	@SuppressWarnings("unused")
+	private final static void cleanUp(final StringBuilder title_i) {
+		int i = title_i.indexOf("]");
+		while (i > 0) {
+			title_i.replace(i, i + 1, "] ");
+			i = title_i.indexOf("]", i + 1);
+		}
+	}
+
 	private final DirTree tree;
 
 	private final Set<Path> songsFound = new HashSet<>();
 
 	private final ArrayDeque<ModEntry> queue = new ArrayDeque<>();
-
 	private final IOHandler io;
 
 	private final TaskPool taskPool;
+
 	private final MasterThread master;
 
 	private final boolean scanNeeded = true;
@@ -58,18 +75,9 @@ public class SongDataContainer implements Container {
 					"The default path or the path defined in\nthe config-file does not exist:\n"
 							+ basePath
 							+ "\n Please look into the manual for more information.",
-					false);
+							false);
 		}
 		tree = new DirTree(basePath);
-	}
-
-	@SuppressWarnings("unused")
-	private final static void cleanUp(final StringBuilder title_i) {
-		int i = title_i.indexOf("]");
-		while (i > 0) {
-			title_i.replace(i, i + 1, "] ");
-			i = title_i.indexOf("]", i + 1);
-		}
 	}
 
 	/**
@@ -91,9 +99,8 @@ public class SongDataContainer implements Container {
 	 */
 	@SuppressWarnings("resource")
 	public final void fill() {
-		if (master.isInterrupted()) {
+		if (master.isInterrupted())
 			return;
-		}
 		if (dirty) {
 			final Path parent =
 					tree.getRoot().getParent().resolve("PluginData");
@@ -183,9 +190,8 @@ public class SongDataContainer implements Container {
 	 */
 	public final String[] getDirs(final Path directory) {
 		final Set<String> dirs = tree.getDirs(directory);
-		if (directory == tree.getRoot()) {
+		if (directory == tree.getRoot())
 			return dirs.toArray(new String[dirs.size()]);
-		}
 		final String[] array = dirs.toArray(new String[dirs.size() + 1]);
 		System.arraycopy(array, 0, array, 1, dirs.size());
 		array[0] = "..";
@@ -314,13 +320,5 @@ public class SongDataContainer implements Container {
 
 	final DirTree getDirTree() {
 		return tree;
-	}
-
-	/**
-	 * @param sc
-	 * @return the created new instance
-	 */
-	public final static Container create(final StartupContainer sc) {
-		return new SongDataContainer(sc);
 	}
 }

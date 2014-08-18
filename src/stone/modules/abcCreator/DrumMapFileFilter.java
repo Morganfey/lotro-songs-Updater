@@ -9,35 +9,33 @@ import java.io.File;
 public class DrumMapFileFilter extends stone.util.PathOptionFileFilter {
 
 	/**
-	 * 
-	 */
-	public DrumMapFileFilter() {
-	}
-
-	/**
 	 * Checks if given file is a directory and contains at least one map.
 	 * 
 	 * @param f
 	 * @return <i>true</i> on positive result.
 	 */
 	public static final boolean check(final File f) {
-		if (!f.isDirectory()) {
+		if (!f.isDirectory())
 			return false;
-		}
 		final String[] list = f.list();
-		if (list == null) {
+		if (list == null)
 			return false;
-		}
 		for (final String s : list) {
 			if (s.startsWith("drum") && s.endsWith(".drummap.txt")) {
-				for (int i = 4; i < s.length() - 12; i++) {
-					if (s.charAt(i) < '0' || s.charAt(i) > '9')
+				for (int i = 4; i < (s.length() - 12); i++) {
+					if ((s.charAt(i) < '0') || (s.charAt(i) > '9'))
 						return false;
 				}
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * 
+	 */
+	public DrumMapFileFilter() {
 	}
 
 	/**
@@ -61,21 +59,19 @@ public class DrumMapFileFilter extends stone.util.PathOptionFileFilter {
 	 */
 	@Override
 	public final File value(final File file) {
-		if (file.isFile()) {
+		if (file.isFile())
 			return file.getParentFile();
-		} else if (DrumMapFileFilter.check(file)) {
+		else if (DrumMapFileFilter.check(file))
 			return file;
-		}
 		return null;
 	}
 
 	private boolean accept(final File f, int depth) {
-		if (depth == 5) {
+		if (depth == 5)
 			return true;
-		}
-		if (check(f)) {
+		if (check(f))
 			return true;
-		} else if (f.isDirectory()) {
+		else if (f.isDirectory()) {
 			for (final File fDir : f.listFiles())
 				if (accept(fDir, depth + 1))
 					return true;

@@ -24,36 +24,11 @@ public class OptionContainer {
 	 * flags
 	 * 
 	 * @param flags
-	 * @param main 
+	 * @param main
 	 */
 	public OptionContainer(final Flag flags, final Main main) {
 		this.flags = flags;
 		this.main = main;
-	}
-
-	/**
-	 * @param section
-	 * @param key
-	 * @param defaultValue
-	 * @return the value of the setting (file)
-	 * @see main.Main#getConfigValue(String, String, String)
-	 */
-	final String getConfigValue(final String section, final String key,
-			final String defaultValue) {
-		return main.getConfigValue(section, key, defaultValue);
-	}
-
-	/**
-	 * Sets an
-	 * 
-	 * @param section
-	 * @param key
-	 * @param value
-	 * @see main.Main#setConfigValue(String, String, String)
-	 */
-	final void setConfigValue(final String section, final String key,
-			final String value) {
-		main.setConfigValue(section, key, value);
 	}
 
 	/**
@@ -99,6 +74,31 @@ public class OptionContainer {
 			}
 		}
 
+	}
+
+	/**
+	 * @param section
+	 * @param key
+	 * @param defaultValue
+	 * @return the value of the setting (file)
+	 * @see main.Main#getConfigValue(String, String, String)
+	 */
+	final String getConfigValue(final String section, final String key,
+			final String defaultValue) {
+		return main.getConfigValue(section, key, defaultValue);
+	}
+
+	/**
+	 * Sets an
+	 * 
+	 * @param section
+	 * @param key
+	 * @param value
+	 * @see main.Main#setConfigValue(String, String, String)
+	 */
+	final void setConfigValue(final String section, final String key,
+			final String value) {
+		main.setConfigValue(section, key, value);
 	}
 
 }

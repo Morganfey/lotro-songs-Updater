@@ -93,11 +93,27 @@ public class GUI implements GUIInterface {
 
 	private static final String waitText = "Please wait ...";
 
+	/**
+	 * Enables a component by calling {@link Component#setEnabled(boolean)}
+	 * 
+	 * @param c
+	 * @param b
+	 */
+	public final static void setEnabled(final Component c, boolean b) {
+		if (c instanceof Container) {
+			for (final Component o : ((Container) c).getComponents()) {
+				GUI.setEnabled(o, b);
+			}
+		} else {
+			c.setEnabled(b);
+		}
+	}
+
 	private final JFrame mainFrame;
 
 	private final JTextArea text;
-
 	private final JLabel wait;
+
 	private final JProgressBar bar;
 
 	Button pressed;
@@ -202,7 +218,7 @@ public class GUI implements GUIInterface {
 
 		mainFrame = new JFrame();
 		mainFrame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-//		mainFrame.setResizable(false);
+		//		mainFrame.setResizable(false);
 		mainFrame.setTitle(name);
 		mainFrame.setLayout(new BorderLayout());
 		mainFrame.setMinimumSize(new Dimension(360, 100));
@@ -211,22 +227,6 @@ public class GUI implements GUIInterface {
 
 		mainFrame.pack();
 		mainFrame.setVisible(true);
-	}
-
-	/**
-	 * Enables a component by calling {@link Component#setEnabled(boolean)}
-	 * 
-	 * @param c
-	 * @param b
-	 */
-	public final static void setEnabled(final Component c, boolean b) {
-		if (c instanceof Container) {
-			for (final Component o : ((Container) c).getComponents()) {
-				GUI.setEnabled(o, b);
-			}
-		} else {
-			c.setEnabled(b);
-		}
 	}
 
 	/**
@@ -268,9 +268,8 @@ public class GUI implements GUIInterface {
 	@Override
 	public final void destroy() {
 		synchronized (this) {
-			if (destroyed) {
+			if (destroyed)
 				return;
-			}
 			destroyed = true;
 		}
 		master.interrupt();
@@ -387,9 +386,8 @@ public class GUI implements GUIInterface {
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				synchronized (Button.class) {
-					if (pressed != null) {
+					if (pressed != null)
 						return;
-					}
 					if (e.getActionCommand().equals("ApproveSelection")) {
 						pressed = Button.YES;
 					} else {
@@ -410,13 +408,11 @@ public class GUI implements GUIInterface {
 
 		mainFrame.setAlwaysOnTop(aot);
 
-		if (pressed != Button.YES) {
+		if (pressed != Button.YES)
 			return null;
-		}
 		final File file = chooser.getSelectedFile();
-		if (file == null) {
+		if (file == null)
 			return null;
-		}
 		return Path.getPath(file.toString());
 	}
 
@@ -638,9 +634,8 @@ public class GUI implements GUIInterface {
 	private final void waitForButton() {
 		try {
 			synchronized (Button.class) {
-				if (master.isInterrupted()) {
+				if (master.isInterrupted())
 					return;
-				}
 				revalidate(true, true);
 				pressed = null;
 				Button.class.wait();
@@ -663,9 +658,8 @@ public class GUI implements GUIInterface {
 	}
 
 	final void revalidate(boolean pack, boolean toFront) {
-		if (master.isInterrupted()) {
+		if (master.isInterrupted())
 			return;
-		}
 		if (pack) {
 			mainFrame.pack();
 		}

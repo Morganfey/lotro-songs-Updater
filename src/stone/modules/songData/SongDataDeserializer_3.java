@@ -22,12 +22,10 @@ final class SongDataDeserializer_3 {
 		nameBuffer.position(0);
 		do {
 			final int read = in.read();
-			if (read == SongDataDeserializer_3.SEPERATOR_3) {
+			if (read == SongDataDeserializer_3.SEPERATOR_3)
 				return false;
-			}
-			if (read == SongDataDeserializer_3.SEPERATOR_EXT_3) {
+			if (read == SongDataDeserializer_3.SEPERATOR_EXT_3)
 				return true;
-			}
 			nameBuffer.put((byte) read);
 		} while (!in.EOFreached());
 		throw new IOException("EOF");
@@ -44,9 +42,8 @@ final class SongDataDeserializer_3 {
 		final ByteBuffer nameBuffer = ByteBuffer.allocate(600);
 		final DirTree tree = sdc.getDirTree();
 		while (!in.EOFreached()) {
-			if (Thread.currentThread().isInterrupted()) {
+			if (Thread.currentThread().isInterrupted())
 				return;
-			}
 			final boolean ext =
 					SongDataDeserializer_3.readUntilSep(nameBuffer, in);
 			final String name =
@@ -120,85 +117,84 @@ final class SongDataDeserializer_3 {
 		final int pos = bb.position();
 		bb.put(SongDataDeserializer_3.SEPERATOR_3);
 		bb.putLong(song.getLastModification());
-		if (voices.isEmpty()) {
+		if (voices.isEmpty())
 			return bb;
-		}
 		final int voicesSize = voices.size();
 		final int voiceExt = voicesSize >> Short.SIZE;
-		boolean extend = voiceExt != 0;
-		if (extend) {
-			bb.position(pos);
-			bb.put(SongDataDeserializer_3.SEPERATOR_EXT_3);
-			bb.putInt(voicesSize);
-		} else {
-			final int posTmp = bb.position();
-			bb.position(pos + 1);
-			bb.putShort((short) voices.size());
-			bb.position(posTmp);
-		}
-
-		final ArrayList<byte[]> voicesBytes = new ArrayList<>(voicesSize);
-		for (final Map.Entry<Integer, String> voice : voices.entrySet()) {
-			final int idx = voice.getKey().intValue();
-			final byte[] name = voice.getValue().getBytes();
-			final ByteBuffer bbVoice;
-
-			if (!extend) {
-				final int extend_idx = idx >> Short.SIZE;
-				if (extend_idx != 0) {
-					extend = true;
-					final ArrayList<byte[]> voicesBytesTmp =
-							new ArrayList<>(voicesSize);
-					for (final byte[] voiceDone : voicesBytes) {
-						final byte[] newByte =
-								new byte[voiceDone.length - Short.SIZE / 8
-										+ Integer.SIZE / 8];
-						final ByteBuffer bbDone = ByteBuffer.wrap(voiceDone);
-						final ByteBuffer bbNew = ByteBuffer.wrap(newByte);
-						bbNew.putInt(bbDone.getShort());
-						bbNew.put(voiceDone, bbDone.position(),
-								bbDone.remaining());
-						voicesBytesTmp.add(newByte);
-					}
-					voicesBytes.clear();
-					voicesBytes.addAll(voicesBytesTmp);
+				boolean extend = voiceExt != 0;
+				if (extend) {
 					bb.position(pos);
 					bb.put(SongDataDeserializer_3.SEPERATOR_EXT_3);
-					bb.putShort((short) 0);
-					bb.position(bb.position() + Long.SIZE / 8 - Short.SIZE / 8);
-					bb.putInt(voices.size());
+					bb.putInt(voicesSize);
+				} else {
+					final int posTmp = bb.position();
+					bb.position(pos + 1);
+					bb.putShort((short) voices.size());
+					bb.position(posTmp);
 				}
-			}
 
-			if (extend) {
-				bbVoice =
-						ByteBuffer.allocate(name.length + 1 + Integer.SIZE / 8);
-				bbVoice.putInt(idx);
-				bbVoice.put(name);
-				bbVoice.put(SongDataDeserializer_3.SEPERATOR_3);
-				voicesBytes.add(bbVoice.array());
-			} else {
-				bbVoice = ByteBuffer.allocate(name.length + 1 + Short.SIZE / 8);
-				bbVoice.putShort((short) idx);
-				bbVoice.put(name);
-				bbVoice.put(SongDataDeserializer_3.SEPERATOR_3);
-				voicesBytes.add(bbVoice.array());
-			}
-		}
-		for (final byte[] voice : voicesBytes) {
-			while (bb.remaining() < voice.length) {
-				final byte[] old = bb.array();
-				final int lim = bb.position();
-				bb = ByteBuffer.allocate(2 * bb.capacity());
-				SongDataDeserializer_3.bbMap.put(t, bb);
-				bb.put(old, 0, lim);
-			}
-			bb.put(voice);
-		}
-		if (extend) {
-			bb.position(bb.position() - 1);
-			bb.put(SongDataDeserializer_3.SEPERATOR_EXT_3);
-		}
-		return bb;
+				final ArrayList<byte[]> voicesBytes = new ArrayList<>(voicesSize);
+				for (final Map.Entry<Integer, String> voice : voices.entrySet()) {
+					final int idx = voice.getKey().intValue();
+					final byte[] name = voice.getValue().getBytes();
+					final ByteBuffer bbVoice;
+
+					if (!extend) {
+						final int extend_idx = idx >> Short.SIZE;
+						if (extend_idx != 0) {
+							extend = true;
+							final ArrayList<byte[]> voicesBytesTmp =
+									new ArrayList<>(voicesSize);
+									for (final byte[] voiceDone : voicesBytes) {
+										final byte[] newByte =
+												new byte[(voiceDone.length - (Short.SIZE / 8))
+												         + (Integer.SIZE / 8)];
+										final ByteBuffer bbDone = ByteBuffer.wrap(voiceDone);
+										final ByteBuffer bbNew = ByteBuffer.wrap(newByte);
+										bbNew.putInt(bbDone.getShort());
+										bbNew.put(voiceDone, bbDone.position(),
+												bbDone.remaining());
+										voicesBytesTmp.add(newByte);
+									}
+									voicesBytes.clear();
+									voicesBytes.addAll(voicesBytesTmp);
+									bb.position(pos);
+									bb.put(SongDataDeserializer_3.SEPERATOR_EXT_3);
+									bb.putShort((short) 0);
+									bb.position((bb.position() + (Long.SIZE / 8)) - (Short.SIZE / 8));
+									bb.putInt(voices.size());
+						}
+					}
+
+					if (extend) {
+						bbVoice =
+								ByteBuffer.allocate(name.length + 1 + (Integer.SIZE / 8));
+						bbVoice.putInt(idx);
+						bbVoice.put(name);
+						bbVoice.put(SongDataDeserializer_3.SEPERATOR_3);
+						voicesBytes.add(bbVoice.array());
+					} else {
+						bbVoice = ByteBuffer.allocate(name.length + 1 + (Short.SIZE / 8));
+						bbVoice.putShort((short) idx);
+						bbVoice.put(name);
+						bbVoice.put(SongDataDeserializer_3.SEPERATOR_3);
+						voicesBytes.add(bbVoice.array());
+					}
+				}
+				for (final byte[] voice : voicesBytes) {
+					while (bb.remaining() < voice.length) {
+						final byte[] old = bb.array();
+						final int lim = bb.position();
+						bb = ByteBuffer.allocate(2 * bb.capacity());
+						SongDataDeserializer_3.bbMap.put(t, bb);
+						bb.put(old, 0, lim);
+					}
+					bb.put(voice);
+				}
+				if (extend) {
+					bb.position(bb.position() - 1);
+					bb.put(SongDataDeserializer_3.SEPERATOR_EXT_3);
+				}
+				return bb;
 	}
 }

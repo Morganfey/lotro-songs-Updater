@@ -1,9 +1,5 @@
 package stone.modules;
 
-import stone.io.ExceptionHandle;
-import stone.io.IOHandler;
-import stone.io.GUIInterface.Button;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -16,20 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
-
-import stone.MasterThread;
-import stone.StartupContainer;
-import stone.modules.Module;
-import stone.modules.fileEditor.ChangeNumberingGUI;
-import stone.modules.fileEditor.ChangeTitleGUI;
-import stone.modules.fileEditor.EditorPlugin;
-import stone.modules.fileEditor.FileEditorPlugin;
-import stone.modules.fileEditor.InvalidNameSchemeException;
-import stone.modules.fileEditor.NameScheme;
-import stone.modules.fileEditor.NumberingGUI;
-import stone.modules.fileEditor.SongChangeData;
-import stone.modules.fileEditor.UniformSongsGUI;
-import stone.modules.songData.SongDataContainer;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -44,6 +26,21 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 
+import stone.MasterThread;
+import stone.StartupContainer;
+import stone.io.ExceptionHandle;
+import stone.io.GUIInterface.Button;
+import stone.io.IOHandler;
+import stone.modules.fileEditor.ChangeNumberingGUI;
+import stone.modules.fileEditor.ChangeTitleGUI;
+import stone.modules.fileEditor.EditorPlugin;
+import stone.modules.fileEditor.FileEditorPlugin;
+import stone.modules.fileEditor.InvalidNameSchemeException;
+import stone.modules.fileEditor.NameScheme;
+import stone.modules.fileEditor.NumberingGUI;
+import stone.modules.fileEditor.SongChangeData;
+import stone.modules.fileEditor.UniformSongsGUI;
+import stone.modules.songData.SongDataContainer;
 import stone.util.BooleanOption;
 import stone.util.Flag;
 import stone.util.Option;
@@ -66,23 +63,60 @@ public class FileEditor implements Module {
 	private static final String DEFAULT_SCHEME =
 			"%title %index/%total [%instrument]$1{ (%duration)}$2{ %mod}";
 
+	final static BooleanOption createChangeNumberingOption(
+			final OptionContainer oc) {
+		return new BooleanOption(oc, "changeNumbering",
+				"Changes the numbering of one or more songs.",
+				"Change song numbering", 'n', "change-numbering", FileEditor.SECTION,
+				null, false);
+	}
+
+	final static BooleanOption
+	createChangeTitleOption(final OptionContainer oc) {
+		return new BooleanOption(oc, "changeTitle",
+				"Changes the title of one or more songs.", "Change song title",
+				't', "change-title", FileEditor.SECTION, null, false);
+	}
+
+	final static BooleanOption createModDateOption(final OptionContainer oc) {
+		return new BooleanOption(oc, "modDate",
+				"Restores the modification date of files in your repository.",
+				"Restore mod-date", 'm', "rst-mod", FileEditor.SECTION, null, false);
+	}
+
+	final static StringOption createSongSchemeOption(final OptionContainer oc) {
+		return new StringOption(oc, "uniformScheme",
+				"Changes the scheme for the uniform-songs option. Please have look"
+						+ "in tha manual for the syntax", "Name scheme",
+						Flag.NoShortFlag, "song-scheme", FileEditor.SECTION, "scheme",
+						FileEditor.DEFAULT_SCHEME);
+	}
+
+	final static BooleanOption
+	createUniformSongsOption(final OptionContainer oc) {
+		return new BooleanOption(oc, "uniform",
+				"Changes the titles of songs, matching a name scheme.",
+				"Uniform song titles", Flag.NoShortFlag, "uniform-songs",
+				FileEditor.SECTION, null, false);
+	}
+
 	final StringOption SONG_SCHEME;
-
 	final BooleanOption MOD_DATE;
-
 	final BooleanOption CHANGE_TITLE;
-
 	final BooleanOption CHANGE_NUMBERING;
-
 	final BooleanOption UNIFORM_SONGS;
 
 	private final IOHandler io;
 	private final CanonicalTreeParser treeParserNew = new CanonicalTreeParser();
+
 	private final CanonicalTreeParser treeParserOld = new CanonicalTreeParser();
+
 	private final Map<String, Integer> changed = new HashMap<>();
+
 	private final Set<String> visited = new HashSet<>();
 
 	private final MasterThread master;
+
 	private final SongDataContainer container;
 
 	private final Map<Path, SongChangeData> changes = new HashMap<>();
@@ -95,7 +129,7 @@ public class FileEditor implements Module {
 	 * Constructor for building versionInfo
 	 */
 	public FileEditor() {
-		this.io = null;
+		io = null;
 		master = null;
 		container = null;
 		MOD_DATE = null;
@@ -112,7 +146,7 @@ public class FileEditor implements Module {
 	 * @param sc
 	 */
 	public FileEditor(final StartupContainer sc) {
-		this.io = sc.getIO();
+		io = sc.getIO();
 		master = sc.getMaster();
 		container =
 				(SongDataContainer) sc.getContainer(SongDataContainer.class
@@ -127,43 +161,6 @@ public class FileEditor implements Module {
 		SONG_SCHEME =
 				FileEditor.createSongSchemeOption(sc.getOptionContainer());
 		main = sc.getMain();
-	}
-
-	final static BooleanOption createChangeNumberingOption(
-			final OptionContainer oc) {
-		return new BooleanOption(oc, "changeNumbering",
-				"Changes the numbering of one or more songs.",
-				"Change song numbering", 'n', "change-numbering", SECTION,
-				null, false);
-	}
-
-	final static BooleanOption
-			createChangeTitleOption(final OptionContainer oc) {
-		return new BooleanOption(oc, "changeTitle",
-				"Changes the title of one or more songs.", "Change song title",
-				't', "change-title", SECTION, null, false);
-	}
-
-	final static BooleanOption createModDateOption(final OptionContainer oc) {
-		return new BooleanOption(oc, "modDate",
-				"Restores the modification date of files in your repository.",
-				"Restore mod-date", 'm', "rst-mod", SECTION, null, false);
-	}
-
-	final static StringOption createSongSchemeOption(final OptionContainer oc) {
-		return new StringOption(oc, "uniformScheme",
-				"Changes the scheme for the uniform-songs option. Please have look"
-						+ "in tha manual for the syntax", "Name scheme",
-				Flag.NoShortFlag, "song-scheme", SECTION, "scheme",
-				DEFAULT_SCHEME);
-	}
-
-	final static BooleanOption
-			createUniformSongsOption(final OptionContainer oc) {
-		return new BooleanOption(oc, "uniform",
-				"Changes the titles of songs, matching a name scheme.",
-				"Uniform song titles", Flag.NoShortFlag, "uniform-songs",
-				SECTION, null, false);
 	}
 
 	/**
@@ -195,7 +192,7 @@ public class FileEditor implements Module {
 
 	@Override
 	public final int getVersion() {
-		return VERSION;
+		return FileEditor.VERSION;
 	}
 
 	@Override
@@ -217,9 +214,8 @@ public class FileEditor implements Module {
 					true);
 			return;
 		}
-		if (master.isInterrupted()) {
+		if (master.isInterrupted())
 			return;
-		}
 		try {
 			if (UNIFORM_SONGS.getValue()) {
 				container.fill();
@@ -235,9 +231,8 @@ public class FileEditor implements Module {
 				io.handleGUIPlugin(plugin);
 				changeTitle(plugin.getSelection());
 			}
-			if (master.isInterrupted()) {
+			if (master.isInterrupted())
 				return;
-			}
 			if (CHANGE_NUMBERING.getValue()) {
 				container.fill();
 				final FileEditorPlugin plugin =
@@ -245,9 +240,8 @@ public class FileEditor implements Module {
 				io.handleGUIPlugin(plugin);
 				changeNumbering(plugin.getSelection());
 			}
-			if (master.isInterrupted()) {
+			if (master.isInterrupted())
 				return;
-			}
 			for (final SongChangeData scd : changes.values()) {
 				scd.revalidate(io, getNameScheme());
 			}
@@ -291,8 +285,8 @@ public class FileEditor implements Module {
 
 	private final void diff(final Git session, final RevWalk walk,
 			final RevCommit commitNew, final ObjectReader reader)
-			throws MissingObjectException, IncorrectObjectTypeException,
-			IOException {
+					throws MissingObjectException, IncorrectObjectTypeException,
+					IOException {
 		int i = 0;
 		if (commitNew.getParentCount() == 0) {
 
@@ -303,8 +297,8 @@ public class FileEditor implements Module {
 			try {
 				final List<DiffEntry> diffs =
 						session.diff().setOldTree(new EmptyTreeIterator())
-								.setNewTree(treeParserNew)
-								.setShowNameAndStatusOnly(true).call();
+						.setNewTree(treeParserNew)
+						.setShowNameAndStatusOnly(true).call();
 				final Iterator<DiffEntry> diffsIterator = diffs.iterator();
 				while (diffsIterator.hasNext()) {
 					changed.put(diffsIterator.next().getNewPath(), time);
@@ -327,8 +321,8 @@ public class FileEditor implements Module {
 					try {
 						final List<DiffEntry> diffs =
 								session.diff().setOldTree(treeParserOld)
-										.setNewTree(treeParserNew)
-										.setShowNameAndStatusOnly(true).call();
+								.setNewTree(treeParserNew)
+								.setShowNameAndStatusOnly(true).call();
 						final Iterator<DiffEntry> diffsIterator =
 								diffs.iterator();
 						while (diffsIterator.hasNext()) {
@@ -355,8 +349,9 @@ public class FileEditor implements Module {
 
 
 	private final NameScheme getNameScheme() throws InvalidNameSchemeException {
-		if (scheme == null)
+		if (scheme == null) {
 			scheme = new NameScheme(SONG_SCHEME.value());
+		}
 		return scheme;
 	}
 
@@ -404,8 +399,9 @@ public class FileEditor implements Module {
 			final Path p = queue.remove();
 			if (p.toFile().isDirectory()) {
 				for (final String dir : container.getDirs(p)) {
-					if (dir.equals(".."))
+					if (dir.equals("..")) {
 						continue;
+					}
 					queue.add(p.resolve(dir));
 				}
 				for (final String song : container.getSongs(p)) {

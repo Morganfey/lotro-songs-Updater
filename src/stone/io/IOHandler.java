@@ -99,7 +99,7 @@ public class IOHandler {
 		}
 
 		iconFinal = icon_;
-		this.icon = iconFinal;
+		icon = iconFinal;
 
 		class GUIProxy extends Proxy {
 
@@ -174,9 +174,8 @@ public class IOHandler {
 			int bytesToDiscard) {
 		OutputStream out = null;
 		InputStream in = null;
-		if (!content.exists()) {
+		if (!content.exists())
 			return;
-		}
 		try {
 			try {
 				out = new OutputStream(fileToAppendTo, FileSystem.UTF8, true);
@@ -211,8 +210,9 @@ public class IOHandler {
 		synchronized (this) {
 			if (!closed) {
 				endProgress();
-				if (gui != null)
+				if (gui != null) {
 					gui.destroy();
+				}
 			}
 			closed = true;
 		}
@@ -435,9 +435,8 @@ public class IOHandler {
 	 * @return the uncompressed entries
 	 */
 	public final Set<String> openZipIn(final stone.util.Path zipFile) {
-		if (!zipFile.exists()) {
+		if (!zipFile.exists())
 			return null;
-		}
 		final Set<String> entriesRet = new HashSet<>();
 		try {
 			final ZipFile zip = new ZipFile(zipFile.toFile());
@@ -448,8 +447,8 @@ public class IOHandler {
 				final ZipEntry zipEntry = entries.nextElement();
 				@SuppressWarnings("resource")
 				final OutputStream out =
-						openOut(zipFile.getParent().resolve(zipEntry.getName())
-								.toFile());
+				openOut(zipFile.getParent().resolve(zipEntry.getName())
+						.toFile());
 				final java.io.InputStream in = zip.getInputStream(zipEntry);
 				int read;
 				while ((read = in.read(content)) > 0) {

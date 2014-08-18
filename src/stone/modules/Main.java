@@ -74,12 +74,6 @@ public class Main implements Module {
 	 */
 	public static final String REPAIR = "Repair";
 
-	/**
-	 * Creates a new instance providing the parsed entries of the config
-	 */
-	public Main() {
-	}
-
 	private static final void createIO(final StartupContainer os) {
 		final String icon;
 		icon = "Icon.png";
@@ -93,12 +87,17 @@ public class Main implements Module {
 	}
 
 	/**
+	 * Creates a new instance providing the parsed entries of the config
+	 */
+	public Main() {
+	}
+
+	/**
 	 * Flushes the configuration
 	 */
 	public final void flushConfig() {
-		if (configNew.isEmpty()) {
+		if (configNew.isEmpty())
 			return;
-		}
 
 		final Runnable r = new MainConfigWriter(this);
 		if (taskPool == null) {
@@ -125,15 +124,13 @@ public class Main implements Module {
 				final Map<String, String> map1 = configOld.get(section);
 				if (map0 != null) {
 					final String value0 = map0.get(key);
-					if (value0 != null) {
+					if (value0 != null)
 						return value0;
-					}
 				}
 				if (map1 != null) {
 					final String value1 = map1.get(key);
-					if (value1 != null) {
+					if (value1 != null)
 						return value1;
-					}
 				}
 				return defaultValue;
 			}
@@ -141,20 +138,18 @@ public class Main implements Module {
 	}
 
 	@Override
-	public List<Option> getOptions() {
-		// TODO Auto-generated method stub
+	public final List<Option> getOptions() {
 		return null;
 	}
 
 	@Override
 	public final int getVersion() {
-		return VERSION;
+		return Main.VERSION;
 	}
 
 
 	@Override
-	public Module init(StartupContainer sc) {
-		// TODO Auto-generated method stub
+	public final Module init(final StartupContainer sc) {
 		return null;
 	}
 
@@ -188,9 +183,8 @@ public class Main implements Module {
 		taskPool = sc.createTaskPool();
 		createIO(sc);
 		io = sc.getIO();
-		if (io == null) {
+		if (io == null)
 			return;
-		}
 		taskPool.runMaster();
 		taskPool.addTask(new Runnable() {
 
@@ -200,7 +194,7 @@ public class Main implements Module {
 					sc.finishInit(flags); // sync barrier 1
 					@SuppressWarnings("resource")
 					final InputStream in =
-							io.openIn(homeSetting.toFile(), FileSystem.UTF8);
+					io.openIn(homeSetting.toFile(), FileSystem.UTF8);
 					final StringBuilder sb = new StringBuilder();
 					String section = null;
 					try {
@@ -211,7 +205,7 @@ public class Main implements Module {
 								break;
 							}
 							final char c = (char) read;
-							if (c == '\r' || c == '\t') {
+							if ((c == '\r') || (c == '\t')) {
 								sb.append(' ');
 							} else if (c == '\n') {
 								section = parseConfig(sb, section);
@@ -226,8 +220,10 @@ public class Main implements Module {
 					if (sb.length() != 0) {
 						System.out.println("error parsing config");
 						sc.getMaster().interrupt();
-					} else
+					}
+					else {
 						sc.parseDone(); // sync barrier 2
+					}
 				} catch (final Exception e) {
 					homeSetting.delete();
 					taskPool.getMaster().interrupt();
@@ -265,10 +261,9 @@ public class Main implements Module {
 					final Map<String, String> map0 = configNew.get(section);
 					if (mapOld != null) {
 						final String valueOld = mapOld.get(key);
-						if (valueOld != null && valueOld.equals(value)) {
-							if (map0 == null) {
+						if ((valueOld != null) && valueOld.equals(value)) {
+							if (map0 == null)
 								return;
-							}
 							map0.remove(key);
 							if (map0.isEmpty()) {
 								configNew.remove(section);
@@ -291,21 +286,19 @@ public class Main implements Module {
 	final String parseConfig(final StringBuilder line,
 			final String section) {
 		int idx = 0;
-		if (line.length() == 0) {
+		if (line.length() == 0)
 			return section;
-		}
 		while (line.charAt(idx) == ' ') {
 			++idx;
-			if (idx == line.length()) {
+			if (idx == line.length())
 				return section;
-			}
 		}
 		if (line.charAt(idx) == '[') {
 			final int end = line.indexOf("]", idx) + 1;
 			final String currentSection = line.substring(idx, end);
 			configOld.put(currentSection, new HashMap<String, String>());
 			idx = end;
-			while (idx < line.length() && line.charAt(idx) == ' ') {
+			while ((idx < line.length()) && (line.charAt(idx) == ' ')) {
 				if (++idx == line.length()) {
 					break;
 				}

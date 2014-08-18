@@ -1,10 +1,5 @@
 package stone.modules;
 
-import stone.io.ExceptionHandle;
-import stone.io.IOHandler;
-import stone.io.InputStream;
-import stone.io.OutputStream;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -13,6 +8,10 @@ import java.util.List;
 import java.util.Set;
 
 import stone.StartupContainer;
+import stone.io.ExceptionHandle;
+import stone.io.IOHandler;
+import stone.io.InputStream;
+import stone.io.OutputStream;
 import stone.modules.songData.SongDataContainer;
 import stone.util.Option;
 import stone.util.Path;
@@ -115,7 +114,7 @@ public final class SongbookUpdater implements Module {
 				main.getConfigValue(Main.GLOBAL_SECTION, Main.PATH_KEY, null);
 		if (home == null) {
 			System.out
-					.printf("Unable to determine home - SongbookUpdateData could not been deleted");
+			.printf("Unable to determine home - SongbookUpdateData could not been deleted");
 			return;
 		}
 		final Path basePath = Path.getPath(home.split("/"));
@@ -123,7 +122,7 @@ public final class SongbookUpdater implements Module {
 				basePath.resolve("PluginData").resolve("SongbookUpdateData");
 		final Path updateDataPathZip =
 				basePath.resolve("PluginData")
-						.resolve("SongbookUpdateData.zip");
+				.resolve("SongbookUpdateData.zip");
 		if (updateDataPath.exists()) {
 			final boolean success = updateDataPath.delete();
 			System.out.printf("Delet%s %s%s\n", success ? "ed" : "ing",
@@ -142,9 +141,8 @@ public final class SongbookUpdater implements Module {
 	 */
 	@Override
 	public final void run() {
-		if (master.isInterrupted()) {
+		if (master.isInterrupted())
 			return;
-		}
 		updateSongbookData();
 	}
 
@@ -165,7 +163,7 @@ public final class SongbookUpdater implements Module {
 		}
 		final File userIni =
 				pluginDataPath.getParent().resolve("UserPreferences.ini")
-						.toFile();
+				.toFile();
 		@SuppressWarnings("resource")
 		final InputStream in = io.openIn(userIni);
 		if (userIni.length() != 0) {
@@ -211,7 +209,7 @@ public final class SongbookUpdater implements Module {
 			io.setProgressTitle("Writing Songbook.plugindata " + profile);
 			final File target =
 					pluginDataPath.resolve(profile).resolve("AllServers")
-							.resolve("SongbookData.plugindata").toFile();
+					.resolve("SongbookData.plugindata").toFile();
 			if (!target.exists()) {
 				try {
 					target.getParentFile().mkdirs();

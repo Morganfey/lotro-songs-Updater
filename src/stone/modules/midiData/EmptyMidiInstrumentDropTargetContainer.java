@@ -11,7 +11,7 @@ import stone.modules.abcCreator.DropTarget;
 import stone.modules.abcCreator.DropTargetContainer;
 
 class EmptyMidiInstrumentDropTargetContainer implements
-		DropTargetContainer<JPanel, JPanel, JPanel> {
+DropTargetContainer<JPanel, JPanel, JPanel> {
 
 	final EmptyMidiInstrumentDropTarget target =
 			new EmptyMidiInstrumentDropTarget(this);
@@ -47,9 +47,8 @@ class EmptyMidiInstrumentDropTargetContainer implements
 
 	@Override
 	public final Iterator<DropTarget<JPanel, JPanel, JPanel>> iterator() {
-		if (target.objects.isEmpty()) {
+		if (target.objects.isEmpty())
 			return java.util.Collections.emptyIterator();
-		}
 		return new Iterator<DropTarget<JPanel, JPanel, JPanel>>() {
 
 			boolean hasNext = true;

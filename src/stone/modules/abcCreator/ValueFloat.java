@@ -13,15 +13,15 @@ import javax.swing.event.ChangeListener;
 class ValueFloat implements Value {
 
 	class SliderListener implements ChangeListener {
-	
+
 		private final JSlider slider;
 		private final JLabel label;
-	
+
 		SliderListener(final JSlider slider, final JLabel label) {
 			this.slider = slider;
 			this.label = label;
 		}
-	
+
 		@Override
 		public final void stateChanged(final ChangeEvent e) {
 			value = slider.getValue();
@@ -44,12 +44,13 @@ class ValueFloat implements Value {
 	private final double factor = 1000.0;
 	private final DragObject<Container, Container, Container> object;
 	private final DropTarget<Container, Container, Container> target;
+	private JSlider slider;
 
 	ValueFloat(BruteParams bruteParams, double initValue, double step, double ticks) {
 		this.bruteParams = bruteParams;
 		value = (int) (initValue * factor);
-		this.min = (int) ((initValue - step) * factor);
-		this.max = (int) ((initValue + step) * factor);
+		min = (int) ((initValue - step) * factor);
+		max = (int) ((initValue + step) * factor);
 		this.ticks = (int) (ticks * factor);
 		this.step = (int) (step * factor);
 		object = null;
@@ -57,7 +58,7 @@ class ValueFloat implements Value {
 	}
 
 	@Override
-	public final void display(final JSlider slider, final JLabel label) {
+	public final synchronized void display(final JSlider slider, final JLabel label) {
 		slider.setMinimum(min);
 		slider.setMaximum(max);
 		slider.setValue(value);
@@ -67,8 +68,9 @@ class ValueFloat implements Value {
 		slider.setMinorTickSpacing(ticks);
 		label.setText(String.format("%s %.2f", value == 0 ? " "
 				: value > 0 ? "+" : "-", Math.abs(value) / factor));
-		if (object != null)
-			object.setParam(this.bruteParams, target, value);
+		if (object != null) {
+			object.setParam(bruteParams, target, value);
+		}
 
 		@SuppressWarnings("unchecked") final Dictionary<Integer, JLabel> dict =
 				slider.getLabelTable();
@@ -82,19 +84,29 @@ class ValueFloat implements Value {
 			labelDict.setSize(d);
 		}
 		slider.addChangeListener(new SliderListener(slider, label));
+		this.slider = slider;
 
 	}
 
 	@SuppressWarnings("hiding")
 	@Override
 	public <A extends Container, B extends Container, C extends Container>
-			Value localInstance(final DragObject<A, B, C> object,
-					final DropTarget<A, B, C> target) {
+	Value localInstance(final DragObject<A, B, C> object,
+			final DropTarget<A, B, C> target) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public final String value() {
 		return String.valueOf(value / factor);
+	}
+
+	@Override
+	public final synchronized void value(final String s) {
+		value = (int) (Double.parseDouble(s) * factor);
+		if (slider != null) {
+			slider.setValue(value);
+			slider.repaint();
+		}
 	}
 }

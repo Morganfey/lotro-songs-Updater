@@ -70,9 +70,8 @@ public class TaskPool {
 	 */
 	public final void close() {
 		synchronized (taskPool) {
-			if (closed) {
+			if (closed)
 				return;
-			}
 			closed = true;
 			taskPool.notifyAll();
 			while (runningTasks > 0) {
@@ -105,9 +104,8 @@ public class TaskPool {
 				@Override
 				public void run() {
 					while (true) {
-						if (!runTask()) {
+						if (!runTask())
 							return;
-						}
 					}
 				}
 			};
@@ -122,7 +120,7 @@ public class TaskPool {
 	 * interrupted while waiting.
 	 */
 	public final void waitForTasks() {
-		while (runningTasks > 0 || !taskPool.isEmpty()) {
+		while ((runningTasks > 0) || !taskPool.isEmpty()) {
 			synchronized (taskPool) {
 				try {
 					taskPool.wait();
@@ -144,9 +142,8 @@ public class TaskPool {
 		final Runnable t;
 		synchronized (taskPool) {
 			while (taskPool.isEmpty()) {
-				if (closed) {
+				if (closed)
 					return false;
-				}
 				try {
 					taskPool.wait();
 				} catch (final InterruptedException e) {

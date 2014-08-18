@@ -7,6 +7,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+
 class ValueInt implements Value {
 
 	class SliderListener implements ChangeListener {
@@ -19,7 +20,8 @@ class ValueInt implements Value {
 		private final JLabel label;
 
 
-		SliderListener(ValueInt valueInt, final JSlider slider, final JLabel label) {
+		SliderListener(ValueInt valueInt, final JSlider slider,
+				final JLabel label) {
 			this.valueInt = valueInt;
 			this.slider = slider;
 			this.label = label;
@@ -28,21 +30,28 @@ class ValueInt implements Value {
 		@Override
 		public final void stateChanged(final ChangeEvent e) {
 			final int value_ = slider.getValue();
-			if (this.valueInt.object == null)
-				((ValueInt) this.valueInt.bruteParams.value).value = value_;
-			else
-				this.valueInt.object.setParam(this.valueInt.bruteParams, this.valueInt.target, value_);
+			if (valueInt.object == null) {
+				((ValueInt) valueInt.bruteParams.value).value =
+						value_;
+			} else {
+				valueInt.object.setParam(valueInt.bruteParams,
+						valueInt.target, value_);
+			}
 			label.setText(String.format("%s %d", value_ == 0 ? " "
 					: value_ > 0 ? "+" : "-", Math.abs(value_)));
-			if (this.valueInt.interval > 0)
-				if (value_ == this.valueInt.min) {
-					this.valueInt.min -= this.valueInt.interval;
-					if (value_ < this.valueInt.max - 3 * this.valueInt.interval)
-						this.valueInt.max -= this.valueInt.interval;
-				} else if (value_ == this.valueInt.max) {
-					this.valueInt.max += this.valueInt.interval;
-					if (value_ > this.valueInt.min + 3 * this.valueInt.interval)
-						this.valueInt.min += this.valueInt.interval;
+			if (valueInt.interval > 0)
+				if (value_ == valueInt.min) {
+					valueInt.min -= valueInt.interval;
+					if (value_ < (valueInt.max - (3
+							* valueInt.interval))) {
+						valueInt.max -= valueInt.interval;
+					}
+				} else if (value_ == valueInt.max) {
+					valueInt.max += valueInt.interval;
+					if (value_ > (valueInt.min + (3
+							* valueInt.interval))) {
+						valueInt.min += valueInt.interval;
+					}
 				} else
 					return;
 			else
@@ -51,11 +60,11 @@ class ValueInt implements Value {
 			parent.remove(slider);
 			final JSlider slider_ = new JSlider();
 			parent.add(slider_);
-			this.valueInt.display(slider_, label);
+			valueInt.display(slider_, label);
 			parent.revalidate();
 		}
 	}
-	
+
 	/**
 	 * 
 	 */
@@ -67,14 +76,16 @@ class ValueInt implements Value {
 	private final int ticks;
 	final DragObject<Container, Container, Container> object;
 	final DropTarget<Container, Container, Container> target;
+	private JSlider slider;
 
 	@SuppressWarnings("unchecked")
 	private <A extends Container, B extends Container, C extends Container> ValueInt(
-			BruteParams bruteParams, final ValueInt value, final DragObject<A, B, C> object,
+			BruteParams bruteParams, final ValueInt value,
+			final DragObject<A, B, C> object,
 			final DropTarget<A, B, C> target) {
 		this.bruteParams = bruteParams;
-		this.interval = value.interval;
-		this.ticks = value.ticks;
+		interval = value.interval;
+		ticks = value.ticks;
 		this.value = value.value;
 		max = value.max;
 		min = value.min;
@@ -82,7 +93,8 @@ class ValueInt implements Value {
 		this.target = (DropTarget<Container, Container, Container>) target;
 	}
 
-	ValueInt(BruteParams bruteParams, int initValue, int interval, int ticks) {
+	ValueInt(BruteParams bruteParams, int initValue, int interval,
+			int ticks) {
 		this.bruteParams = bruteParams;
 		value = initValue;
 		min = initValue - interval;
@@ -93,19 +105,21 @@ class ValueInt implements Value {
 		target = null;
 	}
 
-	ValueInt(BruteParams bruteParams, int initValue, int min, int max, int ticks) {
+	ValueInt(BruteParams bruteParams, int initValue, int min, int max,
+			int ticks) {
 		this.bruteParams = bruteParams;
 		value = initValue;
 		this.min = min;
 		this.max = max;
-		this.interval = 0;
+		interval = 0;
 		this.ticks = ticks;
 		object = null;
 		target = null;
 	}
 
 	@Override
-	public final void display(final JSlider slider, final JLabel label) {
+	public synchronized final void display(final JSlider slider,
+			final JLabel label) {
 		slider.setMinimum(min);
 		slider.setMaximum(max);
 		slider.setValue(value);
@@ -117,18 +131,28 @@ class ValueInt implements Value {
 				: value > 0 ? "+" : "-", Math.abs(value)));
 
 		slider.addChangeListener(new SliderListener(this, slider, label));
+		this.slider = slider;
 	}
 
 	@SuppressWarnings("hiding")
 	@Override
 	public <A extends Container, B extends Container, C extends Container>
-			Value localInstance(DragObject<A, B, C> object,
-					DropTarget<A, B, C> target) {
-		return new ValueInt(this.bruteParams, this, object, target);
+	Value localInstance(DragObject<A, B, C> object,
+			DropTarget<A, B, C> target) {
+		return new ValueInt(bruteParams, this, object, target);
 	}
 
 	@Override
 	public final String value() {
 		return String.valueOf(value);
+	}
+
+	@Override
+	public synchronized void value(final String s) {
+		value = Integer.parseInt(s);
+		if (slider != null) {
+			slider.setValue(value);
+			slider.repaint();
+		}
 	}
 }

@@ -31,8 +31,8 @@ public interface DndPluginCallerParams {
 	 * @param targets
 	 */
 	<C extends Container, D extends Container, T extends Container> void
-			display(JPanel panel, DragObject<C, D, T> object,
-					Iterator<DropTarget<C, D, T>> targets);
+	display(JPanel panel, DragObject<C, D, T> object,
+			Iterator<DropTarget<C, D, T>> targets);
 
 	/**
 	 * @return the name of <i>this</i> param, to be used in a GUI

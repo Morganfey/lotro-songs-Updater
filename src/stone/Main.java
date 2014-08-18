@@ -18,7 +18,7 @@ public class Main {
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
 	 * @throws InstantiationException
-	 * @throws ClassNotFoundException 
+	 * @throws ClassNotFoundException
 	 */
 	public final static void main(final String[] args)
 			throws IllegalAccessException, IllegalArgumentException,
@@ -34,6 +34,8 @@ public class Main {
 		final Object sc = scClass.getMethod("createInstance").invoke(null);
 		final Object main = mainClass.newInstance();
 		final Object flags = flagClass.newInstance();
+
+		// TODO parse flags
 
 		scClass.getMethod("setMain", mainClass).invoke(sc, main);
 		mainClass.getMethod("run", scClass, flagClass).invoke(main, sc, flags);

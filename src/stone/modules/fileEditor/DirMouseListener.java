@@ -53,49 +53,52 @@ final class DirMouseListener implements MouseListener {
 
 	@Override
 	public final void mouseReleased(final MouseEvent e) {
-		this.panel.removeAll();
-		if (this.fileEditorPlugin.currentDir.getParent() == this.p) {
+		panel.removeAll();
+		if (fileEditorPlugin.currentDir.getParent() == p) {
 			boolean all = true;
 			final Set<Path> paths = new HashSet<>();
-			for (final String dir : this.dirs) {
-				final Path p_ = this.fileEditorPlugin.currentDir.resolve(dir);
-				if (p_ == this.fileEditorPlugin.currentDir.getParent())
+			for (final String dir : dirs) {
+				final Path p_ = fileEditorPlugin.currentDir.resolve(dir);
+				if (p_ == fileEditorPlugin.currentDir.getParent()) {
 					continue;
-				if (!this.fileEditorPlugin.selection.contains(p_)) {
+				}
+				if (!fileEditorPlugin.selection.contains(p_)) {
 					all = false;
 					break;
 				}
 				paths.add(p_);
 
 			}
-			if (all)
-				for (final String song : this.songs) {
-					final Path path = this.fileEditorPlugin.currentDir.resolve(song);
-					if (!this.fileEditorPlugin.selection.contains(path)) {
+			if (all) {
+				for (final String song : songs) {
+					final Path path = fileEditorPlugin.currentDir.resolve(song);
+					if (!fileEditorPlugin.selection.contains(path)) {
 						all = false;
 						break;
 					}
 					paths.add(path);
 				}
+			}
 			if (all) {
-				this.fileEditorPlugin.selection.removeAll(paths);
-				this.fileEditorPlugin.selection.add(this.fileEditorPlugin.currentDir);
+				fileEditorPlugin.selection.removeAll(paths);
+				fileEditorPlugin.selection.add(fileEditorPlugin.currentDir);
 			}
-		} else if (this.fileEditorPlugin.selection.remove(this.p)) {
-			this.fileEditorPlugin.selection.remove(this.p);
-			for (final String dir : this.fileEditorPlugin.fileEditor.getDirs(this.p)) {
-				if (dir.equals(".."))
+		} else if (fileEditorPlugin.selection.remove(p)) {
+			fileEditorPlugin.selection.remove(p);
+			for (final String dir : fileEditorPlugin.fileEditor.getDirs(p)) {
+				if (dir.equals("..")) {
 					continue;
-				this.fileEditorPlugin.selection.add(this.p.resolve(dir));
+				}
+				fileEditorPlugin.selection.add(p.resolve(dir));
 			}
-			for (final String song : this.fileEditorPlugin.fileEditor.getFiles(this.p)) {
-				this.fileEditorPlugin.selection.add(this.p.resolve(song));
+			for (final String song : fileEditorPlugin.fileEditor.getFiles(p)) {
+				fileEditorPlugin.selection.add(p.resolve(song));
 			}
 		}
-		this.fileEditorPlugin.currentDir = this.p;
-		this.fileEditorPlugin.displayDir(this.panel, this.scroll);
-		this.panel.revalidate();
+		fileEditorPlugin.currentDir = p;
+		fileEditorPlugin.displayDir(panel, scroll);
+		panel.revalidate();
 
-		this.fileEditorPlugin.repack();
+		fileEditorPlugin.repack();
 	}
 }

@@ -84,7 +84,7 @@ public class PathOption extends Option {
 
 		final Path valuePath = getValue();
 		final String value;
-		if (valuePath == null || !valuePath.exists()) {
+		if ((valuePath == null) || !valuePath.exists()) {
 			value = null;
 		} else {
 			value = super.value();
@@ -143,9 +143,8 @@ public class PathOption extends Option {
 	public final Path getValue() {
 		final String rel = super.value();
 		final String base = readBase();
-		if (rel == null) {
+		if (rel == null)
 			return null;
-		}
 		return Path.getPath(base.split("/")).resolve(rel.split("/"));
 	}
 
@@ -189,16 +188,16 @@ public class PathOption extends Option {
 		throw new UnsupportedOperationException("Use value(File) instead");
 	}
 
+	private final String readBase() {
+		return optionContainer.getConfigValue(
+				stone.modules.Main.GLOBAL_SECTION, stone.modules.Main.PATH_KEY,
+				null);
+	}
+
 	final void value(final File fileSelected) {
 		final File file = filter.value(fileSelected);
 		final Path path = Path.getPath(file.toString().split("\\" + FileSystem.getFileSeparator()));
 		final String base = readBase();
 		super.value(path.relativize(Path.getPath(base.split("/"))));
-	}
-
-	private final String readBase() {
-		return this.optionContainer.getConfigValue(
-				stone.modules.Main.GLOBAL_SECTION, stone.modules.Main.PATH_KEY,
-				null);
 	}
 }

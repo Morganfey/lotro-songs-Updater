@@ -162,9 +162,8 @@ public final class MaskedStringOption extends Option {
 	 *         be saved. Else the same value as {@link #value()} would return.
 	 */
 	public final String getValueToSave() {
-		if (save) {
+		if (save)
 			return value();
-		}
 		return null;
 	}
 

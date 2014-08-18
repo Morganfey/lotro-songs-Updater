@@ -27,7 +27,7 @@ final class Task {
 			path.delete();
 			path = path.getParent();
 		}
-			
+
 	}
 }
 

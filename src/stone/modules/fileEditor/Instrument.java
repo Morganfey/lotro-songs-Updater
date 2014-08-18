@@ -10,10 +10,11 @@ class Instrument {
 
 	public Instrument(final InstrumentType type, final Set<Integer> numbers) {
 		this.type = type;
-		if (numbers.isEmpty())
+		if (numbers.isEmpty()) {
 			this.numbers = new HashSet<>();
-		else
+		} else {
 			this.numbers = new HashSet<>(numbers);
+		}
 	}
 
 	public final String name() {
@@ -28,7 +29,7 @@ class Instrument {
 	@Override
 	public final String toString() {
 		final StringBuilder sb = new StringBuilder(type.name().toLowerCase());
-		sb.setCharAt(0, (char) (sb.charAt(0) + 'A' - 'a'));
+		sb.setCharAt(0, (char) ((sb.charAt(0) + 'A') - 'a'));
 		for (final Integer number : numbers) {
 			sb.append(" ");
 			sb.append(number);

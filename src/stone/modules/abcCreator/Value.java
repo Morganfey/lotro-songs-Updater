@@ -14,9 +14,11 @@ interface Value {
 	 * @param target
 	 * @return the param value saved at object for given target
 	 */
-			<A extends Container, B extends Container, C extends Container>
-			Value
-			localInstance(DragObject<A, B, C> object, DropTarget<A, B, C> target);
+	<A extends Container, B extends Container, C extends Container>
+	Value
+	localInstance(DragObject<A, B, C> object, DropTarget<A, B, C> target);
 
 	String value();
+
+	void value(String s);
 }

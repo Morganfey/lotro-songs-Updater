@@ -11,14 +11,15 @@ abstract class NameSchemeElement {
 	abstract void print(StringBuilder sb);
 
 	void print(final StringBuilder sb, int track) {
-		if (idcs == null || idcs.length == 0)
+		if ((idcs == null) || (idcs.length == 0)) {
 			print(sb);
-		else
+		} else {
 			for (final int i : idcs) {
 				if (i == track) {
 					print(sb);
 					return;
 				}
 			}
+		}
 	}
 }

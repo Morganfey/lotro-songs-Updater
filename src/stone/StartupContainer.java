@@ -1,13 +1,12 @@
 package stone;
 
-import stone.io.IOHandler;
-import stone.modules.Main;
-import stone.modules.Module;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import stone.io.IOHandler;
+import stone.modules.Main;
+import stone.modules.Module;
 import stone.util.Flag;
 import stone.util.OptionContainer;
 import stone.util.Path;
@@ -21,16 +20,36 @@ import stone.util.TaskPool;
  */
 public class StartupContainer {
 
+	/**
+	 * Only one instance shall exist at one time.
+	 * 
+	 * @return the new created instance.
+	 */
+	public final static StartupContainer createInstance() {
+		return new StartupContainer();
+	}
+
+	public final static Class<Module> loadModule(final String module) {
+		try {
+			@SuppressWarnings("unchecked") final Class<Module> clazz =
+					(Class<Module>) StartupContainer.loader.loadClass("stone.modules." + module);
+			return clazz;
+		} catch (final ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 	private TaskPool taskPool;
 
 	boolean initDone;
 
 	final boolean jar;
-
 	final Path workingDirectory;
-
 	private IOHandler io;
+
 	private MasterThread master;
+
 	private OptionContainer optionContainer;
 
 	private Flag flags;
@@ -53,27 +72,22 @@ public class StartupContainer {
 		boolean jar_ = false;
 		Path workingDirectory_ = null;
 		try {
-			final Class<?> loaderClass = loader.getClass();
+			final Class<?> loaderClass = StartupContainer.loader.getClass();
 			jar_ =
 					(boolean) loaderClass.getMethod("wdIsJarArchive").invoke(
-							loader);
+							StartupContainer.loader);
 			workingDirectory_ =
 					Path.getPath(loaderClass.getMethod("getWorkingDir")
-							.invoke(loader).toString().split("/"));
+							.invoke(StartupContainer.loader).toString().split("/"));
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
-		this.workingDirectory = workingDirectory_;
-		this.jar = jar_;
+		workingDirectory = workingDirectory_;
+		jar = jar_;
 	}
 
-	/**
-	 * Only one instance shall exist at one time.
-	 * 
-	 * @return the new created instance.
-	 */
-	public final static StartupContainer createInstance() {
-		return new StartupContainer();
+	public final void createFinalIO(@SuppressWarnings("hiding") final IOHandler io) {
+		this.io = io;
 	}
 
 	/**
@@ -87,10 +101,49 @@ public class StartupContainer {
 	}
 
 	/**
+	 * Calling this method will provide the parsed command line arguments to any module.
+	 * 
+	 * @param flags
+	 */
+	public final void finishInit(@SuppressWarnings("hiding") final Flag flags) {
+		this.flags = flags;
+	}
+
+	public final Container getContainer(final String s) {
+		final Container container = containerMap.get(s);
+		if (container == null) {
+			try {
+				@SuppressWarnings("unchecked") final Class<Container> containerClass =
+						(Class<Container>) StartupContainer.loader.loadClass(s);
+				Container containerNew;
+				containerNew =
+						(Container) containerClass.getMethod("create",
+								getClass()).invoke(null, this);
+				containerMap.put(s, containerNew);
+				return containerNew;
+			} catch (IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | NoSuchMethodException
+					| SecurityException | ClassNotFoundException e) {
+				e.printStackTrace();
+				return null;
+			}
+
+		}
+		return container;
+	}
+
+	/**
 	 * @return the IO-handler
 	 */
 	public final IOHandler getIO() {
 		return io;
+	}
+
+	/**
+	 * @return the instance of the main-module
+	 */
+	public final Main getMain() {
+		return main;
 	}
 
 	/**
@@ -104,8 +157,9 @@ public class StartupContainer {
 	 * @return the OptionContainer
 	 */
 	public final OptionContainer getOptionContainer() {
-		if (optionContainer == null)
+		if (optionContainer == null) {
 			optionContainer = new OptionContainer(flags, main);
+		}
 		return optionContainer;
 	}
 
@@ -116,20 +170,13 @@ public class StartupContainer {
 		return taskPool;
 	}
 
-	/**
-	 * Calling this method will provide the parsed command line arguments to any module.
-	 * 
-	 * @param flags
-	 */
-	public final void finishInit(@SuppressWarnings("hiding") final Flag flags) {
-		this.flags = flags;
+	public final Path getWorkingDir() {
+		return workingDirectory;
 	}
 
-	/**
-	 * @return the instance of the main-module
-	 */
-	public final Main getMain() {
-		return main;
+	public final synchronized void parseDone() {
+		--wait;
+		notifyAll();
 	}
 
 	/**
@@ -145,66 +192,19 @@ public class StartupContainer {
 		this.master = master;
 	}
 
-	public final Container getContainer(final String s) {
-		final Container container = this.containerMap.get(s);
-		if (container == null) {
-			try {
-				@SuppressWarnings("unchecked") final Class<Container> containerClass =
-						(Class<Container>) loader.loadClass(s);
-				Container containerNew;
-				containerNew =
-						(Container) containerClass.getMethod("create",
-								getClass()).invoke(null, this);
-				this.containerMap.put(s, containerNew);
-				return containerNew;
-			} catch (IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException | NoSuchMethodException
-					| SecurityException | ClassNotFoundException e) {
-				e.printStackTrace();
-				return null;
-			}
-
-		}
-		return container;
-	}
-
 	public final synchronized void waitForInit() {
-		if (--wait <= 0) {
+		if (--wait <= 0)
 			return;
-		}
-		while (wait != 0)
+		while (wait != 0) {
 			try {
 				wait();
 			} catch (final InterruptedException e) {
 				master.interrupt();
 			}
-	}
-
-	public final void createFinalIO(@SuppressWarnings("hiding") final IOHandler io) {
-		this.io = io;
-	}
-
-	public final Path getWorkingDir() {
-		return workingDirectory;
+		}
 	}
 
 	public final boolean wdIsJarArchive() {
 		return jar;
-	}
-
-	public final static Class<Module> loadModule(final String module) {
-		try {
-			@SuppressWarnings("unchecked") final Class<Module> clazz =
-					(Class<Module>) loader.loadClass("stone.modules." + module);
-			return clazz;
-		} catch (final ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public final synchronized void parseDone() {
-		--wait;
-		notifyAll();
 	}
 }

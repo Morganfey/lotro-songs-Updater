@@ -16,7 +16,7 @@ import javax.swing.JPanel;
 
 
 final class DO_Listener<C extends Container, D extends Container, T extends Container>
-		extends DNDListener<C, D, T> {
+extends DNDListener<C, D, T> {
 
 	private final DragObject<C, D, T> object;
 	private final DndPluginCaller<C, D, T> caller;
@@ -36,23 +36,17 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 		object.getDisplayableComponent().setBackground(DNDListener.C_INACTIVE);
 	}
 
-	final void displayParam() {
-		panelOption.removeAll();
-		final Iterator<DropTarget<C, D, T>> targets = object.iterator();
-		param.display(panelOption, object, targets);
-		panelOption.revalidate();
-	}
-
 	private final void displayParamMenu() {
 		if (object.getTargetContainer() != state.emptyTarget.getContainer()) {
 			panelOption = new JPanel();
 			panelOption.setLayout(new GridLayout(0, 2));
 			for (final BruteParams ps : params) {
-				if (ps == null)
+				if (ps == null) {
 					continue;
+				}
 				final JPanel optionPanel = new JPanel();
 				final JLabel label = new JLabel(ps.toString());
-				label.setFont(font);
+				label.setFont(DO_Listener.font);
 				optionPanel.add(label);
 				optionPanel.setBackground(Color.LIGHT_GRAY);
 				optionPanel.addMouseListener(new MouseListener() {
@@ -96,7 +90,7 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 	}
 
 	private final void mark(boolean active) {
-		if (!active || state.dragging == null) {
+		if (!active || (state.dragging == null)) {
 			final Set<DropTarget<?, ?, ?>> targets = new HashSet<>();
 			final Color ct0 =
 					active ? DNDListener.C_SELECTED0
@@ -106,7 +100,7 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 							: DNDListener.C_INACTIVE_TARGET;
 			final Color ct2 =
 					active ? Color.CYAN : DNDListener.C_INACTIVE_TARGET;
-//			final Color co0 = active ? C_SELECTED0 : C_INACTIVE;
+			//			final Color co0 = active ? C_SELECTED0 : C_INACTIVE;
 			final Color co1 =
 					active ? DNDListener.C_SELECTED1 : DNDListener.C_INACTIVE;
 			final Color co2 =
@@ -126,9 +120,9 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			object.getDisplayableComponent().setBackground(
 					active ? DNDListener.C_ACTIVE : DNDListener.C_INACTIVE);
 			object.getTargetContainer().getDisplayableComponent()
-					.setBackground(ct0);
+			.setBackground(ct0);
 			for (final DropTarget<?, ?, ?> t : object.getTargetContainer()) {
-				if (t == state.emptyTarget || targets.contains(t)) {
+				if ((t == state.emptyTarget) || targets.contains(t)) {
 					continue;
 				}
 				t.getDisplayableComponent().setBackground(ct1);
@@ -141,14 +135,14 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			}
 			if (object.isAlias()) {
 				object.getOriginal().getDisplayableComponent()
-						.setBackground(co2);
+				.setBackground(co2);
 				if (object.getOriginal().getTargetContainer() != object
 						.getTargetContainer()) {
 					object.getOriginal().getTargetContainer()
-							.getDisplayableComponent().setBackground(ct2);
+					.getDisplayableComponent().setBackground(ct2);
 				}
 				for (final DropTarget<?, ?, ?> t : object.getOriginal()) {
-					if (t == state.emptyTarget || targets.contains(t)) {
+					if ((t == state.emptyTarget) || targets.contains(t)) {
 						continue;
 					}
 					t.getDisplayableComponent().setBackground(ct2);
@@ -161,10 +155,10 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 				alias.getDisplayableComponent().setBackground(co2);
 				if (alias.getTargetContainer() != object.getTargetContainer()) {
 					alias.getTargetContainer().getDisplayableComponent()
-							.setBackground(ct2);
+					.setBackground(ct2);
 				}
 				for (final DropTarget<?, ?, ?> t : alias) {
-					if (t == state.emptyTarget || targets.contains(t)) {
+					if ((t == state.emptyTarget) || targets.contains(t)) {
 						continue;
 					}
 					t.getDisplayableComponent().setBackground(ct2);
@@ -217,7 +211,7 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			}
 		} else {
 			state.object = null;
-			if (state.dragging == null || state.dragging != object) {
+			if ((state.dragging == null) || (state.dragging != object)) {
 				mark(false);
 			}
 		}
@@ -264,8 +258,9 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 				if (state.split) {
 					if (object.getTargetContainer() == state.target
 							.getContainer()) {
-						if (!object.addTarget(state.target))
+						if (!object.addTarget(state.target)) {
 							caller.printError("To large split");
+						}
 					} else {
 						wipeTargetsAndLink();
 					}
@@ -286,7 +281,7 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 							state.targetC.delete(state.target);
 							final Container c =
 									state.target.getDisplayableComponent()
-											.getParent();
+									.getParent();
 							c.remove(state.target.getDisplayableComponent());
 							c.revalidate();
 							caller.printError("To large split");
@@ -300,7 +295,7 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 				}
 				state.target = null;
 				if (object.isAlias()
-						&& state.targetC == state.emptyTarget.getContainer()) {
+						&& (state.targetC == state.emptyTarget.getContainer())) {
 					object.forgetAlias();
 					state.emptyTarget.getContainer().removeAllLinks(object);
 					final Container parent =
@@ -310,9 +305,8 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 					mark(false);
 					return;
 				}
-			} else {
+			} else
 				return;
-			}
 			mark(true);
 			if (panelOption != null) {
 				object.getDisplayableComponent().remove(panelOption);
@@ -320,6 +314,13 @@ final class DO_Listener<C extends Container, D extends Container, T extends Cont
 			}
 			object.getDisplayableComponent().revalidate();
 		}
+	}
+
+	final void displayParam() {
+		panelOption.removeAll();
+		final Iterator<DropTarget<C, D, T>> targets = object.iterator();
+		param.display(panelOption, object, targets);
+		panelOption.revalidate();
 	}
 
 }

@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.swing.JPanel;
 
@@ -16,7 +16,7 @@ import stone.modules.abcCreator.DropTargetContainer;
 
 
 class EmptyMidiInstrumentDropTarget implements
-		DropTarget<JPanel, JPanel, JPanel> {
+DropTarget<JPanel, JPanel, JPanel> {
 	final Set<DragObject<JPanel, JPanel, JPanel>> objects = new HashSet<>();
 	private final DropTargetContainer<JPanel, JPanel, JPanel> container;
 

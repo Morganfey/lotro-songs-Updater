@@ -55,8 +55,9 @@ public final class NoYesPlugin extends GUIPlugin {
 		panel.add(text);
 		panelButton.add(GUI.Button.NO.getButton(), BorderLayout.EAST);
 		panelButton.add(GUI.Button.YES.getButton(), BorderLayout.WEST);
-		if (progress)
+		if (progress) {
 			panel.add(gui.getProgressBar(), BorderLayout.NORTH);
+		}
 		return false;
 	}
 

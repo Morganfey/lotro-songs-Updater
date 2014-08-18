@@ -83,9 +83,9 @@ public class Flag {
 	public final boolean parse(final String[] args) {
 		for (int i = 0, ci = -1; i < args.length; i++) {
 			final String id;
-			if (ci < 0 && args[i].startsWith("--")) {
+			if ((ci < 0) && args[i].startsWith("--")) {
 				id = longToId.get(args[i].substring(2));
-			} else if (ci < 0 && args[i].startsWith("-")) {
+			} else if ((ci < 0) && args[i].startsWith("-")) {
 				id = shortToId.get((int) args[i].charAt(1));
 				ci = 1;
 			} else {
@@ -99,7 +99,7 @@ public class Flag {
 			}
 			final String value;
 			if ((state.get(id) & Flag.PRIMITIVE) == 0) {
-				if (args[i].length() > ci + 1) {
+				if (args[i].length() > (ci + 1)) {
 					System.err.println("unknown option " + args[i]);
 					System.err.println(printHelp());
 					return false;
@@ -112,7 +112,7 @@ public class Flag {
 			enabledFlags.add(id);
 			values.put(id, value);
 			if (ci >= 0) {
-				if (ci + 1 == args[i].length()) {
+				if ((ci + 1) == args[i].length()) {
 					ci = -1;
 				} else {
 					i--;
@@ -134,7 +134,7 @@ public class Flag {
 		for (final String fOption : registeredFlags) {
 			final char shortF = (char) idToShort.get(fOption).intValue();
 			final String longF = idToLong.get(fOption);
-			final int state_ = this.state.get(fOption);
+			final int state_ = state.get(fOption);
 			final boolean primi = (state_ & Flag.PRIMITIVE) != 0;
 			outPart1 += " [";
 			if (shortF != Flag.NoShortFlag) {
@@ -159,12 +159,12 @@ public class Flag {
 					"\n"
 							+ String.format("%s %-16s : %s", idToShort
 									.get(fOption) == Flag.NoShortFlag ? "  "
-									: "-"
+											: "-"
 											+ (char) idToShort.get(fOption)
-													.intValue(), idToLong
-									.get(fOption) == Flag.NoLongFlag ? ""
-									: "--" + idToLong.get(fOption), help
-									.get(fOption));
+											.intValue(), idToLong
+											.get(fOption) == Flag.NoLongFlag ? ""
+													: "--" + idToLong.get(fOption), help
+													.get(fOption));
 		}
 		return outPart1 + outPart2 + outPart3;
 	}

@@ -15,7 +15,7 @@ abstract class AbtractEoWInAbc {
 	AbtractEoWInAbc(final Path song, int line) {
 		this.song = song;
 		this.line = line;
-		synchronized (messages) {
+		synchronized (AbtractEoWInAbc.messages) {
 			AbtractEoWInAbc.messages.put(song, this);
 		}
 	}

@@ -11,7 +11,7 @@ import java.util.Set;
  * @param <T>
  */
 public interface DropTargetContainer<C extends Container, D extends Container, T extends Container>
-		extends Iterable<DropTarget<C, D, T>> {
+extends Iterable<DropTarget<C, D, T>> {
 
 	/**
 	 * Unlinks every DropTarget with its DragObjects and deletes all DropTargets

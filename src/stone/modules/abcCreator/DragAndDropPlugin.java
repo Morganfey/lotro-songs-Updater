@@ -36,7 +36,7 @@ import stone.util.TaskPool;
  *            Implementing class for container
  */
 public abstract class DragAndDropPlugin<C extends Container, D extends Container, T extends Container>
-		extends GUIPlugin {
+extends GUIPlugin {
 
 	class State {
 
@@ -222,8 +222,8 @@ public abstract class DragAndDropPlugin<C extends Container, D extends Container
 		state.dragging = null;
 		state.object = null;
 
-		assert panelCenter.getComponentCount() == 0
-				&& panelLeft.getComponentCount() == 0;
+		assert (panelCenter.getComponentCount() == 0)
+		&& (panelLeft.getComponentCount() == 0);
 		initListLeft.clear();
 		taskPool.waitForTasks();
 

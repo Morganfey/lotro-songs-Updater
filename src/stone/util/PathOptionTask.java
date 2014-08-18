@@ -21,7 +21,7 @@ final class PathOptionTask implements Runnable {
 
 	@Override
 	public void run() {
-		final Path path = this.pathOption.getValue();
+		final Path path = pathOption.getValue();
 		final String value;
 		if (path == null) {
 			value = null;
@@ -31,20 +31,20 @@ final class PathOptionTask implements Runnable {
 		final JFileChooser fileChooser =
 				new JFileChooser(value);
 		final JFrame frame = new JFrame();
-		fileChooser.setFileFilter(this.pathOption.filter);
-		fileChooser.setDialogTitle(this.pathOption.getDescription());
-		fileChooser.setFileSelectionMode(this.pathOption.selectionMode);
+		fileChooser.setFileFilter(pathOption.filter);
+		fileChooser.setDialogTitle(pathOption.getDescription());
+		fileChooser.setFileSelectionMode(pathOption.selectionMode);
 
 		try {
 			final int ret = fileChooser.showOpenDialog(frame);
 			if (ret == JFileChooser.APPROVE_OPTION) {
-				this.pathOption.value(fileChooser.getSelectedFile());
-				this.textField.setText(pathOption.getValue().toString());
-				this.textField.setForeground(Color.BLACK);
+				pathOption.value(fileChooser.getSelectedFile());
+				textField.setText(pathOption.getValue().toString());
+				textField.setForeground(Color.BLACK);
 			} else {
-				pathOption.value((File) null); 
-				this.textField.setText(this.pathOption.getTooltip());
-				this.textField.setForeground(Color.GRAY);
+				pathOption.value((File) null);
+				textField.setText(pathOption.getTooltip());
+				textField.setForeground(Color.GRAY);
 			}
 		} finally {
 			frame.setVisible(false);

@@ -23,31 +23,31 @@ final class MainConfigWriter implements Runnable {
 		final java.io.OutputStream out;
 		final StringBuilder sb = new StringBuilder();
 
-		synchronized (this.main.configOld) {
-			synchronized (this.main.configNew) {
+		synchronized (main.configOld) {
+			synchronized (main.configNew) {
 				// throw all values into configOld
-				for (final Map.Entry<String, Map<String, String>> entryMap : this.main.configNew
+				for (final Map.Entry<String, Map<String, String>> entryMap : main.configNew
 						.entrySet()) {
 					final Map<String, String> map =
-							this.main.configOld.get(entryMap.getKey());
+							main.configOld.get(entryMap.getKey());
 					if (map == null) {
-						this.main.configOld.put(entryMap.getKey(),
+						main.configOld.put(entryMap.getKey(),
 								entryMap.getValue());
 					} else {
 						map.putAll(entryMap.getValue());
 					}
 				}
-				this.main.configNew.clear();
+				main.configNew.clear();
 			}
 
 			// search for null keys
 			final Set<String> sectionsToRemove = new HashSet<>();
-			for (final Map.Entry<String, Map<String, String>> entryMap : this.main.configOld
+			for (final Map.Entry<String, Map<String, String>> entryMap : main.configOld
 					.entrySet()) {
 				final Set<String> keysToRemove = new HashSet<>();
 				for (final Map.Entry<String, String> map : entryMap
 						.getValue().entrySet()) {
-					if (map.getValue() == null
+					if ((map.getValue() == null)
 							|| map.getValue().isEmpty()) {
 						keysToRemove.add(map.getKey());
 					}
@@ -60,11 +60,11 @@ final class MainConfigWriter implements Runnable {
 				}
 			}
 			for (final String section : sectionsToRemove) {
-				this.main.configOld.remove(section);
+				main.configOld.remove(section);
 			}
 		}
 
-		for (final Map.Entry<String, Map<String, String>> sections : this.main.configOld
+		for (final Map.Entry<String, Map<String, String>> sections : main.configOld
 				.entrySet()) {
 			sb.append(sections.getKey());
 			sb.append(FileSystem.getLineSeparator());
@@ -79,7 +79,7 @@ final class MainConfigWriter implements Runnable {
 		}
 
 		try {
-			out = new java.io.FileOutputStream(this.main.homeSetting.toFile());
+			out = new java.io.FileOutputStream(main.homeSetting.toFile());
 			try {
 				out.write(sb.toString().getBytes());
 				out.flush();
@@ -87,7 +87,7 @@ final class MainConfigWriter implements Runnable {
 				out.close();
 			}
 		} catch (final IOException e) {
-			this.main.homeSetting.delete();
+			main.homeSetting.delete();
 		}
 	}
 }

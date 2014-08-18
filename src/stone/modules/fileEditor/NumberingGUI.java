@@ -16,9 +16,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import stone.io.GUIInterface.Button;
 import stone.io.GUIPlugin;
 import stone.io.IOHandler;
-import stone.io.GUIInterface.Button;
 
 
 /**
@@ -42,9 +42,9 @@ public class NumberingGUI extends GUIPlugin {
 	 * @param io
 	 */
 	public NumberingGUI(final SongChangeData data, final IOHandler io) {
-		this.indices = data.getIndices();
-		this.titles = data.getTitles();
-		this.instruments = data.getInstruments();
+		indices = data.getIndices();
+		titles = data.getTitles();
+		instruments = data.getInstruments();
 		scd = data;
 		this.io = io;
 	}
@@ -88,8 +88,9 @@ public class NumberingGUI extends GUIPlugin {
 		final Map<Integer, String> map = new HashMap<>();
 		for (final Entry<Integer, JTextField> idcs : idxToNum.entrySet()) {
 			String value = idcs.getValue().getText().replaceAll("\t", " ");
-			while (value.contains("  "))
+			while (value.contains("  ")) {
 				value = value.replaceAll("  ", " ");
+			}
 			map.put(idcs.getKey(), value);
 		}
 		return map;
@@ -121,13 +122,13 @@ public class NumberingGUI extends GUIPlugin {
 			final JCheckBox optBox = new JCheckBox();
 			final String title;
 			{
-				final Set<?> instruments_ = this.instruments.get(key);
+				final Set<?> instruments_ = instruments.get(key);
 				final String titleString = titles.get(key);
 				title =
 						(titleString == null ? "<No title>" : titleString)
-								+ " "
-								+ (instruments_ == null ? "[?]" : instruments_
-										.toString());
+						+ " "
+						+ (instruments_ == null ? "[?]" : instruments_
+								.toString());
 			}
 			trackPanel.setLayout(new BorderLayout());
 			idxPanel.setLayout(new GridLayout(1, 0));

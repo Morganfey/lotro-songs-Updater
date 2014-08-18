@@ -46,7 +46,7 @@ public final class BooleanOption extends Option {
 			final String section, final String key, boolean defaultValue) {
 		super(optionContainer, name, toolTip, guiDescription, shortFlag,
 				longFlag, false, section, key, Boolean.valueOf(defaultValue)
-						.toString());
+				.toString());
 	}
 
 	/**
@@ -110,9 +110,8 @@ public final class BooleanOption extends Option {
 	/** */
 	@Override
 	public final String value() {
-		if (key == null) {
+		if (key == null)
 			return value;
-		}
 		return super.value();
 	}
 
@@ -121,8 +120,9 @@ public final class BooleanOption extends Option {
 	public final void value(@SuppressWarnings("hiding") final String value) {
 		if (key == null) {
 			this.value = value;
-		} else
+		} else {
 			super.value(value);
+		}
 		if (listener != null) {
 			listener.newValue(getValue());
 		}
