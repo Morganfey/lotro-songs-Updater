@@ -31,8 +31,7 @@ class ValueInt implements Value {
 		public final void stateChanged(final ChangeEvent e) {
 			final int value_ = slider.getValue();
 			if (valueInt.object == null) {
-				((ValueInt) valueInt.bruteParams.value).value =
-						value_;
+				((ValueInt) valueInt.bruteParams.globalValue).value = value_;
 			} else {
 				valueInt.object.setParam(valueInt.bruteParams,
 						valueInt.target, value_);
@@ -42,14 +41,12 @@ class ValueInt implements Value {
 			if (valueInt.interval > 0)
 				if (value_ == valueInt.min) {
 					valueInt.min -= valueInt.interval;
-					if (value_ < (valueInt.max - (3
-							* valueInt.interval))) {
+					if (value_ < (valueInt.max - (3 * valueInt.interval))) {
 						valueInt.max -= valueInt.interval;
 					}
 				} else if (value_ == valueInt.max) {
 					valueInt.max += valueInt.interval;
-					if (value_ > (valueInt.min + (3
-							* valueInt.interval))) {
+					if (value_ > (valueInt.min + (3 * valueInt.interval))) {
 						valueInt.min += valueInt.interval;
 					}
 				} else
@@ -76,23 +73,23 @@ class ValueInt implements Value {
 	private final int ticks;
 	final DragObject<Container, Container, Container> object;
 	final DropTarget<Container, Container, Container> target;
-	private JSlider slider;
 
 	@SuppressWarnings("unchecked")
 	private <A extends Container, B extends Container, C extends Container> ValueInt(
 			BruteParams bruteParams, final ValueInt value,
 			final DragObject<A, B, C> object,
-			final DropTarget<A, B, C> target) {
+			final DropTarget<A, B, C> target, final Integer valueLocal) {
 		this.bruteParams = bruteParams;
 		interval = value.interval;
 		ticks = value.ticks;
-		this.value = value.value;
+		this.value = valueLocal; // value.value;
 		max = value.max;
 		min = value.min;
 		this.object = (DragObject<Container, Container, Container>) object;
 		this.target = (DropTarget<Container, Container, Container>) target;
 	}
 
+	/** Creates a new Value with unbounded value */
 	ValueInt(BruteParams bruteParams, int initValue, int interval,
 			int ticks) {
 		this.bruteParams = bruteParams;
@@ -105,6 +102,7 @@ class ValueInt implements Value {
 		target = null;
 	}
 
+	/** Creates a new Value with bounded value */
 	ValueInt(BruteParams bruteParams, int initValue, int min, int max,
 			int ticks) {
 		this.bruteParams = bruteParams;
@@ -131,15 +129,14 @@ class ValueInt implements Value {
 				: value > 0 ? "+" : "-", Math.abs(value)));
 
 		slider.addChangeListener(new SliderListener(this, slider, label));
-		this.slider = slider;
 	}
 
 	@SuppressWarnings("hiding")
 	@Override
 	public <A extends Container, B extends Container, C extends Container>
-	Value localInstance(DragObject<A, B, C> object,
-			DropTarget<A, B, C> target) {
-		return new ValueInt(bruteParams, this, object, target);
+			Value localInstance(DragObject<A, B, C> object,
+					DropTarget<A, B, C> target, final Integer value) {
+		return new ValueInt(bruteParams, this, object, target, value);
 	}
 
 	@Override
@@ -150,9 +147,5 @@ class ValueInt implements Value {
 	@Override
 	public synchronized void value(final String s) {
 		value = Integer.parseInt(s);
-		if (slider != null) {
-			slider.setValue(value);
-			slider.repaint();
-		}
 	}
 }

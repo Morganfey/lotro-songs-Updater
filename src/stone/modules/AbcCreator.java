@@ -197,7 +197,7 @@ DndPluginCaller<JPanel, JPanel, JPanel> {
 	private static final PathOptionFileFilter INSTR_MAP_FILTER =
 			new InstrumentMapFileFilter();
 
-	private final static int VERSION = 3;
+	private final static int VERSION = 4;
 
 	private static final FileFilter midiFilter = new MidiFileFilter();
 

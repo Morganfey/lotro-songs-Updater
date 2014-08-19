@@ -10,7 +10,8 @@ import java.io.IOException;
 
 
 /**
- * StringBuilder implementing more or less the same functionality of util.StringBuilder
+ * StringBuilder implementing more or less the same functionality of
+ * util.StringBuilder
  * 
  * @author Nelphindal
  */
@@ -44,8 +45,9 @@ public class StringBuilder {
 	}
 
 	/**
-	 * * Appends a char to the front. Succeeding calls of appendFirst('o'), appendFirst('o') and appendFirst('f')
-	 * on a empty instance of StringBuilder will result in "foo".
+	 * * Appends a char to the front. Succeeding calls of appendFirst('o'),
+	 * appendFirst('o') and appendFirst('f') on a empty instance of
+	 * StringBuilder will result in "foo".
 	 * 
 	 * @param c
 	 *            char to append
@@ -62,8 +64,9 @@ public class StringBuilder {
 	}
 
 	/**
-	 * Appends a string to the front. Succeeding calls of appendFirst("foo") and appendFirst("bar")
-	 * on a empty instance of StringBuilder will result in "barfoo".
+	 * Appends a string to the front. Succeeding calls of appendFirst("foo") and
+	 * appendFirst("bar") on a empty instance of StringBuilder will result in
+	 * "barfoo".
 	 * 
 	 * @param s
 	 *            String to append
@@ -88,7 +91,8 @@ public class StringBuilder {
 			head = StringBuilder.PATTERN_SIZE;
 			tail = length;
 		}
-		System.arraycopy(array, 0, content[cIdx], StringBuilder.PATTERN_SIZE, array.length);
+		System.arraycopy(array, 0, content[cIdx],
+				StringBuilder.PATTERN_SIZE, array.length);
 		tail += array.length;
 		return this;
 	}
@@ -155,7 +159,8 @@ public class StringBuilder {
 	}
 
 	/**
-	 * @return <i>true</i> if the length is 0 and {@link #toString()} would return an empty string.
+	 * @return <i>true</i> if the length is 0 and {@link #toString()} would
+	 *         return an empty string.
 	 */
 	public final boolean isEmpty() {
 		return head == tail;
@@ -186,7 +191,8 @@ public class StringBuilder {
 	}
 
 	/**
-	 * Sets the content to <i>s</i>. It has equal effect like the calls clear() and append{First, Last}(s).
+	 * Sets the content to <i>s</i>. It has equal effect like the calls clear()
+	 * and append{First, Last}(s).
 	 * 
 	 * @param s
 	 */
@@ -207,7 +213,8 @@ public class StringBuilder {
 	}
 
 	/**
-	 * Sets the contained string to start <i>offset</i> positions later. Unspecified behavior if offset is greater than actual length.
+	 * Sets the contained string to start <i>offset</i> positions later.
+	 * Unspecified behavior if offset is greater than actual length.
 	 * 
 	 * @param offset
 	 */
@@ -241,8 +248,8 @@ public class StringBuilder {
 		if (tail < head) {
 			System.arraycopy(content[cIdx], head, content[cIdxNext],
 					StringBuilder.PATTERN_SIZE, length - tail);
-			System.arraycopy(content[cIdx], 0, content[cIdxNext], (length - tail)
-					+ StringBuilder.PATTERN_SIZE, tail);
+			System.arraycopy(content[cIdx], 0, content[cIdxNext],
+					(length - tail) + StringBuilder.PATTERN_SIZE, tail);
 
 		} else if ((head > StringBuilder.PATTERN_SIZE)
 				|| (head < (StringBuilder.PATTERN_SIZE >> 2))) {
@@ -259,8 +266,8 @@ public class StringBuilder {
 		if ((content[cIdxNext] == null)
 				|| (content[cIdxNext].length <= content[cIdx].length)) {
 			content[cIdxNext] =
-					new char[content[cIdx].length + (StringBuilder.PATTERN_SIZE
-							* 2)];
+					new char[content[cIdx].length
+					         + (StringBuilder.PATTERN_SIZE * 2)];
 		}
 	}
 
@@ -269,7 +276,8 @@ public class StringBuilder {
 		copy();
 	}
 
-	private final boolean handleControl(int keycode, int[] cursor, boolean alt) {
+	private final boolean handleControl(int keycode, int[] cursor,
+			boolean alt) {
 		switch (keycode) {
 			case KeyEvent.VK_A:
 				cursor[1] = 0;
@@ -279,9 +287,9 @@ public class StringBuilder {
 				if (head > tail) {
 					growAndCopy();
 				}
-				StringBuilder.clip.setContents(
-						new StringSelection(new String(content[cIdx], head
-								+ cursor[1], cursor[2] - cursor[1])), null);
+				StringBuilder.clip.setContents(new StringSelection(
+						new String(content[cIdx], head + cursor[1],
+								cursor[2] - cursor[1])), null);
 				return true;
 			case KeyEvent.VK_Q:
 				if (alt) {
@@ -292,7 +300,8 @@ public class StringBuilder {
 				try {
 					final String pasted =
 							(String) StringBuilder.clip.getContents(null)
-							.getTransferData(DataFlavor.stringFlavor);
+							.getTransferData(
+									DataFlavor.stringFlavor);
 					for (final char c : pasted.toCharArray()) {
 						insert(c, cursor);
 						cursor[1] = cursor[2] = cursor[0];
@@ -318,7 +327,8 @@ public class StringBuilder {
 						StringBuilder.PATTERN_SIZE, cursorArray[1]);
 				System.arraycopy(content[cIdx], head + cursorArray[2],
 						content[cIdxNext], StringBuilder.PATTERN_SIZE
-						+ cursorArray[1] + 1, length - cursorArray[2]);
+						+ cursorArray[1] + 1, length
+						- cursorArray[2]);
 				switchBuffer();
 			}
 			content[cIdx][cursorArray[1] + head] = c;
@@ -339,8 +349,9 @@ public class StringBuilder {
 
 			System.arraycopy(content[cIdx], head, content[cIdxNext],
 					StringBuilder.PATTERN_SIZE, cursor);
-			System.arraycopy(content[cIdx], head + cursor, content[cIdxNext],
-					StringBuilder.PATTERN_SIZE + cursor + 1, length - cursor);
+			System.arraycopy(content[cIdx], head + cursor,
+					content[cIdxNext], StringBuilder.PATTERN_SIZE + cursor
+					+ 1, length - cursor);
 			switchBuffer();
 			content[cIdx][StringBuilder.PATTERN_SIZE + cursor] = c;
 			head = StringBuilder.PATTERN_SIZE;
@@ -368,7 +379,8 @@ public class StringBuilder {
 				head = StringBuilder.PATTERN_SIZE;
 			}
 			System.arraycopy(s.toCharArray(), 0, content[cIdx],
-					StringBuilder.PATTERN_SIZE + cursorArray[1], s.length());
+					StringBuilder.PATTERN_SIZE + cursorArray[1], s
+					.length());
 			tail -= lengthDelta;
 			cursorArray[0] = cursorArray[2] = ++cursorArray[1];
 			return;
@@ -385,9 +397,9 @@ public class StringBuilder {
 			}
 			System.arraycopy(content[cIdx], head, content[cIdxNext],
 					StringBuilder.PATTERN_SIZE, cursor);
-			System.arraycopy(content[cIdx], head + cursor, content[cIdxNext],
-					StringBuilder.PATTERN_SIZE + cursor + s.length(), length
-					- cursor);
+			System.arraycopy(content[cIdx], head + cursor,
+					content[cIdxNext], StringBuilder.PATTERN_SIZE + cursor
+					+ s.length(), length - cursor);
 			switchBuffer();
 			System.arraycopy(s.toCharArray(), 0, content[cIdx],
 					StringBuilder.PATTERN_SIZE + cursor, s.length());
@@ -435,8 +447,9 @@ public class StringBuilder {
 			System.arraycopy(content[cIdx], head, content[cIdxNext],
 					StringBuilder.PATTERN_SIZE, cursor);
 			System.arraycopy(content[cIdx], head + cursor + 1,
-					content[cIdxNext], StringBuilder.PATTERN_SIZE + cursor,
-					length - cursor - 1);
+					content[cIdxNext],
+					StringBuilder.PATTERN_SIZE + cursor, length - cursor
+					- 1);
 			switchBuffer();
 			tail = (StringBuilder.PATTERN_SIZE + length) - 1;
 			head = StringBuilder.PATTERN_SIZE;
@@ -470,7 +483,21 @@ public class StringBuilder {
 
 
 	final byte getByte(int pos) {
-		return (byte) (((charAt(pos) - '0') << 4) | (charAt(pos + 1) - '0'));
+		int b0 = charAt(pos) - '0';
+		int b1 = charAt(pos + 1) - '0';
+		if (b0 > 9) {
+			b0 -= 7;
+			if (b0 > 16) {
+				b0 -= 32;
+			}
+		}
+		if (b1 > 9) {
+			b1 -= 7;
+			if (b1 > 16) {
+				b1 -= 32;
+			}
+		}
+		return (byte) ((b0 << 4) + b1);
 
 	}
 
@@ -547,8 +574,8 @@ public class StringBuilder {
 		if (len != string.length()) {
 			this.insert(string, new int[] { pos, pos, pos + len });
 		} else {
-			System.arraycopy(string.toCharArray(), 0, content[cIdx],
-					head + len, string.length());
+			System.arraycopy(string.toCharArray(), 0, content[cIdx], head
+					+ len, string.length());
 		}
 	}
 

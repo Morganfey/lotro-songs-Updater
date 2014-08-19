@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -80,12 +81,21 @@ public final class Path implements Comparable<Path> {
 										pos));
 							return path.resolve(sb.toString().substring(0, pos));
 						case '%':
-							switch (sb.getByte(pos + 1)) {
-								case 0x20:
-									sb.replace(pos, 3, " ");
-									continue;
+							final byte b0 = sb.getByte(pos + 1);
+							assert b0 >= 0xc0;
+							final int byteCount =
+									b0 < 0x80 ? 1 : (b0 < 0xe ? 3 : 4);
+							final ByteBuffer buffer =
+									ByteBuffer.allocate(byteCount);
+							buffer.put(b0);
+							for (int i = pos + 2; buffer.remaining() > 0; ++i) {
+								buffer.put(sb.getByte(i));
 							}
-							break;
+							buffer.rewind();
+							final String replacement =
+									FileSystem.UTF8.decode(buffer).toString();
+							sb.replace(pos, 1 + (2 * byteCount), replacement);
+							continue;
 						case '/':
 							final String s = sb.toString().substring(0, pos);
 							if (path == null) {
@@ -100,8 +110,10 @@ public final class Path implements Comparable<Path> {
 							sb.setHead(pos + 1);
 							pos = 0;
 							continue;
+						default:
+							++pos;
 					}
-					++pos;
+
 				}
 				if (path == null)
 					return Path.rootMap.get(sb.toString());
@@ -130,7 +142,8 @@ public final class Path implements Comparable<Path> {
 				final String[] bases = FileSystem.getBases();
 				final Map<String, Path> map = new HashMap<>();
 				final String baseName;
-				Path base = FileSystem.getBase();
+				final Path home = FileSystem.getBase();
+				Path base = home;
 				if (base != null) {
 					while (base.parent != null) {
 						base = base.parent;
@@ -148,6 +161,7 @@ public final class Path implements Comparable<Path> {
 						final Path root;
 						if (baseName.equals(p)) {
 							root = base;
+							map.put("~", home);
 						} else {
 							root = new Path(p);
 						}

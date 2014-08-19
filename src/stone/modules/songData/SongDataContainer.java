@@ -71,11 +71,13 @@ public class SongDataContainer implements Container {
 		assert home != null;
 		final Path basePath = Path.getPath(home.split("/")).resolve("Music");
 		if (!basePath.exists()) {
-			io.printError(
-					"The default path or the path defined in\nthe config-file does not exist:\n"
-							+ basePath
-							+ "\n Please look into the manual for more information.",
-							false);
+			if (!basePath.getParent().exists() || !basePath.toFile().mkdir()) {
+				io.printError(
+						"The default path or the path defined in\nthe config-file does not exist:\n"
+								+ basePath
+								+ "\n Please look into the manual for more information.",
+								false);
+			}
 		}
 		tree = new DirTree(basePath);
 	}

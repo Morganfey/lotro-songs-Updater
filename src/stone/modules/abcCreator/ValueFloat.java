@@ -44,8 +44,6 @@ class ValueFloat implements Value {
 	private final double factor = 1000.0;
 	private final DragObject<Container, Container, Container> object;
 	private final DropTarget<Container, Container, Container> target;
-	private JSlider slider;
-
 	ValueFloat(BruteParams bruteParams, double initValue, double step, double ticks) {
 		this.bruteParams = bruteParams;
 		value = (int) (initValue * factor);
@@ -84,7 +82,6 @@ class ValueFloat implements Value {
 			labelDict.setSize(d);
 		}
 		slider.addChangeListener(new SliderListener(slider, label));
-		this.slider = slider;
 
 	}
 
@@ -92,7 +89,7 @@ class ValueFloat implements Value {
 	@Override
 	public <A extends Container, B extends Container, C extends Container>
 	Value localInstance(final DragObject<A, B, C> object,
-			final DropTarget<A, B, C> target) {
+			final DropTarget<A, B, C> target, final Integer value) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -104,9 +101,5 @@ class ValueFloat implements Value {
 	@Override
 	public final synchronized void value(final String s) {
 		value = (int) (Double.parseDouble(s) * factor);
-		if (slider != null) {
-			slider.setValue(value);
-			slider.repaint();
-		}
 	}
 }

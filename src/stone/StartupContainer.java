@@ -121,8 +121,10 @@ public class StartupContainer {
 								getClass()).invoke(null, this);
 				containerMap.put(s, containerNew);
 				return containerNew;
-			} catch (IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException | NoSuchMethodException
+			} catch (final InvocationTargetException e) {
+				e.getCause().printStackTrace();
+			} catch (final IllegalAccessException | IllegalArgumentException
+					| NoSuchMethodException
 					| SecurityException | ClassNotFoundException e) {
 				e.printStackTrace();
 				return null;

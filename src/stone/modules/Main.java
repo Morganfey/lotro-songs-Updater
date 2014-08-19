@@ -24,7 +24,7 @@ import stone.util.TaskPool;
  */
 public class Main implements Module {
 
-	private static final int VERSION = 3;
+	private static final int VERSION = 4;
 
 	/**
 	 * The users homeDir

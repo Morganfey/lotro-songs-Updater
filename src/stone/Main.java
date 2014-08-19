@@ -23,12 +23,14 @@ public class Main {
 	public final static void main(final String[] args)
 			throws IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, NoSuchMethodException,
-			SecurityException, InstantiationException, ClassNotFoundException {
+			SecurityException, InstantiationException,
+			ClassNotFoundException {
 		final ModuleLoader loader = ModuleLoader.createLoader();
 		final Class<?> scClass =
 				loader.loadClass(StartupContainer.class.getCanonicalName());
 		final Class<?> mainClass =
-				loader.loadClass(stone.modules.Main.class.getCanonicalName());
+				loader.loadClass(stone.modules.Main.class
+						.getCanonicalName());
 		final Class<?> flagClass =
 				loader.loadClass(Flag.class.getCanonicalName());
 		final Object sc = scClass.getMethod("createInstance").invoke(null);
@@ -38,6 +40,7 @@ public class Main {
 		// TODO parse flags
 
 		scClass.getMethod("setMain", mainClass).invoke(sc, main);
-		mainClass.getMethod("run", scClass, flagClass).invoke(main, sc, flags);
+		mainClass.getMethod("run", scClass, flagClass).invoke(main, sc,
+				flags);
 	}
 }
