@@ -1,30 +1,56 @@
 package stone.modules.abcCreator;
 
+import java.awt.BorderLayout;
 import java.awt.Container;
 
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JSlider;
 
 
-interface Value {
+abstract class Value<E> {
 
-	void display(final JSlider slider, final JLabel label);
+
+	private final JPanel panel;
+	protected final JLabel label;
+	protected final JSlider slider;
+
+	Value() {
+		panel = new JPanel();
+		label = new JLabel();
+		slider = new JSlider();
+		panel.setLayout(new BorderLayout());
+		panel.add(slider);
+		panel.add(label, BorderLayout.SOUTH);
+	}
 
 	/**
 	 * @param object
 	 * @param target
 	 * @return the param value saved at object for given target
 	 */
-	<A extends Container, B extends Container, C extends Container> Value
-			localInstance(DragObject<A, B, C> object,
-					DropTarget<A, B, C> target, Integer value);
+	abstract
+			<A extends Container, B extends Container, C extends Container>
+			Value<E> localInstance(DragObject<A, B, C> object,
+					DropTarget<A, B, C> target, final E value);
 
-	String value();
+	abstract E value();
 
 	/**
 	 * Sets global Value
 	 * 
 	 * @param s
 	 */
-	void value(String s);
+	abstract void value(E s);
+
+	abstract void value(String string);
+
+	abstract E parse(String string);
+
+	public final JPanel panel() {
+		display();
+		return panel;
+	}
+
+	public abstract void display();
 }

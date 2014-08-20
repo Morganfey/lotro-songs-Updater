@@ -16,40 +16,41 @@ import javax.swing.JSlider;
 import stone.io.ExceptionHandle;
 import stone.io.IOHandler;
 
+
 /**
  * @author Nelphindal
  */
-public class BruteParams implements DndPluginCallerParams {
+public class BruteParams<E> implements DndPluginCallerParams<E> {
 	/** Pitch with floating limits */
-	public static final BruteParams PITCH = new BruteParams("Pitch", 0, 24, 12,
-			true, true);
+	public static final BruteParams<Integer> PITCH = new BruteParams<>(
+			"Pitch", 0, 24, 12, true, true);
 	/** Compress with hard limits at 0.0 and 2.0 */
-	public static final BruteParams DYNAMIC = new BruteParams("Compress", 1.0,
-			1, 0.125, true, false);
+	public static final BruteParams<Double> DYNAMIC = new BruteParams<>(
+			"Compress", 1.0, 1, 0.125, true, false);
 	/** Speedup with floating limits */
-	public static final BruteParams SPEED = new BruteParams("Speedup", 0, -25,
-			100, 10, true, false);
+	public static final BruteParams<Integer> SPEED = new BruteParams<>(
+			"Speedup", 0, -25, 100, 10, true, false);
 	/** Volume with hard limits at -127 and +127 */
-	public static final BruteParams VOLUME = new BruteParams("Volume", 0, -127,
-			127, 16, true, true);
+	public static final BruteParams<Integer> VOLUME = new BruteParams<>(
+			"Volume", 0, -127, 127, 16, true, true);
 
 	/** Delay with hard limites */
-	public static final BruteParams DELAY = new BruteParams("Delay", 0, 0, 32,
-			16, false, true);
+	public static final BruteParams<Integer> DELAY = new BruteParams<>(
+			"Delay", 0, 0, 32, 16, false, true);
 	// TODO support for fadeout in future releases
 	// FADEOUT("Fadeout", );
 
-	public static final BruteParams DURATION = new BruteParams("Duration", 2, 0,
-			5, 1, false, true);
+	public static final BruteParams<Integer> DURATION = new BruteParams<>(
+			"Duration", 2, 0, 5, 1, false, true);
 
-	private final static BruteParams[] values = buildValues();
+	private final static BruteParams<?>[] values = buildValues();
 
 	/**
 	 * @param s
 	 * @return the equivalent param
 	 */
-	public final static BruteParams valueOf(final String s) {
-		for (final BruteParams value : BruteParams.values) {
+	public final static BruteParams<?> valueOf(final String s) {
+		for (final BruteParams<?> value : BruteParams.values) {
 			if (value.s.equalsIgnoreCase(s))
 				return value;
 		}
@@ -59,8 +60,9 @@ public class BruteParams implements DndPluginCallerParams {
 	/**
 	 * @return an array containing all values
 	 */
-	public static final BruteParams[] values() {
-		final BruteParams[] values_ = new BruteParams[BruteParams.values.length];
+	public static final BruteParams<?>[] values() {
+		final BruteParams<?>[] values_ =
+				new BruteParams[BruteParams.values.length];
 		System.arraycopy(BruteParams.values, 0, values_, 0, values_.length);
 		return values_;
 	}
@@ -71,8 +73,8 @@ public class BruteParams implements DndPluginCallerParams {
 	 * @return an array with null entries where the flag is not set
 	 * @see #values()
 	 */
-	public static final BruteParams[] valuesGlobal() {
-		final BruteParams[] values_ = values();
+	public static final BruteParams<?>[] valuesGlobal() {
+		final BruteParams<?>[] values_ = values();
 		for (int i = 0; i < values_.length; i++) {
 			if (!values_[i].global) {
 				values_[i] = null;
@@ -87,8 +89,8 @@ public class BruteParams implements DndPluginCallerParams {
 	 * @return an array with null entries where the flag is not set
 	 * @see #values()
 	 */
-	public static final BruteParams[] valuesLocal() {
-		final BruteParams[] values_ = values();
+	public static final BruteParams<?>[] valuesLocal() {
+		final BruteParams<?>[] values_ = values();
 		for (int i = 0; i < values_.length; i++) {
 			if (!values_[i].local) {
 				values_[i] = null;
@@ -97,13 +99,14 @@ public class BruteParams implements DndPluginCallerParams {
 		return values_;
 	}
 
-	private final static BruteParams[] buildValues() {
+	private final static BruteParams<?>[] buildValues() {
 		final Field[] fields = BruteParams.class.getFields();
-		final BruteParams[] values_ = new BruteParams[fields.length];
+		final BruteParams<?>[] values_ = new BruteParams[fields.length];
 		for (int i = 0; i < fields.length; i++) {
 			try {
-				values_[i] = (BruteParams) fields[i].get(null);
-			} catch (final IllegalArgumentException | IllegalAccessException e) {
+				values_[i] = (BruteParams<?>) fields[i].get(null);
+			} catch (final IllegalArgumentException
+					| IllegalAccessException e) {
 				e.printStackTrace();
 			}
 		}
@@ -114,17 +117,23 @@ public class BruteParams implements DndPluginCallerParams {
 
 	private final boolean local, global;
 
-	private final Object defaultValue;
+	private final E defaultValue;
 
-	final Value globalValue;
+	private final Value<E> globalValue;
 
+	private final DoubleMap<DragObject<?, ?, ?>, DropTarget<?, ?, ?>, Value<E>> localValueMap =
+			new DoubleMap<>();
+
+	@SuppressWarnings("unchecked")
 	private BruteParams(final String s, double initValue, double step,
 			double ticks, boolean global, boolean local) {
 		this.s = s;
-		globalValue = new ValueFloat(this, initValue, step, ticks);
+		globalValue =
+				(Value<E>) new ValueFloat((BruteParams<Double>) this,
+						initValue, step, ticks);
 		this.local = local;
 		this.global = global;
-		defaultValue = Double.valueOf(initValue);
+		defaultValue = (E) Double.valueOf(initValue);
 	}
 
 	/**
@@ -137,13 +146,16 @@ public class BruteParams implements DndPluginCallerParams {
 	 * @param global
 	 * @param local
 	 */
-	private BruteParams(final String s, int initValue, int interval, int ticks,
-			boolean global, boolean local) {
+	@SuppressWarnings("unchecked")
+	private BruteParams(final String s, int initValue, int interval,
+			int ticks, boolean global, boolean local) {
 		this.s = s;
-		globalValue = new ValueInt(this, initValue, interval, ticks);
+		globalValue =
+				(Value<E>) new ValueInt((BruteParams<Integer>) this,
+						initValue, interval, ticks);
 		this.local = local;
 		this.global = global;
-		defaultValue = Integer.valueOf(initValue);
+		defaultValue = (E) Integer.valueOf(initValue);
 	}
 
 	/**
@@ -157,17 +169,20 @@ public class BruteParams implements DndPluginCallerParams {
 	 * @param global
 	 * @param local
 	 */
+	@SuppressWarnings("unchecked")
 	private BruteParams(final String s, int initValue, int min, int max,
 			int ticks, boolean global, boolean local) {
 		this.s = s;
-		globalValue = new ValueInt(this, initValue, min, max, ticks);
+		globalValue =
+				(Value<E>) new ValueInt((BruteParams<Integer>) this,
+						initValue, min, max, ticks);
 		this.local = local;
-		defaultValue = Integer.valueOf(initValue);
+		defaultValue = (E) Integer.valueOf(initValue);
 		this.global = global;
 	}
 
 	@Override
-	public final Object defaultValue() {
+	public final E defaultValue() {
 		return defaultValue;
 	}
 
@@ -179,35 +194,33 @@ public class BruteParams implements DndPluginCallerParams {
 		panel.add(new JLabel(s), BorderLayout.NORTH);
 		panel.add(slider);
 		panel.add(label, BorderLayout.SOUTH);
-		globalValue.display(slider, label);
+		globalValue.display();
 	}
 
 	@Override
-	public final <C extends Container, D extends Container, T extends Container> void display(
-			final JPanel panel, final DragObject<C, D, T> object,
-			final Iterator<DropTarget<C, D, T>> targets) {
+	public final
+			<C extends Container, D extends Container, T extends Container>
+			void display(final JPanel panel,
+					final DragObject<C, D, T> object,
+					final Iterator<DropTarget<C, D, T>> targets) {
 		panel.setLayout(new GridLayout(0, 1));
 		final Map<Integer, JPanel> mapPanel = new HashMap<>();
-		final Map<Integer, DropTarget<?, ?, ?>> mapTarget = new HashMap<>();
+		final Map<Integer, DropTarget<?, ?, ?>> mapTarget =
+				new HashMap<>();
 		for (int i = 0, id = 1; targets.hasNext(); i = id++) {
 			final DropTarget<C, D, T> target = targets.next();
-			final JSlider slider = new JSlider();
-			final JLabel label = new JLabel();
-			final JPanel panelIdx = new JPanel();
-			panelIdx.setLayout(new BorderLayout());
-			panelIdx.add(slider);
-			panelIdx.add(label, BorderLayout.SOUTH);
-			int value = object.getParam(this, target);
-			globalValue.localInstance(object, target, value).display(slider, label);
+			final Value<E> value = getLocalValue0(object, target);
+			final JPanel panelIdx = value.panel();
 			panel.add(panelIdx);
 			mapPanel.put(i + 1, panelIdx);
 			mapTarget.put(i + 1, target);
 		}
 		for (final Entry<Integer, JPanel> e : mapPanel.entrySet()) {
 			e.getValue().add(
-					new JLabel(s + "   " + mapTarget.get(e.getKey()).getName()
-							+ " " + e.getKey() + "/" + mapTarget.size()),
-							BorderLayout.NORTH);
+					new JLabel(s + "   "
+							+ mapTarget.get(e.getKey()).getName() + " "
+							+ e.getKey() + "/" + mapTarget.size()),
+					BorderLayout.NORTH);
 		}
 	}
 
@@ -217,7 +230,7 @@ public class BruteParams implements DndPluginCallerParams {
 	}
 
 	@Override
-	public final String value() {
+	public final E value() {
 		return globalValue.value();
 	}
 
@@ -235,12 +248,61 @@ public class BruteParams implements DndPluginCallerParams {
 			} else if ((comment >= 0) && (space < 0)) {
 				this.globalValue.value(value.substring(0, comment));
 			} else if ((comment >= 0) && (space >= 0)) {
-				this.globalValue.value(value.substring(0, Math.min(comment, space)));
+				this.globalValue.value(value.substring(0, Math.min(
+						comment, space)));
 			} else {
 				this.globalValue.value(value);
 			}
 		} catch (final Exception e) {
 			io.handleException(ExceptionHandle.CONTINUE, e);
 		}
+	}
+
+	public final static void clear() {
+		for (BruteParams<?> b: values) {
+			b.globalValue.value(b.defaultValue.toString());
+			b.localValueMap.clear();
+		}
+	}
+
+	public final
+			<C extends Container, D extends Container, T extends Container>
+			void setLocalValue(final DragObject<C, D, T> object,
+					final DropTarget<C, D, T> target, final String string) {
+		setLocalValue(object, target, globalValue.parse(string));
+	}
+
+	public final
+			<C extends Container, D extends Container, T extends Container>
+			void setLocalValue(final DragObject<C, D, T> object,
+					final DropTarget<C, D, T> target, final E value) {
+		getLocalValue0(object, target).value(value);
+	}
+
+	public final
+			<C extends Container, D extends Container, T extends Container>
+			E getLocalValue(final DragObject<C, D, T> midiTrack,
+					final DropTarget<C, D, T> abcTrack) {
+		final Value<E> localValue = getLocalValue0(midiTrack, abcTrack);
+		return localValue.value();
+	}
+
+	private final
+			<C extends Container, D extends Container, T extends Container>
+			Value<E> getLocalValue0(final DragObject<C, D, T> object,
+					final DropTarget<C, D, T> target) {
+		final Value<E> localValue = localValueMap.get(object, target);
+		if (localValue == null) {
+			final Value<E> localValueNew =
+					globalValue.localInstance(object, target, globalValue
+							.value());
+			localValueMap.put(object, target, localValueNew);
+			return localValueNew;
+		}
+		return localValue;
+	}
+
+	public final void setGlobalValue(E value) {
+		globalValue.value(value);
 	}
 }

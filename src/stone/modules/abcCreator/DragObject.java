@@ -11,7 +11,7 @@ import java.util.Iterator;
  * @param <T>
  */
 public interface DragObject<C extends Container, D extends Container, T extends Container>
-extends Iterable<DropTarget<C, D, T>> {
+		extends Iterable<DropTarget<C, D, T>> {
 
 	/**
 	 * adds a new association with given target
@@ -66,19 +66,6 @@ extends Iterable<DropTarget<C, D, T>> {
 	DragObject<C, D, T> getOriginal();
 
 	/**
-	 * @param param
-	 * @return the value to given key set by {@link #setParam(DndPluginCallerParams, int)}
-	 */
-	int getParam(DndPluginCallerParams param);
-
-	/**
-	 * @param param
-	 * @param target
-	 * @return the value to given param linked to given target
-	 */
-	int getParam(DndPluginCallerParams param, DropTarget<C, D, T> target);
-
-	/**
 	 * @return the container
 	 */
 	DropTargetContainer<C, D, T> getTargetContainer();
@@ -98,24 +85,5 @@ extends Iterable<DropTarget<C, D, T>> {
 	 */
 	@Override
 	Iterator<DropTarget<C, D, T>> iterator();
-
-	/**
-	 * Adds a new option described by given pair of param and target
-	 * 
-	 * @param param
-	 * @param target
-	 * @param key
-	 * @param value
-	 */
-	void setParam(DndPluginCallerParams param, DropTarget<C, D, T> target,
-			int value);
-
-	/**
-	 * Adds a new option described by given param and sets the value
-	 * 
-	 * @param param
-	 * @param value
-	 */
-	void setParam(DndPluginCallerParams param, int value);
 
 }

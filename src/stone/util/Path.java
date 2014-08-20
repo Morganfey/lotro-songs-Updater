@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -198,15 +199,28 @@ public final class Path implements Comparable<Path> {
 				return file.delete();
 			}
 
+			private final static boolean renameFilePath(final Path path,
+					final Path target) {
+				if (path.toFile().renameTo(target.toFile()))
+					return true;
+				try {
+					Files.move(path.toAbsolutePath(), target.toAbsolutePath());
+					return true;
+				} catch (final Exception e) {
+					e.printStackTrace();
+					return false;
+				}
+			}
+
 			private final String[] dirs;
 
 			private final int hash;
 
 			private final Map<String, WeakReference<Path>> successors =
 					new TreeMap<>();
-
 					private File file = null;
 					private final String filename;
+
 					private final Path parent;
 
 					private final String str;
@@ -248,7 +262,7 @@ public final class Path implements Comparable<Path> {
 							// synchronized (finalizerMonitor) { object owned already by calling
 							// getPathFunc(String)
 							if (!Path.reusableHashes.isEmpty()) {
-								hash = Path.reusableHashes.remove();
+								hash = Path.reusableHashes.remove().intValue();
 							} else {
 								hash = ++Path.nextHash;
 							}
@@ -509,7 +523,7 @@ public final class Path implements Comparable<Path> {
 
 							if (files.length == 0)
 								return toFile().renameTo(pathNew.toFile());
-							boolean ret = pathNew.exists() || pathNew.toFile().mkdir();
+							final boolean ret = pathNew.exists() || pathNew.toFile().mkdir();
 							for (int i = 0; i < files.length; i++) {
 								if (!getPathFunc(files[i]).renameTo(
 										pathNew.getPathFunc(files[i]))) {
@@ -523,10 +537,9 @@ public final class Path implements Comparable<Path> {
 									return false;
 								}
 							}
-							ret &= delete();
-							return ret;
+							return ret & renameFilePath(this, pathNew);
 						}
-						return toFile().renameTo(pathNew.toFile());
+						return renameFilePath(this, pathNew);
 					}
 
 					/**
@@ -635,7 +648,7 @@ public final class Path implements Comparable<Path> {
 							if (parent != null) {
 								parent.successors.remove(filename);
 							}
-							Path.reusableHashes.push(hash);
+							Path.reusableHashes.push(Integer.valueOf(hash));
 						}
 					}
 }

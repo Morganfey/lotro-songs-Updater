@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 
 import stone.modules.midiData.MidiInstrument;
 
+
 final class MapLoadingThread extends Thread {
 
 	/**
@@ -19,7 +20,8 @@ final class MapLoadingThread extends Thread {
 	private final File mapToLoad;
 	final Map<String, Track> idToTrackMap;
 
-	MapLoadingThread(AbcMapPlugin abcMapPlugin, File mapToLoad, Map<String, Track> idToTrackMap) {
+	MapLoadingThread(AbcMapPlugin abcMapPlugin, File mapToLoad,
+			Map<String, Track> idToTrackMap) {
 		this.abcMapPlugin = abcMapPlugin;
 		this.mapToLoad = mapToLoad;
 		this.idToTrackMap = idToTrackMap;
@@ -68,9 +70,12 @@ final class MapLoadingThread extends Thread {
 					if (tClone == null) {
 						final Track clone = t.clone();
 						cloneMap.get(t).put(m, clone);
-						MapLoadingThread.this.abcMapPlugin.panelLeft.add(clone.getDisplayableComponent());
-						MapLoadingThread.this.abcMapPlugin.panelLeft.validate();
-						MapLoadingThread.this.abcMapPlugin.initObject(clone);
+						MapLoadingThread.this.abcMapPlugin.panelLeft
+								.add(clone.getDisplayableComponent());
+						MapLoadingThread.this.abcMapPlugin.panelLeft
+								.validate();
+						MapLoadingThread.this.abcMapPlugin
+								.initObject(clone);
 						// initTarget(target);
 					}
 					o = cloneMap.get(t).get(m);
@@ -83,8 +88,8 @@ final class MapLoadingThread extends Thread {
 						i += 3;
 					} else {
 						try {
-							o.setParam(BruteParams.valueOf(s[i]),
-									target, Integer.parseInt(s[i + 1]));
+							BruteParams.valueOf(s[i]).setLocalValue(o,
+									target, s[i + 1]);
 							i += 2;
 						} catch (final Exception e) {
 							error = true;
@@ -101,7 +106,7 @@ final class MapLoadingThread extends Thread {
 				targetList.add(target);
 				if (s.length == 2) {
 					try {
-						target.setParam("map", Integer.parseInt(s[1]));
+						target.setParam("map", Integer.valueOf(s[1]));
 					} catch (final Exception e) {
 						error = true;
 					}
